@@ -1,0 +1,48 @@
+http {
+		server {
+
+		}
+		location <...>{
+
+		}
+
+		format de l'erreur page = { error_page <error_code> <error_page>; }
+
+		code erreur :
+			200 = ok : La requête s'est déroulée correctement et le serveur renvoie la réponse attendue
+			201 = created : La requête a réussi et une nouvelle ressource a été créée
+			204 = no content : La requête a été traitée avec succès, mais aucune donnée n'est renvoyée dans la réponse.
+
+			301 = Moved Permanently : La ressource a été déplacée de façon permanente vers une nouvelle URL. Les navigateurs peuvent rediriger automatiquement.
+			302 = Found : La ressource demandée a été temporairement déplacée vers une autre URL.
+			304 = Not Modified : La ressource n’a pas été modifiée depuis la dernière requête. Le client peut utiliser une version en cache.
+
+			400 = Bad Request : La requête est mal formulée ou contient des erreurs syntaxiques.
+			401 = Unauthorized : La requête nécessite une authentification. Le client doit fournir des identifiants valides.
+			403 = Forbidden : L'accès à la ressource est interdit, même si l’authentification est correcte.
+			404 = Not Found : La ressource demandée n'a pas été trouvée sur le serveur.
+			405 = Method Not Allowed : La méthode HTTP utilisée (par exemple, POST ou DELETE) n'est pas autorisée pour cette ressource.
+			429 = Too Many Requests : Le client a envoyé trop de requêtes en peu de temps et a été temporairement bloqué.
+
+			500 = Internal Server Error : Une erreur générique côté serveur, souvent due à un problème inattendu.
+			501 = Not Implemented : La méthode ou fonctionnalité demandée n'est pas supportée par le serveur.
+			502 = Bad Gateway : Le serveur a reçu une réponse invalide d'un serveur en amont.
+			503 = Service Unavailable : Le serveur est temporairement indisponible (surchargé ou en maintenance).
+			504 = Gateway Timeout : Le serveur en amont n'a pas répondu à temps pour satisfaire la requête du client.
+
+		exemple = error_page 404 404.html;
+		error_page 403 403.html;
+
+		return page spécifiée à renvoyer au client = {return <URI>;}
+		exemple = {return https://google.com;}
+
+
+		exemple de server basique :
+
+		server
+		{
+			listen		8080 -> port
+			server_name	127.0.0.2
+			return 301	127.0.0.1
+		}
+}
