@@ -1,0 +1,16 @@
+http {
+	server {
+
+	}
+	location <...>{
+
+	}
+
+	format de l'erreur page = { error_page <error_code> <error_page>; }
+
+	exemple = error_page 404 404.html;
+	error_page 403 403.html;
+
+	return l'url de la page = {return <URI>;}
+	exemple = {return https://google.com;}
+}
