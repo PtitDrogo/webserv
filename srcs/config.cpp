@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/06 16:53:33 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/07 13:56:23 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,4 +95,5 @@ std::vector<std::string> Config::get_server_names() const
 {
 	return this->_server_names;
 }
+
 
