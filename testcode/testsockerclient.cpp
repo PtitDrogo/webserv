@@ -31,17 +31,44 @@ int main()
     }
     std::cout << "Connected to the server" << std::endl;
 
-    // Send a message to the server
-    const char *message = "Hello from client";
-    send(client_fd, message, strlen(message), 0);
-    std::cout << "Message sent" << std::endl;
+    // Keep the client running for continuous communication
+    while (true)
+    {
+        std::string user_input;
+        std::cout << "Enter a message to send to the server (type 'exit' to quit): ";
+        std::getline(std::cin, user_input);
 
-    // Read the response from the server
-    char buffer[1024] = {0};
-    int valread = read(client_fd, buffer, 1024);
-    std::cout << "Received: " << buffer << std::endl;
+        // Exit condition
+        if (user_input == "exit")
+        {
+            break;
+        }
+
+        // Send the user input to the server
+        send(client_fd, user_input.c_str(), user_input.length(), 0);
+        std::cout << "Message sent" << std::endl;
+
+        // Read the response from the server
+        char buffer[1024] = {0};
+        int valread = read(client_fd, buffer, 1024);
+        if (valread > 0)
+        {
+            std::cout << "Received: " << buffer << std::endl;
+        }
+        else if (valread == 0)
+        {
+            std::cout << "Server closed the connection" << std::endl;
+            break;
+        }
+        else
+        {
+            std::cerr << "Error reading from server" << std::endl;
+            break;
+        }
+    }
 
     // Clean up
     close(client_fd);
+    std::cout << "Client closed" << std::endl;
     return 0;
 }
