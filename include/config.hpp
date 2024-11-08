@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:15:40 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/06 16:53:22 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 13:25:29 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,23 +14,25 @@
 # define CONFIG_HPP
 
 #include "include.hpp"
+#include "server.hpp"
+#include <vector>        // Pour std::vector
+#include <string>        // Pour std::string
+#include <map>   
+
+class Server;
 
 class Config
 {
 	private :
-		std::vector<int> _ports;
-		std::vector<std::string> _server_names;
-		std::map<std::string, std::string> _url_redirection;
+		std::vector<Server> _server;
 		
 	public:
 		Config();
 		~Config();
 		Config(const Config &copy);
 		Config &operator=(const Config &copy);
-		bool parse_config_file();
-		std::vector<int> get_ports() const;
-		std::vector<std::string> get_server_names() const;
-		std::map<std::string, std::string> get_url_redirection() const;
+		bool parse_config_file(Server &serv, std::string filename);
+		std::vector<Server> getServer() const;
 };
 
 #endif
