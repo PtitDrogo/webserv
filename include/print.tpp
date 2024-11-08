@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 15:16:05 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/06 15:48:20 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 14:29:18 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,5 +30,13 @@ void printMap(std::map<T, T> m)
 		std::cout << it->first << " => " << it->second << std::endl;
 	}
 };
+
+
+template <typename T>
+std::string to_string(T value) {
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
+}
 
 #endif
