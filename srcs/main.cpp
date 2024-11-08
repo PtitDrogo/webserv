@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 16:37:43 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 18:24:55 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,7 @@ std::string readFile(std::string &path)
 	std::ifstream file(path.c_str(), std::ios::binary);
 	if(!file.is_open())
 	{
-		std::cout << path << ": ";
-		std::cout << "Error: could not open file" << std::endl;
+		return ("");
 	}
 	return std::string(
 		std::istreambuf_iterator<char>(file),
@@ -42,6 +41,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"Connection: close\r\n"
 			"\r\n" + content);
 }
+
 
 bool parse_buffer(std::string buffer)
 {
@@ -159,27 +159,30 @@ int main(int argc, char **argv)
 			continue;
 		}
 		std::cout << "Connexion acceptée !" << std::endl;
+		std::cout << serv.getErrorPage("404") << std::endl;
 
 		char buffer[1024];
 		recv(client_socket, buffer, sizeof(buffer), 0);
 		if (!parse_buffer(buffer))
 		{
 			std::cout << "------------------open ficher 404 error" << std::endl;
-			std::string path = "./config/error_page/404.html";
+			std::string path = "." + serv.getErrorPage("404");
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			std::cout << reponse << std::endl;
 			send(client_socket, reponse.c_str(), reponse.size(), 0);
 		}
 		std::cout << "Requête reçue du client : " << buffer << std::endl;
-
-
 		std::string path = "." + serv.getRoot() + serv.getIndex();
 		std::string file_content = readFile(path);
+		if (file_content.empty())
+		{
+			std::string path = "." + serv.getErrorPage("403");
+			std::string file_content = readFile(path);
+			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+			send(client_socket, reponse.c_str(), reponse.size(), 0);
+		}
 		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << reponse << std::endl;
 		send(client_socket, reponse.c_str(), reponse.size(), 0);
-		
 	}
 	return (0);
 }

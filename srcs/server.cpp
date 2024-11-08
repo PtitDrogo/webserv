@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 12:35:58 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 15:15:56 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 17:42:51 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,11 +64,17 @@ std::map<std::string , std::string> Server::getReturn() const
 	return (this->_return);
 }
 
-std::map<std::string, std::string> Server::getErrorPage() const 
-{
-	return (this->_error_page);
+std::string Server::getErrorPage(const std::string& errorCode) const {
+    std::map<std::string, std::string>::const_iterator it = _error_page.find(errorCode);
+    
+    // Vérifie si l'élément avec la clé "errorCode" existe dans la map
+    if (it != _error_page.end()) {
+        return it->second;  // Retourne le deuxième élément (la valeur)
+    }
+    
+    // Si le code d'erreur n'est pas trouvé, retourne une valeur par défaut
+    return "error_default.html";
 }
-
 void Server::setPort(std::string port)
 {
 	this->_port = port;
