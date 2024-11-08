@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 15:17:07 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 17:46:55 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 	std::cout << "server_name = "<< serv.getServerName() << std::endl;
 	std::cout << "index = " << serv.getIndex() << std::endl;
 	std::cout << "root = " << serv.getRoot() << std::endl;
-	printMap(serv.getErrorPage());
+	// printMap(serv.getErrorPage());
 	return (true);
 }
 

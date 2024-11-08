@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 11:15:25 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 15:15:36 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/08 17:43:11 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Server
 		std::string getRoot() const;
 		std::string getServerName() const;
 		std::map<std::string , std::string> getReturn() const;
-		std::map<std::string, std::string> getErrorPage() const;
+		std::string getErrorPage(const std::string& errorCode) const;
 
 		//setter//
 
