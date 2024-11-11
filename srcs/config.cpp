@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 17:46:55 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 18:20:42 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ std::vector<Server> Config::getServer() const
 }
 
 
-bool Config::parse_config_file(Server &serv, std::string filename)
+bool Config::parse_config_file(Server &serv, location &loc, std::string filename)
 {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open())
@@ -54,14 +54,9 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		size_t pos = line.find_first_not_of(" \t");
 		if (pos != std::string::npos && line.find("listen", pos) == pos)
 		{
-			size_t start = pos + 6; // Position après "listen"
-			
-			// Ignorer les espaces après "listen"
-			while (start < line.size() && std::isspace(line[start])) {
+			size_t start = pos + 6;
+			while (start < line.size() && std::isspace(line[start]))
 				start++;
-			}
-
-			// Récupérer le port jusqu'au prochain espace ou la fin de la ligne
 			size_t end = line.find_first_of(" \t", start);
 			std::string port = line.substr(start, end - start);
 			serv.setPort(port);
@@ -69,14 +64,9 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		size_t pos1 = line.find_first_not_of(" \t");
 		if (pos != std::string::npos && line.find("server_name", pos1) == pos1)
 		{
-			size_t start = pos1 + 11; // Position après "listen"
-			
-			// Ignorer les espaces après "listen"
-			while (start < line.size() && std::isspace(line[start])) {
+			size_t start = pos1 + 11;
+			while (start < line.size() && std::isspace(line[start]))
 				start++;
-			}
-
-			// Récupérer le port jusqu'au prochain espace ou la fin de la ligne
 			size_t end = line.find_first_of(" \t", start);
 			std::string server_name = line.substr(start, end - start);
 			serv.setServerName(server_name);
@@ -84,14 +74,9 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		size_t pos2 = line.find_first_not_of(" \t");
 		if (pos != std::string::npos && line.find("index", pos2) == pos2)
 		{
-			size_t start = pos2 + 5; // Position après "listen"
-			
-			// Ignorer les espaces après "listen"
-			while (start < line.size() && std::isspace(line[start])) {
+			size_t start = pos2 + 5;
+			while (start < line.size() && std::isspace(line[start]))
 				start++;
-			}
-
-			// Récupérer le port jusqu'au prochain espace ou la fin de la ligne
 			size_t end = line.find_first_of(" \t", start);
 			std::string index = line.substr(start, end - start);
 			serv.setIndex(index);
@@ -99,14 +84,9 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		size_t pos3 = line.find_first_not_of(" \t");
 		if (pos3 != std::string::npos && line.find("root", pos3) == pos3)
 		{
-			size_t start = pos3 + 4; // Position après "listen"
-			
-			// Ignorer les espaces après "listen"
-			while (start < line.size() && std::isspace(line[start])) {
+			size_t start = pos3 + 4;
+			while (start < line.size() && std::isspace(line[start]))
 				start++;
-			}
-
-			// Récupérer le port jusqu'au prochain espace ou la fin de la ligne
 			size_t end = line.find_first_of(" \t", start);
 			std::string root = line.substr(start, end - start);
 			serv.setRoot(root);
@@ -122,82 +102,57 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 			std::string error_file;
 			iss >> error_file;
 			serv.setErrorPage(error_code, error_file);
-			std::cout << "Error page for code " << error_code << " is " << error_file << std::endl;
 		}
+		///////////////////////////////
+		////////RECUPE LOCATION////////
+		///////////////////////////////
+		size_t pos5 = line.find_first_not_of(" \t");
+		if (pos5 != std::string::npos && line.find("location", pos5) == pos5)
+		{
+			size_t start = pos5 + 8;
+			while (start < line.size() && std::isspace(line[start])) {
+				start++;
+			}
+			size_t end = line.find_first_of(" {", start);
+			std::string path = line.substr(start, end - start) + ' ';
+			loc.setPath(path);
 
-		
+			// Si l'accolade ouvrante est sur la même ligne, chercher le reste
+			size_t braceOpenPos = line.find('{', end);
+			std::string sectionContent;
+
+			if (braceOpenPos != std::string::npos) {
+				sectionContent += line.substr(braceOpenPos + 1) + "\n";
+			}
+			std::istream& input = file;
+			// Lire jusqu'à trouver l'accolade fermante
+			std::string nextLine;
+			while (std::getline(input, nextLine)) {
+				size_t braceClosePos = nextLine.find('}');
+				if (braceClosePos != std::string::npos) {
+					sectionContent += nextLine.substr(0, braceClosePos);
+					break;
+				} else {
+					sectionContent += nextLine + "\n";
+				}
+			}
+
+			// Parse la section pour l'index
+			std::istringstream sectionStream(sectionContent);
+			std::string subLine;
+			while (std::getline(sectionStream, subLine)) {
+				size_t indexPos = subLine.find("index");
+				if (indexPos != std::string::npos) {
+					size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
+					size_t endIndex = subLine.find_first_of(" \t;", startIndex);
+					std::string index = subLine.substr(startIndex, endIndex - startIndex);
+					loc.setIndex(index);
+					break; // Arrête la recherche après avoir trouvé la première occurrence de l'index
+				}
+			}
+		}
+		std::cout << line << std::endl;
 	}
-	std::cout << "port = " << serv.getPort() << std::endl;
-	std::cout << "server_name = "<< serv.getServerName() << std::endl;
-	std::cout << "index = " << serv.getIndex() << std::endl;
-	std::cout << "root = " << serv.getRoot() << std::endl;
-	// printMap(serv.getErrorPage());
+	std::cout << "\n\n\n\n" << std::endl;
 	return (true);
 }
-
-// bool Config::parse_config_file()
-// {
-// 	std::ifstream file("./config/server.conf");
-// 	if (!file.is_open())
-// 	{
-// 		std::cerr << "Error: could not open file" << std::endl;
-// 		return false;
-// 	}
-// 	if (file.is_open())
-// 	{
-// 		std::cout << "File opened successfully" << std::endl;
-// 	}
-// 	std::string line;
-// 	while (std::getline(file, line))
-// 	{
-// 		size_t pos = line.find_first_not_of(" \t");
-// 		if (pos != std::string::npos && line.find("listen", pos) == pos)
-// 		{
-// 			std::istringstream iss(line);
-// 			std::string word;
-// 			iss >> word;
-// 			int port;
-// 			while (iss >> port)
-// 				this->_ports.push_back(port);
-// 		}
-// 		size_t pos1 = line.find_first_not_of(" \t");
-// 		if (pos1 != std::string::npos && line.find("server_name", pos1) == pos1)
-// 		{
-// 			std::istringstream iss(line.substr(pos1));
-// 			std::string word2;
-// 			iss >> word2;
-// 			std::string adress;
-// 			while (iss >> adress)
-// 				this->_server_names.push_back(adress);
-// 		}
-// 		size_t pos2 = line.find_first_not_of(" \t");
-// 		if (pos2 != std::string::npos && line.find("return", pos2) == pos2)
-// 		{
-// 			std::istringstream iss(line);
-// 			std::string word;
-// 			iss >> word;
-// 			std::string code;
-// 			iss >> code;
-// 			std::string url;
-// 			iss >> url;
-// 			this->_url_redirection[code] = url;
-// 		}
-// 	}
-// 	file.close();
-// 	printVector(this->_ports);
-// 	printVector(this->_server_names);
-// 	printMap(this->_url_redirection);
-// 	return true;
-// }
-
-// std::vector<int> Config::get_ports() const
-// {
-// 	return this->_ports;
-// }
-
-// std::vector<std::string> Config::get_server_names() const
-// {
-// 	return this->_server_names;
-// }
-
-
