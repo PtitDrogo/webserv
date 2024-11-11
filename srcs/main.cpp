@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/07 15:12:53 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 11:48:00 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,29 +18,101 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-int main(int argc, char const *argv[])
+
+std::string readFile(std::string &path)
 {
-	(void)argc;
-	(void)argv;
-	
+	std::ifstream file(path.c_str(), std::ios::binary);
+	if(!file.is_open())
+	{
+		return ("");
+	}
+	return std::string(
+		std::istreambuf_iterator<char>(file),
+		std::istreambuf_iterator<char>()
+	);
+}
+
+std::string httpHeaderResponse(std::string code, std::string contentType, std::string content)
+{
+	return ("HTTP/1.1 " + code + "\r\n"
+			"Content-Type: " + contentType + "\r\n"
+			"Content-Length: " + to_string(content.size()) + "\r\n"
+			"Connection: close\r\n"
+			"\r\n" + content);
+}
+
+
+bool parse_buffer(std::string buffer)
+{
+	std::istringstream stream(buffer);
+	std::string line;
+	if (!stream)
+	{
+		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
+		return false;
+	}
+	std::string method;
+	std::string path;
+	std::string version;
+	while (std::getline(stream, line))
+	{
+		size_t pos1 = line.find("GET");
+		size_t pos2 = line.find("HTTP");
+		if (pos1 != std::string::npos && pos2 != std::string::npos)
+		{
+			method = line.substr(pos1, 4);
+			path = line.substr(pos1 + 5, pos2 - pos1 - 5);
+			version = line.substr(pos2);
+
+			std::cout << "Méthode: " << method << std::endl;
+			std::cout << "Ressource demandée: |" << path << "|" << std::endl;
+			std::cout << "Version: " << version << std::endl;
+
+			if (path[0] == ' ')
+			{
+				std::cout << "Erreur : le chemin est vide entre GET et HTTP." << std::endl;
+				std::cout << "Page 404 ouverte" << std::endl;
+				return true;
+			}
+			return false;
+		}
+	}
+	std::cout << "Requête malformée ou \"GET\" / \"HTTP\" non trouvés" << std::endl;
+	return false;
+}
+
+
+int main(int argc, char **argv)
+{
 	Config conf;
+	Server serv;
 
-	// recupere les ports
-	conf.parse_config_file(); 
+	if (argc != 2)
+	{
+		std::cout << "error : use ./webserv file.conf" << std::endl;
+		return (0);
+	}
+	conf.parse_config_file(serv, argv[1]);
 
-	// creation du socket //
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0); 
+	std::cout << "-----------------------------------" << std::endl;
 
-	// creation de l'adresse du serveur //
+	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	int opt = 1;
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == -1)
+	{
+		std::cerr << "Erreur lors de la configuration du socket." << std::endl;
+		close(server_socket);
+		return -1;
+	}
 	sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(conf.get_ports()[0]);
+	int port = std::atoi(serv.getPort().c_str());
+	server_address.sin_port = htons(port);
 	server_address.sin_addr.s_addr = INADDR_ANY;
-
+	
 	std::cout << "Server socket created" << std::endl;
 	std::cout << "Server port: " << ntohs(server_address.sin_port) << std::endl;
-
-	// liaison du socket //
+	
 	if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) == -1)
 	{
 		std::cerr << "Erreur lors de la liaison du socket." << std::endl;
@@ -49,9 +121,7 @@ int main(int argc, char const *argv[])
 	}
 
 	std::cout << "Server socket binded" << std::endl;
-	std::cout << "Server listening on port " << ntohs(server_address.sin_port) << std::endl;
-
-	// mise en écoute du serveur //
+	
 	if (listen(server_socket, 5) == -1)
 	{
 		std::cerr << "Erreur lors de la mise en écoute." << std::endl;
@@ -60,10 +130,14 @@ int main(int argc, char const *argv[])
 	}
 	
 	std::cout << "Server listening" << std::endl;
-
-	// acceptation de la connexion //
+	
 	while (true)
 	{
+
+		///////////////////////////////
+		/////////ACCEPT////////////////
+		///////////////////////////////
+
 		sockaddr_in client_address;
 		socklen_t client_size = sizeof(client_address);
 		int client_socket = accept(server_socket, (sockaddr*)&client_address, &client_size);
@@ -71,31 +145,46 @@ int main(int argc, char const *argv[])
 		{
 			std::cerr << "Erreur lors de l'acceptation de la connexion." << std::endl;
 			close(server_socket);
-			continue ;
+			continue;
 		}
 		std::cout << "Connexion acceptée !" << std::endl;
-		std::ifstream html_file("./config/web.html");
-		if (!html_file.is_open())
+		std::cout << serv.getErrorPage("404") << std::endl;
+
+
+		//////////////////////////////////////////////
+		/////////CREE BUFFER CONTIEN FICHIER HTML/////
+		//////////////////////////////////////////////
+
+		char buffer[1024];
+		recv(client_socket, buffer, sizeof(buffer), 0);
+		if (!parse_buffer(buffer))
 		{
-			std::cerr << "Erreur lors de l'ouverture du fichier HTML." << std::endl;
-			close(client_socket);
-			close(server_socket);
-			continue ;
+			std::cout << "------------------open ficher 404 error" << std::endl;
+			std::string path = "." + serv.getErrorPage("404");
+			std::string file_content = readFile(path);
+			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+			send(client_socket, reponse.c_str(), reponse.size(), 0);
 		}
-		std::stringstream buffer;
-		buffer << html_file.rdbuf();
-		std::string html_content = buffer.str();
-		html_file.close();
-		size_t content_length = html_content.size();
-		char response_header[1024];
-		snprintf(response_header, sizeof(response_header),
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: text/html\r\n"
-				"Content-Length: %zu\r\n\r\n", content_length);
-		send(client_socket, response_header, strlen(response_header), 0);
-		send(client_socket, html_content.c_str(), html_content.size(), 0);
-		std::cout << "Réponse envoyée au client." << std::endl;
-		close(client_socket);
+
+		//////////////////////////////////////////////////////////////////
+		///////////CHECK SI J'AI LES PERM POUR ACCEDER AU DOSSIER HTML////
+		//////////////////////////////////////////////////////////////////
+
+		
+		std::cout << "Requête reçue du client : " << buffer << std::endl;
+		std::string path = "." + serv.getRoot() + serv.getIndex();
+		std::string file_content = readFile(path);
+		if (file_content.empty())
+		{
+			std::string path = "." + serv.getErrorPage("403");
+			std::string file_content = readFile(path);
+			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+			send(client_socket, reponse.c_str(), reponse.size(), 0);
+		}
+		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client_socket, reponse.c_str(), reponse.size(), 0);
+
+		
 	}
-	return 0;
+	return (0);
 }

@@ -2,9 +2,11 @@ NAME =  webserver
 
 SRC =		srcs/main.cpp \
 			srcs/config.cpp \
+			srcs/server.cpp \
 
 INCLUDES =	include/config.hpp \
 			include/include.hpp \
+			include/server.hpp \
 
 
 OBJ = $(SRC:.cpp=.o)
