@@ -3,10 +3,16 @@ NAME =  webserver
 SRC =		srcs/main.cpp \
 			srcs/config.cpp \
 			srcs/server.cpp \
+			srcs/location.cpp \
+			srcs/Open_html_page.cpp \
+			srcs/SetupSocket.cpp \
 
 INCLUDES =	include/config.hpp \
 			include/include.hpp \
 			include/server.hpp \
+			include/location.hpp \
+			include/Open_html_page.hpp \
+			include/SetupSocket.hpp \
 
 
 OBJ = $(SRC:.cpp=.o)
