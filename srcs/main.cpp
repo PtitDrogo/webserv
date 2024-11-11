@@ -6,7 +6,7 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 19:10:33 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/11 19:58:04 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,8 +72,7 @@ int main(int argc, char **argv)
 			addPollFD(client_socket, fds);
 			printf("DEBUG: Added client to the list\n");
 		}
-		int ret = poll(fds.data(), fds.size(), -1);
-        if (ret < 0)
+		if (poll(fds.data(), fds.size(), -1) == -1)
         {
             std::cerr << "Poll failed" << std::endl;
             close(server_socket); //technically would have to do more cleanup than that;

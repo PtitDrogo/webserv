@@ -6,7 +6,7 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 19:12:41 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/11 20:02:27 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,29 +61,31 @@ int SetupClientAddress(int server_socket)
 	return client_socket;
 }
 
+void disconnectClient(std::vector<struct pollfd> &fds, size_t &i)
+{
+	std::cout << "Client disconnected" << std::endl;
+	close(fds[i].fd);
+	fds.erase(fds.begin() + i);
+	--i;
+}
+
+
 
 void handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds) //add the list of pollfds later;
 {
 	if (valread > 0)
 	{
-		// std::cout << "DEBUG:Received from client successfully" << std::endl;
+		std::cout << "DEBUG:Received from client successfully" << std::endl;
 	}
 	else if (valread == 0)
 	{
-		// Client disconnected
-		std::cout << "Client disconnected" << std::endl;
-		close(fds[i].fd);
-		fds.erase(fds.begin() + i);
-		--i;
+		disconnectClient(fds, i);
 	}
 	else
 	{
 		// Error reading from the client
 		std::cerr << "Error reading from client" << std::endl;
-		//TODO Take him away from the list of client once thats implemented;
-		close(fds[i].fd);
-		fds.erase(fds.begin() + i);
-		--i;
+		disconnectClient(fds, i);
 	}
 }
 
@@ -99,3 +101,4 @@ void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
 	}
 	return ;
 }
+
