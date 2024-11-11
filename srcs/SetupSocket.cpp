@@ -6,12 +6,13 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:32:28 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/11 19:12:41 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/config.hpp"
 #include "../include/server.hpp"
+#include "poll.h"
 
 int SetupSocket(Server serv)
 {
@@ -61,7 +62,7 @@ int SetupClientAddress(int server_socket)
 }
 
 
-void handleRecvValue(int valread, int client_socket) //add the list of pollfds later;
+void handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds) //add the list of pollfds later;
 {
 	if (valread > 0)
 	{
@@ -71,14 +72,30 @@ void handleRecvValue(int valread, int client_socket) //add the list of pollfds l
 	{
 		// Client disconnected
 		std::cout << "Client disconnected" << std::endl;
-		//TODO Take him away from the list of client once thats implemented;
-		close(client_socket);
+		close(fds[i].fd);
+		fds.erase(fds.begin() + i);
+		--i;
 	}
 	else
 	{
 		// Error reading from the client
 		std::cerr << "Error reading from client" << std::endl;
 		//TODO Take him away from the list of client once thats implemented;
-		close(client_socket);
+		close(fds[i].fd);
+		fds.erase(fds.begin() + i);
+		--i;
 	}
+}
+
+void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
+{
+	if (client_socket != -1)
+	{
+		struct pollfd client_pollfd;
+		client_pollfd.fd = client_socket;
+		client_pollfd.events = POLLIN; //This can be several things;
+		client_pollfd.revents = 0;
+		fds.push_back(client_pollfd);
+	}
+	return ;
 }

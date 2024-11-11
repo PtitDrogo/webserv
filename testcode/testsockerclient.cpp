@@ -20,8 +20,8 @@ int main()
     // Connect to the server
     struct sockaddr_in address;
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr("127.0.0.1");
-    address.sin_port = htons(8080);
+    address.sin_addr.s_addr = inet_addr("127.0.0.2");
+    address.sin_port = htons(1080);
 
     if (connect(client_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
