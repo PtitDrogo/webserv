@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Open_html_page.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:11:20 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:11:36 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 18:31:41 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,5 +20,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 void generate_html_page404(Server &serv, int client_socket);
 void generate_html_page_without_location(Server &serv, int client_socket);
 void generate_html_page_with_location(Server &serv, location &loc, int client_socket);
+void handleRecvValue(int valread, int client_socket);
+
 
 #endif

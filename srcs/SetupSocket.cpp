@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SetupSocket.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:21:32 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 18:32:28 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,4 +58,27 @@ int SetupClientAddress(int server_socket)
 		return -1;
 	}
 	return client_socket;
+}
+
+
+void handleRecvValue(int valread, int client_socket) //add the list of pollfds later;
+{
+	if (valread > 0)
+	{
+		// std::cout << "DEBUG:Received from client successfully" << std::endl;
+	}
+	else if (valread == 0)
+	{
+		// Client disconnected
+		std::cout << "Client disconnected" << std::endl;
+		//TODO Take him away from the list of client once thats implemented;
+		close(client_socket);
+	}
+	else
+	{
+		// Error reading from the client
+		std::cerr << "Error reading from client" << std::endl;
+		//TODO Take him away from the list of client once thats implemented;
+		close(client_socket);
+	}
 }

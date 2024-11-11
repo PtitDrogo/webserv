@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:17:53 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 18:32:36 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,8 @@ int main(int argc, char **argv)
 	{
 		int client_socket = SetupClientAddress(server_socket);
 		char buffer[1024];
-		recv(client_socket, buffer, sizeof(buffer), 0);
+		int recv_value = recv(client_socket, buffer, sizeof(buffer), 0);
+		handleRecvValue(recv_value, client_socket);
 		if (parse_buffer(buffer, loc) == 0)
 			generate_html_page404(serv, client_socket);
 		if (parse_buffer(buffer, loc) == 2)
@@ -73,3 +74,4 @@ int main(int argc, char **argv)
 	}
 	return (0);
 }
+
