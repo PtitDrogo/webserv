@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 18:24:55 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/11 11:48:00 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ std::string readFile(std::string &path)
 
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content)
 {
-	//make the header response
 	return ("HTTP/1.1 " + code + "\r\n"
 			"Content-Type: " + contentType + "\r\n"
 			"Content-Length: " + to_string(content.size()) + "\r\n"
@@ -45,39 +44,25 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 
 bool parse_buffer(std::string buffer)
 {
-	std::istringstream stream(buffer);  // Créer un flux à partir de la chaîne buffer
+	std::istringstream stream(buffer);
 	std::string line;
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return false;
 	}
-
-	// Lire chaque ligne du flux
 	std::string method;
 	std::string path;
 	std::string version;
-
-	// Lire chaque ligne du flux
 	while (std::getline(stream, line))
 	{
-		// Chercher "GET" et "HTTP" dans la ligne
 		size_t pos1 = line.find("GET");
 		size_t pos2 = line.find("HTTP");
-
-		// Si "GET" et "HTTP" sont trouvés, on les analyse
 		if (pos1 != std::string::npos && pos2 != std::string::npos)
 		{
-			// Extraire la méthode (ici on suppose que c'est toujours "GET")
-			method = line.substr(pos1, 4);  // La méthode GET a toujours 3 caractères
-
-			// Extraire la ressource demandée entre "GET" et "HTTP"
-			path = line.substr(pos1 + 5, pos2 - pos1 - 5);  // Exclure "GET " et " HTTP"
-			//GET /favicon.ico HTTP/1.1
-			//GET / HTTP/1.1
-			
-			// Extraire la version HTTP (tout ce qui reste après "HTTP")
-			version = line.substr(pos2);  // La version commence juste après "HTTP"
+			method = line.substr(pos1, 4);
+			path = line.substr(pos1 + 5, pos2 - pos1 - 5);
+			version = line.substr(pos2);
 
 			std::cout << "Méthode: " << method << std::endl;
 			std::cout << "Ressource demandée: |" << path << "|" << std::endl;
@@ -89,10 +74,9 @@ bool parse_buffer(std::string buffer)
 				std::cout << "Page 404 ouverte" << std::endl;
 				return true;
 			}
-			return false;  // Retourner false si la requête est bien formée
+			return false;
 		}
 	}
-	// Si "GET" et "HTTP" n'ont pas été trouvés
 	std::cout << "Requête malformée ou \"GET\" / \"HTTP\" non trouvés" << std::endl;
 	return false;
 }
@@ -149,6 +133,11 @@ int main(int argc, char **argv)
 	
 	while (true)
 	{
+
+		///////////////////////////////
+		/////////ACCEPT////////////////
+		///////////////////////////////
+
 		sockaddr_in client_address;
 		socklen_t client_size = sizeof(client_address);
 		int client_socket = accept(server_socket, (sockaddr*)&client_address, &client_size);
@@ -161,6 +150,11 @@ int main(int argc, char **argv)
 		std::cout << "Connexion acceptée !" << std::endl;
 		std::cout << serv.getErrorPage("404") << std::endl;
 
+
+		//////////////////////////////////////////////
+		/////////CREE BUFFER CONTIEN FICHIER HTML/////
+		//////////////////////////////////////////////
+
 		char buffer[1024];
 		recv(client_socket, buffer, sizeof(buffer), 0);
 		if (!parse_buffer(buffer))
@@ -171,6 +165,12 @@ int main(int argc, char **argv)
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client_socket, reponse.c_str(), reponse.size(), 0);
 		}
+
+		//////////////////////////////////////////////////////////////////
+		///////////CHECK SI J'AI LES PERM POUR ACCEDER AU DOSSIER HTML////
+		//////////////////////////////////////////////////////////////////
+
+		
 		std::cout << "Requête reçue du client : " << buffer << std::endl;
 		std::string path = "." + serv.getRoot() + serv.getIndex();
 		std::string file_content = readFile(path);
@@ -183,6 +183,8 @@ int main(int argc, char **argv)
 		}
 		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		send(client_socket, reponse.c_str(), reponse.size(), 0);
+
+		
 	}
 	return (0);
 }
