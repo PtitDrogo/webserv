@@ -48,7 +48,7 @@ int main()
     //creating the server_poll
     struct pollfd server_pollfd;
     server_pollfd.fd = server_fd;
-    server_pollfd.events = POLLIN;
+    server_pollfd.events = POLLIN; //This can be several things;
     server_pollfd.revents = 0;
     fds.push_back(server_pollfd); // Add the server socket for listening
 
