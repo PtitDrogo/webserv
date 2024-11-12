@@ -6,7 +6,7 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 19:58:04 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/12 15:46:35 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,29 +66,37 @@ int main(int argc, char **argv)
 	
 	while (true)
 	{
+		// printf("hi1\n");
 		if (fds[0].revents & POLLIN)
         {
+			// printf("hiX\n");
 			int client_socket = SetupClientAddress(server_socket);
 			addPollFD(client_socket, fds);
 			printf("DEBUG: Added client to the list\n");
 		}
+		// printf("hi2\n");
 		if (poll(fds.data(), fds.size(), -1) == -1)
         {
             std::cerr << "Poll failed" << std::endl;
             close(server_socket); //technically would have to do more cleanup than that;
             return 1;
         }
+		// printf("hi3\n");
 		for (size_t i = 1; i < fds.size(); ++i)
 		{
+			// printf("hi4\n");
 			char buffer[1024] = {0};
-			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-			handleRecvValue(recv_value, i, fds);
+			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), MSG_DONTWAIT); //TRY AGAIN WITH 0 LATER
+			// printf("hi4.5\n");
+			if (handleRecvValue(recv_value, i, fds) == 1)
+				break ;
 			if (parse_buffer(buffer, loc) == 0)
 				generate_html_page404(serv, fds[i].fd);
 			if (parse_buffer(buffer, loc) == 2)
 				generate_html_page_without_location(serv, fds[i].fd);
 			else if (parse_buffer(buffer, loc) == 1)
 				generate_html_page_with_location(serv, loc, fds[i].fd);
+			// printf("hi5\n");
 		}
 	}
 	return (0);

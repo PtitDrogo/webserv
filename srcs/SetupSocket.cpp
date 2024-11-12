@@ -6,7 +6,7 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 20:02:27 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/12 15:46:39 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,21 +71,30 @@ void disconnectClient(std::vector<struct pollfd> &fds, size_t &i)
 
 
 
-void handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds) //add the list of pollfds later;
+int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds) //add the list of pollfds later;
 {
+
 	if (valread > 0)
 	{
 		std::cout << "DEBUG:Received from client successfully" << std::endl;
+		return (0);
 	}
 	else if (valread == 0)
 	{
 		disconnectClient(fds, i);
+		return (1); //Error, client disconnected;
 	}
 	else
 	{
 		// Error reading from the client
+		if (errno == EAGAIN || errno == EWOULDBLOCK) //this means no errors happened
+		{
+			errno = 0;
+			return 0;
+		}
 		std::cerr << "Error reading from client" << std::endl;
 		disconnectClient(fds, i);
+		return (1);
 	}
 }
 
