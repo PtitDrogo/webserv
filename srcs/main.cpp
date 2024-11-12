@@ -6,7 +6,7 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 15:46:35 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/12 16:51:40 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 	while (true)
 	{
 		// printf("hi1\n");
+		// printf("hi2\n");
 		if (fds[0].revents & POLLIN)
         {
 			// printf("hiX\n");
@@ -74,7 +75,6 @@ int main(int argc, char **argv)
 			addPollFD(client_socket, fds);
 			printf("DEBUG: Added client to the list\n");
 		}
-		// printf("hi2\n");
 		if (poll(fds.data(), fds.size(), -1) == -1)
         {
             std::cerr << "Poll failed" << std::endl;
@@ -84,12 +84,19 @@ int main(int argc, char **argv)
 		// printf("hi3\n");
 		for (size_t i = 1; i < fds.size(); ++i)
 		{
-			// printf("hi4\n");
-			char buffer[1024] = {0};
-			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), MSG_DONTWAIT); //TRY AGAIN WITH 0 LATER
-			// printf("hi4.5\n");
-			if (handleRecvValue(recv_value, i, fds) == 1)
+			if (fds[i].revents & POLLRDHUP)
+			{
+				printf("If you see me you win\n");
+				disconnectClient(fds, i);
 				break ;
+			}
+			if (!(fds[i].revents & POLLIN))
+                continue; //beautiful, if nothing happens, just skip it
+			char buffer[1024] = {0};
+			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0); //MSG_DONTWAIT in case of trouble
+			if (handleRecvValue(recv_value, i, fds) == 1)
+				break ; //For now maybe idk
+			printf("My request is %s\n", buffer);
 			if (parse_buffer(buffer, loc) == 0)
 				generate_html_page404(serv, fds[i].fd);
 			if (parse_buffer(buffer, loc) == 2)
