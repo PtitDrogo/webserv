@@ -6,6 +6,7 @@ SRC =		srcs/main.cpp \
 			srcs/location.cpp \
 			srcs/Open_html_page.cpp \
 			srcs/SetupSocket.cpp \
+			srcs/parseBuffer.cpp \
 
 INCLUDES =	include/config.hpp \
 			include/include.hpp \
@@ -13,6 +14,7 @@ INCLUDES =	include/config.hpp \
 			include/location.hpp \
 			include/Open_html_page.hpp \
 			include/SetupSocket.hpp \
+			srcs/parseBuffer.hpp \
 
 
 OBJ = $(SRC:.cpp=.o)
