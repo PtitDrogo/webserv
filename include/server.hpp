@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 11:15:25 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 14:23:18 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/12 13:06:11 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class Server
 		std::string _root;
 		std::map<std::string , std::string> _return;
 		std::map<std::string , std::string> _error_page;
-		std::vector<std::string> _location;
+		std::vector<location> _location;
 	public :
 		Server();
 		~Server();
