@@ -26,7 +26,6 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 
 void generate_html_page_error(Server &serv, int client_socket, std::string error_code)
 {
-	std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
 	std::string path = "." + serv.getErrorPage(error_code);
 	std::string file_content = readFile(path);
 	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);

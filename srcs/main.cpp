@@ -3,7 +3,6 @@
 #include "config.hpp"
 
 
-
 std::string get_type_request(std::string buffer)
 {
 	std::istringstream stream(buffer);
@@ -16,16 +15,19 @@ std::string get_type_request(std::string buffer)
 			return ("GET");
 		if (line.find("POST") != std::string::npos)
 			return ("POST");
+		//DEBUG DE TFREYDIE A SUPPR APRES
+		if (line.find("CGI") != std::string::npos)
+			return ("CGI");
 	}
 	return ("");
 }
 
-
-int main(int argc, char **argv)
+int main(int argc, char **argv, char **envp)
 {
 	Config conf;
 	Server serv;
 	location loc;
+	(void) envp;
 
 	if (argc != 2)
 	{
@@ -60,8 +62,10 @@ int main(int argc, char **argv)
 			std::string type_request = get_type_request(buffer);
 			if (type_request == "GET")
 				parse_buffer_get(buffer, serv, fds[i].fd);
-			if (type_request == "POST")
+			else if (type_request == "POST")
 				parse_buffer_post(buffer , fds[i].fd, serv);
+			// else if (type_request == "CGI")
+			// 	cgiHandler(envp);
 			else
 				generate_html_page_error(serv, fds[i].fd, "404");
 			std::cout << buffer << std::endl;

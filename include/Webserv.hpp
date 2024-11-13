@@ -49,4 +49,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 void 		generate_html_page_error(Server &serv, int client_socket, std::string error_code);
 
+//-----------CGI-----------//
+void cgiHandler(char **envp);
+
 #endif
