@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   config.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 19:17:21 by ilbendib         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../include/config.hpp"
-#include "../include/Open_html_page.hpp"
+#include "Webserv.hpp"
+#include "config.hpp"
 
 Config::Config() {}
 
