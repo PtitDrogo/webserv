@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   SetupSocket.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:21:32 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 15:11:47 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/config.hpp"
-#include "../include/server.hpp"
+#include "config.hpp"
+#include "server.hpp"
+#include "poll.h"
+#include "Webserv.hpp"
 
 int SetupSocket(Server serv)
 {
@@ -59,3 +61,4 @@ int SetupClientAddress(int server_socket)
 	}
 	return client_socket;
 }
+
