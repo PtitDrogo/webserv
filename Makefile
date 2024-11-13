@@ -1,41 +1,73 @@
-NAME =  webserver
+OBJS_DIR	=	.objs
+DEPS_DIR	=	.deps
+SRCS_DIR	=	srcs
+HEADER_DIR	=	include
 
-SRC =		srcs/main.cpp \
-			srcs/config.cpp \
-			srcs/server.cpp \
-			srcs/location.cpp \
-			srcs/Open_html_page.cpp \
-			srcs/SetupSocket.cpp \
-			srcs/parseBuffer.cpp \
+NAME		=	 webserver
+OBJS	=	$(patsubst $(SRCS_DIR)%.cpp, $(OBJS_DIR)%.o, $(SRCS))
+DEPS	=	$(OBJS:.o=.d)
+#------------------------------------------------------------------------#
 
-INCLUDES =	include/config.hpp \
-			include/include.hpp \
-			include/server.hpp \
-			include/location.hpp \
-			include/Open_html_page.hpp \
-			include/SetupSocket.hpp \
-			srcs/parseBuffer.hpp \
+#---------------------------------Sources---------------------------------#
+SRCS	=		$(SRCS_DIR)/main.cpp \
+				$(SRCS_DIR)/config.cpp \
+				$(SRCS_DIR)/server.cpp \
+				$(SRCS_DIR)/location.cpp \
+				$(SRCS_DIR)/Open_html_page.cpp \
+				$(SRCS_DIR)/SetupSocket.cpp \
+				$(SRCS_DIR)/parseBuffer.cpp \
+			
+#------------------------------------------------------------------------#
+
+#---------------------------------Compilation & Linking---------------------------------#
+CC		=	c++
+RM		=	rm -f
+
+CFLAGS		=	-g3 -std=c++98 -Wall -Werror -Wextra
+
+INCLUDES	=	-I $(HEADER_DIR) -MMD -MP
+
+#------------------------------------------------------------------------#
 
 
-OBJ = $(SRC:.cpp=.o)
-CC = c++
-RM = rm -f
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
+#---------------------------------Pretty---------------------------------#
+YELLOW	=	\033[1;33m
+GREEN	=	\033[1;32m
+RESET	=	\033[0m
+UP		=	"\033[A"
+CUT		=	"\033[K"
+#------------------------------------------------------------------------#
+
 
 all: $(NAME)
+-include $(DEPS)
 
-$(NAME): $(OBJ) Makefile
-	$(CC) $(CPPFLAGS) $(OBJ) -o $(NAME) -I ./include
+FORCE:
 
-%.o: %.cpp $(INCLUDES)
-	$(CC) $(CPPFLAGS) -c $< -o $@ -I ./include
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp
+	@mkdir -p $(@D)
+	@echo "$(YELLOW)Compiling [$<]$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ 
+	@printf $(UP)$(CUT)
+
+$(NAME): $(OBJS) $(LIBFT) Makefile
+	@echo "$(YELLOW)Compiling [$<]$(RESET)"
+	@$(CC) $(OBJS) $(CFLAGS) $(INCLUDES) -o $@ 
+	@printf $(UP)$(CUT)
+	@echo "$(GREEN)$(NAME) compiled!$(RESET)"
 
 clean:
-	$(RM) $(OBJ)
+	@echo "$(YELLOW)cleaning files$(RESET)"
+	@$(RM) $(OBJS) rm -rf $(OBJS_DIR)
+	@printf $(UP)$(CUT)
+	@echo "$(GREEN)$(NAME) files deleted !$(RESET)"
 
-fclean: clean
-	$(RM) $(NAME)
+fclean:	clean
+	@echo "$(YELLOW)cleaning files$(RESET)"
+	@$(RM) $(NAME)
+	@printf $(UP)$(CUT)
+	@echo "$(GREEN)$(NAME) executable deleted !$(RESET)"
 
-re: fclean all
+re:	fclean $(NAME)
 
-.PHONY: all clean fclean re
+.PHONY:	all clean fclean re bonus FORCE
