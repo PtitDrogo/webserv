@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   location.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 12:48:17 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 14:31:36 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 13:58:47 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/location.hpp"
+#include "location.hpp"
 
 location::location() {}
 

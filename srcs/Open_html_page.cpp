@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Open_html_page.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:12 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:21:15 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 15:11:46 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/config.hpp"
-#include "../include/server.hpp"
+#include "config.hpp"
+#include "server.hpp"
 
 std::string readFile(std::string &path)
 {

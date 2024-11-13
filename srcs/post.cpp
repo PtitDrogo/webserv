@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   post.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:57:56 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/07 16:24:36 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 13:59:14 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/Post.hpp"
+#include "Post.hpp"
 
 Post::Post()
 {

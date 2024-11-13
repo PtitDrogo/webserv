@@ -6,15 +6,13 @@
 /*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 17:26:11 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/13 15:17:09 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/config.hpp"
-#include "../include/Setup_socket.hpp"
-#include "../include/Open_html_page.hpp"
-#include "../include/parseBuffer.hpp"
-#include <poll.h>
+#include "include.hpp"
+#include "Webserv.hpp"
+#include "config.hpp"
 
 int main(int argc, char **argv)
 {
@@ -35,18 +33,9 @@ int main(int argc, char **argv)
     addPollFD(server_socket, fds);
 	while (true)
 	{
-		if (fds[0].revents & POLLIN)
-        {
-			int client_socket = SetupClientAddress(server_socket);
-			addPollFD(client_socket, fds);
-			printf("DEBUG: Added client to the list\n");
-		}
-		if (poll(fds.data(), fds.size(), -1) == -1)
-        {
-            std::cerr << "Poll failed" << std::endl;
-            close(server_socket); //technically would have to do more cleanup than that;
-            return 1;
-        }
+		checkIfNewClient(fds, server_socket);
+		if (safe_poll(fds, server_socket) == FAILURE)
+            return FAILURE;
 		for (size_t i = 1; i < fds.size(); ++i)
 		{
 			if (fds[i].revents & POLLRDHUP)
@@ -55,15 +44,15 @@ int main(int argc, char **argv)
 				break ;
 			}
 			if (!(fds[i].revents & POLLIN))
-                continue; //beautiful, if nothing happens, just skip it
+                continue;
 			char buffer[1024] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0); //MSG_DONTWAIT in case of trouble
-			if (handleRecvValue(recv_value, i, fds) == 1)
+			if (handleRecvValue(recv_value, i, fds) == FAILURE)
 				break ;
-			printf("DEBUG: My request is %s\n", buffer);
+			// printf("DEBUG: My request is %s\n", buffer);
 			generateResponse(serv, buffer, loc, fds[i].fd);
 		}
 	}
-	return (0);
+	return (SUCCESS);
 }
 

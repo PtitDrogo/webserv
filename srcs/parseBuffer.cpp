@@ -1,7 +1,5 @@
-#include "../include/config.hpp"
-#include "../include/Setup_socket.hpp"
-#include "../include/Open_html_page.hpp"
-#include <poll.h> 
+#include "Webserv.hpp"
+#include "include.hpp"
 
 int parse_buffer(std::string buffer, location &loc)
 {

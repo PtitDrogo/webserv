@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:20:42 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 13:58:42 by tfreydie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/config.hpp"
+#include "config.hpp"
 
 Config::Config() {}
 

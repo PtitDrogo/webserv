@@ -16,6 +16,7 @@ SRCS	=		$(SRCS_DIR)/main.cpp \
 				$(SRCS_DIR)/Open_html_page.cpp \
 				$(SRCS_DIR)/SetupSocket.cpp \
 				$(SRCS_DIR)/parseBuffer.cpp \
+				$(SRCS_DIR)/HandleClients.cpp \
 			
 #------------------------------------------------------------------------#
 
