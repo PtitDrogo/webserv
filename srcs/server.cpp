@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/08 12:35:58 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/13 13:59:20 by tfreydie         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "server.hpp"
 
 Server::Server() 
@@ -110,10 +98,10 @@ void Server::setErrorPage(std::string& error_code, std::string& error_file)
 	_error_page[error_code] = error_file;
 }
 
-// void Server::setLocation(location loc)
-// {
-// 	this->_location.push_back(loc);
-// }
+void Server::setLocation(location loc)
+{
+	this->_location.push_back(loc);
+}
 
 // void Server::setLocation(std::string loc)
 // {

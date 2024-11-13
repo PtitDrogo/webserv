@@ -1,15 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   config.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/06 14:17:01 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/13 13:58:42 by tfreydie         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
+#include "Webserv.hpp"
 #include "config.hpp"
 
 Config::Config() {}
@@ -137,7 +126,6 @@ bool Config::parse_config_file(Server &serv, location &loc, std::string filename
 				}
 			}
 
-			// Parse la section pour l'index
 			std::istringstream sectionStream(sectionContent);
 			std::string subLine;
 			while (std::getline(sectionStream, subLine)) {
@@ -147,12 +135,29 @@ bool Config::parse_config_file(Server &serv, location &loc, std::string filename
 					size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 					std::string index = subLine.substr(startIndex, endIndex - startIndex);
 					loc.setIndex(index);
-					break; // Arrête la recherche après avoir trouvé la première occurrence de l'index
+					break;
 				}
 			}
+			std::cout << subLine << std::endl;
 		}
 		std::cout << line << std::endl;
 	}
+	// if (!serv.getIndex().empty())
+	// {
+	// 	std::string root = serv.getRoot() + serv.getIndex();
+	// 	serv.setRoot(root);
+	// }
+	if (serv.getPort().empty() || serv.getServerName().empty() || serv.getRoot().empty())
+	{
+		generate_html_page_error(serv, 1, "403");
+		return false;
+	}
+	std::cout << serv.getPort() << std::endl;
+	std::cout << serv.getServerName() << std::endl;
+	std::cout << serv.getIndex() << std::endl;
+	std::cout << serv.getRoot() << std::endl;
+	std::cout << serv.getErrorPage("404") << std::endl;
+	std::cout << loc.getPath() << std::endl;
 	std::cout << "\n\n\n\n" << std::endl;
 	return (true);
 }
