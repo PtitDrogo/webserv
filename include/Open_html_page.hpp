@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:11:20 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 18:11:36 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/12 18:35:23 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@
 
 std::string readFile(std::string &path);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
-void generate_html_page404(Server &serv, int client_socket);
-void generate_html_page_without_location(Server &serv, int client_socket);
-void generate_html_page_with_location(Server &serv, location &loc, int client_socket);
+void generate_html_page_error(Server &serv, int client_socket, std::string error_code);
+
+
 
 #endif

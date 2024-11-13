@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 12:35:58 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/11 14:21:08 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/12 13:06:49 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,10 +110,10 @@ void Server::setErrorPage(std::string& error_code, std::string& error_file)
 	_error_page[error_code] = error_file;
 }
 
-// void Server::setLocation(location loc)
-// {
-// 	this->_location.push_back(loc);
-// }
+void Server::setLocation(location loc)
+{
+	this->_location.push_back(loc);
+}
 
 // void Server::setLocation(std::string loc)
 // {

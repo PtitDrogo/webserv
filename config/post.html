@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Simple website</title>
+	<link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
+</head>
+<body style="text-align: center; background-color: rgb(54, 54, 54);">
+	<h1 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 4vw;">POST</h1>
+	<h2 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; text-align: left;">Upload</h2>
+	<div>
+		<form method="post" enctype="multipart/form-data" style="text-align: left; color: aliceblue">
+			<div>
+				<input type="file" name="files" multiple>
+				<label for="fileInput"></label>
+			</div>
+			<button type="submit" style="margin:2rem;">Envoyer les fichiers</button>
+		</form>
+		<h2 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; text-align: left;">Form</h2>
+		<form method="post" style="text-align: left; color: aliceblue">
+			<label for="name">Name :</label>
+			<input type="text" id="name" name="name" pattern="^[a-zA-Z0-9]+$" required><br><br>
+			
+			<label for="email">Email :</label>
+			<input type="email" id="email" name="email" pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required><br><br>
+			
+			<label for="message">Message :</label><br>
+			<textarea id="message" name="message" rows="4" cols="50" pattern="^[a-zA-Z0-9]+$" required></textarea><br><br>
+			
+			<button type="submit">Send</button>
+		</form>
+		<!-- <script>
+			document.getElementById('postForm').addEventListener('submit', function(e) {
+				var name = document.getElementById('name').value;
+				var email = document.getElementById('email').value;
+				var message = document.getElementById('message').value;
+				var regex = /^[a-zA-Z0-9]+$/;
+				var regexMail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+				if (!regex.test(username) || !regexMail.test(email) || !regex.test(message)) {
+					alert("You can only use letters and numbers");
+					e.preventDefault();
+				}
+			});
+		</script> -->
+</body>
+</html>
