@@ -8,24 +8,27 @@
 </head>
 <body style="text-align: center; background-color: rgb(54, 54, 54);">
 	<h1 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 4vw;">POST</h1>
-	<h2 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; text-align: left;">Upload</h2>
+	<!-- <h2 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; text-align: left;">Upload</h2> -->
 	<div>
-		<form method="post" enctype="multipart/form-data" style="text-align: left; color: aliceblue">
+		<!-- <form method="post" enctype="multipart/form-data" style="text-align: left; color: aliceblue">
 			<div>
 				<input type="file" name="files" multiple>
 				<label for="fileInput"></label>
 			</div>
 			<button type="submit" style="margin:2rem;">Envoyer les fichiers</button>
-		</form>
-		<h2 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; text-align: left;">Form</h2>
-		<form method="post" style="text-align: left; color: aliceblue">
+		</form> -->
+		<h2 style="color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 2vw; margin-top: 15vh;">Form</h2>
+		<form method="post" style="color: aliceblue">
+			<label for="FileName">File Name :</label>
+			<input type="text" id="FileName" name="FileName" pattern="^[a-zA-Z0-9]+$" required><br><br>
+
 			<label for="name">Name :</label>
 			<input type="text" id="name" name="name" pattern="^[a-zA-Z0-9]+$" required><br><br>
 			
 			<label for="email">Email :</label>
 			<input type="email" id="email" name="email" pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required><br><br>
 			
-			<label for="message">Message :</label><br>
+			<label for="message">File Contents :</label><br>
 			<textarea id="message" name="message" rows="4" cols="50" pattern="^[a-zA-Z0-9]+$" required></textarea><br><br>
 			
 			<button type="submit">Send</button>

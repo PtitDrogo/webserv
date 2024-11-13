@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 13:08:48 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 19:34:37 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/13 15:17:30 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@
 // 	return "text/html"; // Default content type
 // }
 
-void parse_buffer(std::string buffer, Server &serv , int client_socket)
+void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -80,13 +80,46 @@ void parse_buffer(std::string buffer, Server &serv , int client_socket)
 			else
 				finalPath = "." + serv.getRoot() + path;
 		}
+	}
+	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
+	std::string file_content = readFile(finalPath);
+	if (file_content.empty())
+		generate_html_page_error(serv, client_socket, "404");
+	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+	send(client_socket, reponse.c_str(), reponse.size(), 0);
+}
+
+void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
+{
+	std::istringstream stream(buffer);
+	std::string line;
+
+	if (!stream)
+	{
+		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
+		return ;
+	}
+	std::string method;
+	std::string path;
+	std::string version;
+	std::string finalPath;
+	std::string name;
+	std::string email;
+	std::string message;
+	std::string filename;
+	while (std::getline(stream, line))
+	{
+		size_t pos1 = line.find("FileName=");
 		size_t pos3 = line.find("name=");
 		size_t pos4 = line.find("email=");
 		size_t pos5 = line.find("message=");
 		if (pos3 != std::string::npos && pos4 != std::string::npos && pos5 != std::string::npos)
 		{
-			size_t start_pos = pos3 + 5;
+			size_t start_pos = pos1 + 9;
 			size_t end_pos = line.find('&', start_pos);
+			filename = line.substr(start_pos, end_pos - start_pos);
+			start_pos = pos3 + 5;
+			end_pos = line.find('&', start_pos);
 			name = line.substr(start_pos, end_pos - start_pos);
 			start_pos = pos4 + 6;
 			end_pos = line.find('&', start_pos);
@@ -96,33 +129,47 @@ void parse_buffer(std::string buffer, Server &serv , int client_socket)
 			message = line.substr(start_pos, end_pos - start_pos);
 		}
 	}
-
-	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
-	std::string file_content = readFile(finalPath);
-	if (file_content.empty())
-		generate_html_page_error(serv, client_socket, "404");
-	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client_socket, reponse.c_str(), reponse.size(), 0);
-
-
-	std::ofstream outfile ("./config/message.txt", std::ios::app);
-	if (outfile.is_open() && name != "" && email != "" && message != "")
+	
+	if (!filename.empty())
 	{
-		outfile << "name : " << name << std::endl;
-		outfile << "email : " << email << std::endl;
-		outfile << "message : " << message << std::endl;
-		outfile << "--------------------------------------" << std::endl;
-		outfile.close();
-		std::string reponse2 = 
-			"HTTP/1.1 201 Found\r\n"
-			"Location: /index.html\r\n" // Redirige vers index.html
-			"Content-Length: 0\r\n"
-			"Connection: close\r\n"
-			"\r\n";
-		send(client_socket, reponse2.c_str(), reponse2.size(), 0);
+		filename = "./config/base_donnees/" + filename + ".txt";
+		std::ofstream outfile (filename.c_str(), std::ios::app);
+		if (outfile.is_open())
+		{
+			outfile << "name : " << name << std::endl;
+			outfile << "email : " << email << std::endl;
+			outfile << "content : " << message << std::endl;
+			outfile << "--------------------------------------" << std::endl;
+			outfile.close();
+
+			std::string path = "." + serv.getRoot() + serv.getIndex();
+			std::string file_content = readFile(path);
+			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+			send(client_socket, reponse.c_str(), reponse.size(), 0);
+		}
 	}
 	else
 		std::cout << "Unable to open file" << std::endl;
+	filename.clear();
+	name.clear();
+	email.clear();
+	message.clear();
+}
+
+std::string get_type_request(std::string buffer)
+{
+	std::istringstream stream(buffer);
+	std::string line;
+
+
+	while (std::getline(stream, line))
+	{
+		if (line.find("GET") != std::string::npos)
+			return ("GET");
+		if (line.find("POST") != std::string::npos)
+			return ("POST");
+	}
+	return ("");
 }
 
 
@@ -141,11 +188,20 @@ int main(int argc, char **argv)
 	int server_socket = SetupSocket(serv);
 	while (true)
 	{
+		std::string type_request;
 		int client_socket = SetupClientAddress(server_socket);
 		char buffer[1024];
+
+		//vider le buffer
+		memset(buffer, 0, sizeof(buffer));
 		recv(client_socket, buffer, sizeof(buffer), 0);
+
+		type_request = get_type_request(buffer);
+		if (type_request == "GET")
+			parse_buffer_get(buffer, serv, client_socket);
+		if (type_request == "POST")
+			parse_buffer_post(buffer , client_socket, serv);
 		std::cout << buffer << std::endl;
-		parse_buffer(buffer, serv, client_socket);
 	}
 	return (0);
 }
