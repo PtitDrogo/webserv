@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 12:35:58 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/08 17:42:51 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/12 13:06:49 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,11 @@ std::map<std::string , std::string> Server::getReturn() const
 	return (this->_return);
 }
 
+// std::string Server::getLocation() const 
+// {
+// 	return (this->_location);
+// }
+
 std::string Server::getErrorPage(const std::string& errorCode) const {
     std::map<std::string, std::string>::const_iterator it = _error_page.find(errorCode);
     
@@ -104,4 +109,14 @@ void Server::setErrorPage(std::string& error_code, std::string& error_file)
 {
 	_error_page[error_code] = error_file;
 }
+
+void Server::setLocation(location loc)
+{
+	this->_location.push_back(loc);
+}
+
+// void Server::setLocation(std::string loc)
+// {
+// 	this->_location = loc;
+// }
 
