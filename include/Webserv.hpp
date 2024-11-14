@@ -9,6 +9,7 @@
 
 #include "include.hpp"
 #include "server.hpp"
+#include "config.hpp"
 
 
 //*********************************************************//
@@ -25,12 +26,14 @@
 //*********************************************************//
 
 
+class Config;
+
 //-----------ParseBuffer-----------//
-void	parse_buffer_get(std::string buffer, Server &serv , int client_socket);
-void	parse_buffer_post(std::string buffer , int client_socket, Server &serv);
+void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
+void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
 
 //-----------SetUpSocket-----------//
-int SetupSocket(Server serv);
+int SetupSocket(Server serv, Config conf);
 int SetupClientAddress(int server_socket);
 
 
@@ -47,6 +50,11 @@ void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);
 std::string readFile(std::string &path);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
-void 		generate_html_page_error(Server &serv, int client_socket, std::string error_code);
+void 		generate_html_page_error(Config &conf, int client_socket, std::string error_code);
+
+//-----------Delete-----------//
+
+bool deleteFile(const std::string& path);
+void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
 #endif

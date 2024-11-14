@@ -2,7 +2,7 @@
 #include "include.hpp"
 
 
-void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
+void parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -31,24 +31,24 @@ void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
 			version = line.substr(pos2);
 			if (path == "/")
 			{
-				if (!serv.getIndex().empty())
-					finalPath = "." + serv.getRoot() + serv.getIndex();
+				if (!conf.getServer()[0].getIndex().empty())
+					finalPath = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
 				else
-					generate_html_page_error(serv, client_socket, "404");
+					generate_html_page_error(conf, client_socket, "404");
 			}
 			else
-				finalPath = "." + serv.getRoot() + path;
+				finalPath = "." + conf.getServer()[0].getRoot() + path;
 		}
 	}
 	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
 	std::string file_content = readFile(finalPath);
 	if (file_content.empty())
-		generate_html_page_error(serv, client_socket, "404");
+		generate_html_page_error(conf, client_socket, "404");
 	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
-void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
+void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -92,19 +92,32 @@ void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
 	if (!filename.empty())
 	{
 		filename = "./config/base_donnees/" + filename + ".txt";
-		std::ofstream outfile (filename.c_str(), std::ios::app);
-		if (outfile.is_open())
+		
+		std::ifstream infile(filename.c_str());
+		if (infile.is_open())
 		{
-			outfile << "name : " << name << std::endl;
-			outfile << "email : " << email << std::endl;
-			outfile << "content : " << message << std::endl;
-			outfile << "--------------------------------------" << std::endl;
-			outfile.close();
-
-			std::string path = "." + serv.getRoot() + serv.getIndex();
+			path = "./config/page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client_socket, reponse.c_str(), reponse.size(), 0);
+			infile.close();
+		}
+		else
+		{
+			std::ofstream outfile(filename.c_str(), std::ios::app);
+			if (outfile.is_open())
+			{
+				outfile << "name : " << name << std::endl;
+				outfile << "email : " << email << std::endl;
+				outfile << "content : " << message << std::endl;
+				outfile << "--------------------------------------" << std::endl;
+				outfile.close();
+
+				std::string path = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
+				std::string file_content = readFile(path);
+				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+				send(client_socket, reponse.c_str(), reponse.size(), 0);
+			}
 		}
 	}
 	else

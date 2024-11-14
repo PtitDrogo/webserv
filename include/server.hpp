@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 11:15:25 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 13:06:11 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/14 19:01:47 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Server
 		std::string getRoot() const;
 		std::string getServerName() const;
 		std::map<std::string , std::string> getReturn() const;
-		std::string getErrorPage(const std::string& errorCode) const;
+		std::map<std::string ,std::string> getErrorPage() const;
 
 		
 		std::vector<location> getLocation() const;
@@ -56,8 +56,7 @@ class Server
 		void setErrorPage(std::string& error_code,std::string& error_file);
 
 		
-		void setLocation(location loc);
-		void setLocation(std::string loc);
+		void setLocation(location &loc);
 };
 
 #endif
