@@ -50,6 +50,10 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 void 		generate_html_page_error(Server &serv, int client_socket, std::string error_code);
 
 //-----------CGI-----------//
-void cgiHandler(char **envp);
+void    cgiProtocol(char *const *envp, const std::string& request);
+
+
+//-----------Utils-----------//
+std::string fileToString(const char *filePath);
 
 #endif
