@@ -21,7 +21,7 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
         if (pos1 != std::string::npos && pos2 != std::string::npos)
         {
             method = line.substr(pos1, type.size() + 1);
-            req.setMetode(method);
+            req.setMethod(method);
             path = line.substr(pos1 + type.size() + 1, pos2 - pos1 - (type.size() + 2));
             req.setPath(path);
             version = line.substr(pos2);
@@ -143,7 +143,7 @@ int main(int argc, char **argv,char **envp)
 				generate_html_page_error(conf, fds[i].fd, "404");
 			}
 			std::cout << "-------REQUEST------" << std::endl;
-			std::cout << "methode = " << req.getMetode() << std::endl;
+			std::cout << "methode = " << req.getMethod() << std::endl;
 			std::cout << "path = " << req.getPath() << std::endl;
 			std::cout << " version = " << req.getVersion() << std::endl;
 			std::cout << " body = " << req.getBody() << std::endl;
