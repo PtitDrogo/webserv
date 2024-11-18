@@ -31,6 +31,8 @@ class Server;
 //-----------ParseRequests-----------//
 std::string parse_request(std::string type, std::string buffer, HttpRequest &req);
 std::string get_type_request(std::string buffer, HttpRequest &req);
+bool isCgiRequest(const HttpRequest &req);
+
 
 //-----------ParseBuffer-----------//
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
@@ -63,7 +65,7 @@ bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
 //-----------CGI-----------//
-void    cgiProtocol(char *const *envp, const std::string& request);
+void    cgiProtocol(char *const *envp, const HttpRequest &request);
 
 
 //-----------Utils-----------//

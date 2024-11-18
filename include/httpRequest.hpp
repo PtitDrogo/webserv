@@ -21,7 +21,7 @@ class HttpRequest
 		std::string getVersion() const;
 		std::string getBody() const;
 
-		void setMethod(std::string metode);
+		void setMethod(std::string method);
 		void setPath(std::string path);
 		void setVersion(std::string version);
 		void setBody(std::string body);

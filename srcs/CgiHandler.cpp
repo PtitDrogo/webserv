@@ -1,7 +1,7 @@
 #include "Webserv.hpp"
 
 
-
+//GET /config/cgi-bin/helloworld.py HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 
@@ -28,10 +28,12 @@ _pid(-1)
 CgiHandler::~CgiHandler() {}
 
 
-void CgiHandler::HandleCgiRequest(const std::string& request)
+void CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
-    // std::cout << "hi whats up cgi handler here" << std::endl;
-    _path = "./config/cgi-bin/" + request;
+    
+    //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
+    _path = "." + request.getPath();
+    std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
     //Execute the fucking cgi;
     int PID = fork();
@@ -60,7 +62,7 @@ void CgiHandler::HandleCgiRequest(const std::string& request)
     }
 }
 
-void    cgiProtocol(char *const *envp, const std::string& request)
+void    cgiProtocol(char *const *envp, const HttpRequest &request)
 {
     CgiHandler cgi(envp);
 

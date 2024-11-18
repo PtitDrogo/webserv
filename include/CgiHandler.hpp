@@ -1,6 +1,8 @@
 #ifndef CGI_HANDLER_HPP
 # define CGI_HANDLER_HPP
 
+class HttpRequest;
+
 #include "Webserv.hpp"
 
 # define PATH_CGI_OUT "./cgi_tmp/webserv_cgi_stdout"
@@ -22,7 +24,7 @@ private:
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp);
-    void HandleCgiRequest(const std::string &request); 
+    void HandleCgiRequest(const HttpRequest &request); 
     //Request should contain all the info i would hope
 };
 

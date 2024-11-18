@@ -58,9 +58,9 @@ std::string HttpRequest::getBody() const
 	return this->_body;
 }
 
-void HttpRequest::setMethod(std::string metode)
+void HttpRequest::setMethod(std::string method)
 {
-	this->_method = metode;
+	this->_method = method;
 }
 
 void HttpRequest::setPath(std::string path)

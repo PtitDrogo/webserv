@@ -1,5 +1,7 @@
 #include "Webserv.hpp"
 
+static bool isCgiDelim(char c);
+
 std::string parse_request(std::string type, std::string buffer, HttpRequest &req)
 {
     std::istringstream stream(buffer);
@@ -25,6 +27,13 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
         body += line + "\n";
     }
     req.setBody(body);
+    //Added the check for cgi here
+    if (isCgiRequest(req) == true)
+    {    
+        req.setMethod("CGI");
+        std::cout << "This shit is a CGI nocap nocap" << std::endl;
+        return ("CGI");
+    }
     return (type);
 }
 
@@ -41,9 +50,43 @@ std::string get_type_request(std::string buffer, HttpRequest &req)
             return (parse_request("POST", buffer, req));
         else if (line.find("DELETE") != std::string::npos)
             return (parse_request("DELETE", buffer, req));
-        // DEBUG DE TFREYDIE A SUPPR APRES
-        else if (line.find("CGI") != std::string::npos)
-            return ("CGI");
     }
     return ("");
+}
+
+//I think this works as intended
+bool isCgiRequest(const HttpRequest &req)
+{
+    const char *valid_cgis[] = {".py", ".sh", ".php"}; //We can always add more here
+    unsigned int cgis_list_len = sizeof(valid_cgis) / sizeof(char *);
+
+    std::string path = req.getPath();
+    unsigned int i;
+
+    std::cout << "In isCgiReQuest" << std::endl;
+    std::cout << "|" << path << "|" << std::endl;
+    
+    
+    for (i = 0; i < path.size(); i++)
+    {
+        if (isCgiDelim(path[i]) == true)
+            break ;
+    }
+    //Smallest programm possible is x.py
+    if (i < 4)
+        return false;
+    std::string check_3 = path.substr(i - 3, i);
+    std::string check_4 = path.substr(i - 4, i);
+
+    for (unsigned int j = 0; j < cgis_list_len; j++)
+    {
+        if (check_3 == valid_cgis[j] || check_4 == valid_cgis[j])
+            return (true);
+    }
+    return (false);
+}
+
+static bool isCgiDelim(char c)
+{
+    return (std::isspace(c) || c == '?');
 }
