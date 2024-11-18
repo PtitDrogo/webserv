@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   location.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 12:48:17 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/13 13:58:47 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/14 14:46:17 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ location &location::operator=(const location &copy)
 	if (this != &copy)
 	{
 		this->_index = copy._index;
+		this->path = copy.path;
 	}
 	return *this;
 }

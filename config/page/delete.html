@@ -50,13 +50,52 @@
 			background-color: #c10000;
 		}
 
+		/* Style de l'input */
+		#fileName {
+			padding: 10px;
+			font-size: 1.2vw;
+			margin-top: 2vh;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			width: 50%;
+		}
+
 	</style>
 </head>
 <body>
 	<h1>DELETE</h1>
 	<div>
-		<h3>Delete a Resource</h3>
-		<button class="delete-button">Delete</button>
+		<h3>Supprimer une ressource</h3>
+		<input type="text" id="fileName" placeholder="Entrez le nom du fichier à supprimer">
+		<button id="deleteButton" class="delete-button">Supprimer la ressource</button>
 	</div>
+
+	<script>
+		document.getElementById('deleteButton').addEventListener('click', function() {
+			const fileName = document.getElementById('fileName').value.trim();
+			
+			if (!fileName) {
+				alert("Veuillez entrer un nom de fichier valide.");
+				return;
+			}
+
+			// Envoi de la requête DELETE
+			fetch(`../base_donnees/${fileName}`, {
+				method: 'DELETE'
+			})
+			.then(response => {
+				if (response.status === 200) {
+					alert(`Le fichier '${fileName}' a été supprimé avec succès.`);
+				} else {
+					alert(`Échec de la suppression du fichier '${fileName}'.`);
+				}
+			})
+			.catch(error => {
+				console.error('Une erreur est survenue :', error);
+			});
+		});
+	</script>
 </body>
 </html>
+
+

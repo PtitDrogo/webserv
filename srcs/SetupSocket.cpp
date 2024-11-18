@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SetupSocket.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tfreydie <tfreydie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/13 15:11:47 by tfreydie         ###   ########.fr       */
+/*   Updated: 2024/11/18 16:54:53 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,9 @@
 #include "poll.h"
 #include "Webserv.hpp"
 
-int SetupSocket(Server serv)
+int SetupSocket(Server serv, Config conf)
 {
+	(void)serv;
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	int opt = 1;
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == -1)
@@ -27,13 +28,19 @@ int SetupSocket(Server serv)
 	}
 	sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
-	int port = std::atoi(serv.getPort().c_str());
+
+
+	int port = std::atoi(conf.getServer()[0].getPort().c_str());
+
+
+	
+	// int port = std::atoi(conf.getServer()[0].getPort().c_str());
 	server_address.sin_port = htons(port);
 	server_address.sin_addr.s_addr = INADDR_ANY;
 	if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) == -1)
 	{
 		std::cerr << "Erreur lors de la liaison du socket." << std::endl;
-		close(server_socket);	
+		close(server_socket);
 		return -1;
 	}
 	if (listen(server_socket, 5) == -1)

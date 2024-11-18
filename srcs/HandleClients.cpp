@@ -42,7 +42,7 @@ int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds)
 
 	if (valread > 0)
 	{
-		std::cout << "DEBUG:Received from client successfully" << std::endl;
+		// std::cout << "DEBUG:Received from client successfully" << std::endl;
 		return (SUCCESS);
 	}
 	else if (valread == 0)

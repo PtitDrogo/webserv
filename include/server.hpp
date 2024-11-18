@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 11:15:25 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/12 13:06:11 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/18 15:42:00 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ class Server
 		std::map<std::string , std::string> _return;
 		std::map<std::string , std::string> _error_page;
 		std::vector<location> _location;
+		int _max_body_size;
+		std::string _auto_index;
 	public :
 		Server();
 		~Server();
@@ -40,10 +42,10 @@ class Server
 		std::string getRoot() const;
 		std::string getServerName() const;
 		std::map<std::string , std::string> getReturn() const;
-		std::string getErrorPage(const std::string& errorCode) const;
-
-		
+		std::map<std::string ,std::string> getErrorPage() const;
+		int getMaxBodySize() const;
 		std::vector<location> getLocation() const;
+		std::string getAutoIndex() const;
 		// std::string getLocation() const;
 
 		//setter//
@@ -54,10 +56,9 @@ class Server
 		void setServerName(std::string server_name);
 		void setReturn(std::map<std::string , std::string> return_);
 		void setErrorPage(std::string& error_code,std::string& error_file);
-
-		
-		void setLocation(location loc);
-		void setLocation(std::string loc);
+		void setLocation(location &loc);
+		void setMaxBodySize(int max_body_size);
+		void setAutoIndex(std::string auto_index);
 };
 
 #endif
