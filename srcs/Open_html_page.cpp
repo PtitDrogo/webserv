@@ -1,5 +1,4 @@
-#include "config.hpp"
-#include "server.hpp"
+#include "Webserv.hpp"
 
 std::string readFile(std::string &path)
 {

@@ -1,7 +1,4 @@
 #include "Webserv.hpp"
-#include "include.hpp"
-#include "httpRequest.hpp"
-
 
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 {
@@ -125,4 +122,45 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 	name.clear();
 	email.clear();
 	message.clear();
+}
+
+bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
+{
+	std::string initial_data(buffer, recv_value);
+	size_t content_length_pos = initial_data.find("Content-Length: ");
+	if (content_length_pos == std::string::npos)
+	{
+		generate_html_page_error(conf, fd, "400");
+		return false;
+	}
+
+	size_t length_start = content_length_pos + 16;
+	size_t length_end = initial_data.find("\r\n", length_start);
+	int content_length = 0;
+	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
+
+	int content_length_size_t = content_length;
+	if (content_length_size_t > conf.getServer()[0].getMaxBodySize())
+	{
+		generate_html_page_error(conf, fd, "400");
+		return false;
+	}
+
+	std::string body = initial_data;
+	int total_received = body.size();
+	while (total_received < content_length_size_t)
+	{
+		recv_value = recv(fd, buffer, sizeof(buffer), 0);
+		if (recv_value <= 0)
+		{
+			std::cerr << "Erreur : données POST incomplètes." << std::endl;
+			generate_html_page_error(conf, fd, "400");
+			return false;
+		}
+
+		body.append(buffer, recv_value);
+		total_received += recv_value;
+	}
+	parse_buffer_post(body, fd, conf);
+	return (true);
 }

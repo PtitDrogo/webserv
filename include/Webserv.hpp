@@ -8,8 +8,7 @@
 
 
 #include "include.hpp"
-#include "server.hpp"
-#include "config.hpp"
+
 
 
 //*********************************************************//
@@ -21,16 +20,22 @@
 # define FAILURE 1
 
 
+class Config;
+class HttpRequest;
+class Server;
+
 //*********************************************************//
 //************************FUNCTIONS************************//
 //*********************************************************//
 
-
-class Config;
+//-----------ParseRequests-----------//
+std::string parse_request(std::string type, std::string buffer, HttpRequest &req);
+std::string get_type_request(std::string buffer, HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
 void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
+bool    preparePostParse(int fd, char *buffer, Config &conf, int recv_value);
 
 //-----------SetUpSocket-----------//
 int SetupSocket(Server serv, Config conf);
@@ -58,6 +63,15 @@ bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
 //-----------CGI-----------//
-void cgiHandler(char **envp);
+void    cgiProtocol(char *const *envp, const std::string& request);
+
+
+//-----------Utils-----------//
+std::string fileToString(const char *filePath);
+
+
+//-----------DEBUG-PRINTS-----------//
+void printVectorloc2(std::vector<location> loc);
+void printVectorServer2(std::vector<Server> serv);
 
 #endif

@@ -1,4 +1,3 @@
-#include "Webserv.hpp"
 #include "config.hpp"
 
 Config::Config() {}

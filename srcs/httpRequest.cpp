@@ -2,7 +2,7 @@
 
 HttpRequest::HttpRequest()
 {
-	this->_metode = "";
+	this->_method = "";
 	this->_path = "";
 	this->_version = "";
 }
@@ -18,7 +18,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &copy)
 {
 	if (this != &copy)
 	{
-		this->_metode = copy._metode;
+		this->_method = copy._method;
 		this->_path = copy._path;
 		this->_version = copy._version;
 		this->_body = copy._body;
@@ -26,9 +26,9 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &copy)
 	return *this;
 }
 
-std::string HttpRequest::getMetode() const
+std::string HttpRequest::getMethod() const
 {
-	return this->_metode;
+	return this->_method;
 }
 
 std::string HttpRequest::getPath() const
@@ -46,9 +46,9 @@ std::string HttpRequest::getBody() const
 	return this->_body;
 }
 
-void HttpRequest::setMetode(std::string metode)
+void HttpRequest::setMethod(std::string metode)
 {
-	this->_metode = metode;
+	this->_method = metode;
 }
 
 void HttpRequest::setPath(std::string path)
