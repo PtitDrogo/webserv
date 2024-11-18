@@ -30,5 +30,6 @@
 #include "location.hpp"
 #include "print.tpp"
 #include "config.hpp"
+#include "Webserv.hpp"
 
 #endif

@@ -24,10 +24,32 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"\r\n" + content);
 }
 
-void generate_html_page_error(Server &serv, int client_socket, std::string error_code)
+void generate_html_page_error(Config &conf, int client_socket, std::string error_code)
 {
-	std::string path = "." + serv.getErrorPage(error_code);
-	std::string file_content = readFile(path);
-	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client_socket, reponse.c_str(), reponse.size(), 0);
+    std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
+
+    // On récupère la map de l'erreur pour l'utiliser ensuite
+    std::map<std::string, std::string> errorPageMap = conf.getServer()[0].getErrorPage();
+
+    // Recherche de l'erreur dans la map
+    std::map<std::string, std::string>::iterator it = errorPageMap.find(error_code);
+
+    std::string path;
+    if (it != errorPageMap.end()) {
+        // Si la clé existe, on utilise le chemin associé
+        path = "." + it->second;
+    } else {
+        // Si la clé n'existe pas, on utilise une page d'erreur par défaut
+        std::cerr << "Error page for code " << error_code << " not found." << std::endl;
+        path = "./error_default.html"; // Page d'erreur par défaut
+    }
+
+    // Lecture du contenu du fichier
+    std::string file_content = readFile(path);
+
+    // Création de la réponse HTTP
+    std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
+
+    // Envoi de la réponse
+    send(client_socket, reponse.c_str(), reponse.size(), 0);
 }

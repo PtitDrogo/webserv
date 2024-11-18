@@ -23,6 +23,11 @@ Server &Server::operator=(const Server &copy)
 		this->_port = copy._port;
 		this->_root = copy._root;
 		this->_server_name = copy._server_name;
+		this->_return = copy._return;
+		this->_error_page = copy._error_page;
+		this->_location = copy._location;
+		this->_max_body_size = copy._max_body_size;
+		this->_auto_index = copy._auto_index;
 	}
 	return *this;
 }
@@ -52,22 +57,26 @@ std::map<std::string , std::string> Server::getReturn() const
 	return (this->_return);
 }
 
-// std::string Server::getLocation() const 
-// {
-// 	return (this->_location);
-// }
-
-std::string Server::getErrorPage(const std::string& errorCode) const {
-    std::map<std::string, std::string>::const_iterator it = _error_page.find(errorCode);
-    
-    // Vérifie si l'élément avec la clé "errorCode" existe dans la map
-    if (it != _error_page.end()) {
-        return it->second;  // Retourne le deuxième élément (la valeur)
-    }
-    
-    // Si le code d'erreur n'est pas trouvé, retourne une valeur par défaut
-    return "error_default.html";
+std::vector<location> Server::getLocation() const
+{
+	return (this->_location);
 }
+
+std::map<std::string ,std::string> Server::getErrorPage() const
+{
+	return (this->_error_page);
+}
+
+int Server::getMaxBodySize() const
+{
+	return (this->_max_body_size);
+}
+
+std::string Server::getAutoIndex() const
+{
+	return (this->_auto_index);
+}
+
 void Server::setPort(std::string port)
 {
 	this->_port = port;
@@ -98,9 +107,19 @@ void Server::setErrorPage(std::string& error_code, std::string& error_file)
 	_error_page[error_code] = error_file;
 }
 
-void Server::setLocation(location loc)
+void Server::setLocation(location &loc)
 {
 	this->_location.push_back(loc);
+}
+
+void Server::setMaxBodySize(int max_body_size)
+{
+	this->_max_body_size = max_body_size;
+}
+
+void Server::setAutoIndex(std::string auto_index)
+{
+	this->_auto_index = auto_index;
 }
 
 // void Server::setLocation(std::string loc)

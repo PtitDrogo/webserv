@@ -1,8 +1,9 @@
 #include "Webserv.hpp"
 #include "include.hpp"
+#include "httpRequest.hpp"
 
 
-void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
+void	parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -16,9 +17,6 @@ void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
 	std::string path;
 	std::string version;
 	std::string finalPath;
-	std::string name;
-	std::string email;
-	std::string message;
 	while (std::getline(stream, line))
 	{
 		size_t pos1 = line.find("GET");
@@ -31,24 +29,24 @@ void parse_buffer_get(std::string buffer, Server &serv , int client_socket)
 			version = line.substr(pos2);
 			if (path == "/")
 			{
-				if (!serv.getIndex().empty())
-					finalPath = "." + serv.getRoot() + serv.getIndex();
+				if (!conf.getServer()[0].getIndex().empty())
+					finalPath = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
 				else
-					generate_html_page_error(serv, client_socket, "404");
+					generate_html_page_error(conf, client_socket, "404");
 			}
 			else
-				finalPath = "." + serv.getRoot() + path;
+				finalPath = "." + conf.getServer()[0].getRoot() + path;
 		}
 	}
 	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
 	std::string file_content = readFile(finalPath);
 	if (file_content.empty())
-		generate_html_page_error(serv, client_socket, "404");
+		generate_html_page_error(conf, client_socket, "404");
 	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
-void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
+void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -92,19 +90,33 @@ void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
 	if (!filename.empty())
 	{
 		filename = "./config/base_donnees/" + filename + ".txt";
-		std::ofstream outfile (filename.c_str(), std::ios::app);
-		if (outfile.is_open())
+		
+		std::ifstream infile(filename.c_str());
+		if (infile.is_open())
 		{
-			outfile << "name : " << name << std::endl;
-			outfile << "email : " << email << std::endl;
-			outfile << "content : " << message << std::endl;
-			outfile << "--------------------------------------" << std::endl;
-			outfile.close();
-
-			std::string path = "." + serv.getRoot() + serv.getIndex();
+			path = "./config/page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client_socket, reponse.c_str(), reponse.size(), 0);
+			infile.close();
+		}
+		else
+		{
+			std::ofstream outfile(filename.c_str(), std::ios::app);
+			if (outfile.is_open())
+			{
+				outfile << "name : " << name << std::endl;
+				outfile << "email : " << email << std::endl;
+				outfile << "content : " << message << std::endl;
+				outfile << "--------------------------------------" << std::endl;
+				outfile.flush();
+				outfile.close();
+
+				std::string path = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
+				std::string file_content = readFile(path);
+				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+				send(client_socket, reponse.c_str(), reponse.size(), 0);
+			}
 		}
 	}
 	else
@@ -113,4 +125,45 @@ void parse_buffer_post(std::string buffer , int client_socket, Server &serv)
 	name.clear();
 	email.clear();
 	message.clear();
+}
+
+bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
+{
+	std::string initial_data(buffer, recv_value);
+	size_t content_length_pos = initial_data.find("Content-Length: ");
+	if (content_length_pos == std::string::npos)
+	{
+		generate_html_page_error(conf, fd, "400");
+		return false;
+	}
+
+	size_t length_start = content_length_pos + 16;
+	size_t length_end = initial_data.find("\r\n", length_start);
+	int content_length = 0;
+	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
+
+	int content_length_size_t = content_length;
+	if (content_length_size_t > conf.getServer()[0].getMaxBodySize())
+	{
+		generate_html_page_error(conf, fd, "400");
+		return false;
+	}
+
+	std::string body = initial_data;
+	int total_received = body.size();
+	while (total_received < content_length_size_t)
+	{
+		recv_value = recv(fd, buffer, sizeof(buffer), 0);
+		if (recv_value <= 0)
+		{
+			std::cerr << "Erreur : données POST incomplètes." << std::endl;
+			generate_html_page_error(conf, fd, "400");
+			return false;
+		}
+
+		body.append(buffer, recv_value);
+		total_received += recv_value;
+	}
+	parse_buffer_post(body, fd, conf);
+	return (true);
 }
