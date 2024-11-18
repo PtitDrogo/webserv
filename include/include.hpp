@@ -12,18 +12,16 @@
 #include <cctype>
 #include <sstream>
 #include <iterator>
+#include <cstring>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <iostream>
-#include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <fstream>
-#include <poll.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <poll.h>
+#include <sstream>
 
 
 //-----------InternalLibraries-----------//
@@ -31,5 +29,8 @@
 #include "print.tpp"
 #include "config.hpp"
 #include "Webserv.hpp"
+#include "server.hpp"
+#include "httpRequest.hpp"
+#include "CgiHandler.hpp"
 
 #endif

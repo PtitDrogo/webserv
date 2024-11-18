@@ -1,6 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include "Webserv.hpp"
 
 // magic code here, do not touch
 std::string fileToString(const char *filePath)

@@ -8,8 +8,7 @@
 
 
 #include "include.hpp"
-#include "server.hpp"
-#include "config.hpp"
+
 
 
 //*********************************************************//
@@ -21,12 +20,17 @@
 # define FAILURE 1
 
 
+class Config;
+class HttpRequest;
+class Server;
+
 //*********************************************************//
 //************************FUNCTIONS************************//
 //*********************************************************//
 
-
-class Config;
+//-----------ParseRequests-----------//
+std::string parse_request(std::string type, std::string buffer, HttpRequest &req);
+std::string get_type_request(std::string buffer, HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
@@ -64,5 +68,10 @@ void    cgiProtocol(char *const *envp, const std::string& request);
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
+
+
+//-----------DEBUG-PRINTS-----------//
+void printVectorloc2(std::vector<location> loc);
+void printVectorServer2(std::vector<Server> serv);
 
 #endif

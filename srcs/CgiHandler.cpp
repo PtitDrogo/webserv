@@ -1,5 +1,7 @@
 #include "Webserv.hpp"
-#include "CgiHandler.hpp"
+
+
+
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 

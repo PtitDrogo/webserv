@@ -1,7 +1,7 @@
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
-#include "include.hpp"
+#include "Webserv.hpp"
 
 class HttpRequest
 {
