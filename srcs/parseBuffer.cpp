@@ -1,8 +1,9 @@
 #include "Webserv.hpp"
 #include "include.hpp"
+#include "httpRequest.hpp"
 
 
-void parse_buffer_get(std::string buffer, Config &conf , int client_socket)
+void	parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -16,9 +17,6 @@ void parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 	std::string path;
 	std::string version;
 	std::string finalPath;
-	std::string name;
-	std::string email;
-	std::string message;
 	while (std::getline(stream, line))
 	{
 		size_t pos1 = line.find("GET");
@@ -111,6 +109,7 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 				outfile << "email : " << email << std::endl;
 				outfile << "content : " << message << std::endl;
 				outfile << "--------------------------------------" << std::endl;
+				outfile.flush();
 				outfile.close();
 
 				std::string path = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();

@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/14 19:51:41 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/18 16:54:53 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ int SetupSocket(Server serv, Config conf)
 
 
 	int port = std::atoi(conf.getServer()[0].getPort().c_str());
-	std::cout << "Port: " << port << std::endl;
 
 
 	

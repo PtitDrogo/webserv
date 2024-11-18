@@ -1,0 +1,71 @@
+#include "httpRequest.hpp"
+
+HttpRequest::HttpRequest()
+{
+	this->_metode = "";
+	this->_path = "";
+	this->_version = "";
+}
+
+HttpRequest::~HttpRequest() {}
+
+HttpRequest::HttpRequest(const HttpRequest &copy)
+{
+	*this = copy;
+}
+
+HttpRequest &HttpRequest::operator=(const HttpRequest &copy)
+{
+	if (this != &copy)
+	{
+		this->_metode = copy._metode;
+		this->_path = copy._path;
+		this->_version = copy._version;
+		this->_body = copy._body;
+	}
+	return *this;
+}
+
+std::string HttpRequest::getMetode() const
+{
+	return this->_metode;
+}
+
+std::string HttpRequest::getPath() const
+{
+	return this->_path;
+}
+
+std::string HttpRequest::getVersion() const
+{
+	return this->_version;
+}
+
+std::string HttpRequest::getBody() const
+{
+	return this->_body;
+}
+
+void HttpRequest::setMetode(std::string metode)
+{
+	this->_metode = metode;
+}
+
+void HttpRequest::setPath(std::string path)
+{
+	this->_path = path;
+}
+
+void HttpRequest::setVersion(std::string version)
+{
+	this->_version = version;
+}
+
+void HttpRequest::setBody(std::string body)
+{
+	this->_body = body;
+}
+
+
+
+
