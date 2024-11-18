@@ -27,4 +27,5 @@ class HttpRequest
 		void setBody(std::string body);
 };
 
+std::ostream    &operator<<(std::ostream &o, HttpRequest const &req);
 #endif

@@ -62,14 +62,9 @@ int main(int argc, char **argv,char **envp)
 			}
 			else
 			{	
-				std::cout << "hi" << std::endl;
 				generate_html_page_error(conf, fds[i].fd, "404");
 			}
-			std::cout << "-------REQUEST------" << std::endl;
-			std::cout << "methode = " << req.getMethod() << std::endl;
-			std::cout << "path = " << req.getPath() << std::endl;
-			std::cout << " version = " << req.getVersion() << std::endl;
-			std::cout << " body = " << req.getBody() << std::endl;
+			std::cout << req << std::endl;
 		}
 	}
 	return SUCCESS;

@@ -26,6 +26,18 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &copy)
 	return *this;
 }
 
+std::ostream    &operator<<(std::ostream &o, HttpRequest const &req)
+{
+	o << "-------REQUEST------" << std::endl;
+	o << "Methode = " << req.getMethod() << std::endl;
+	o << "Path    = " << req.getPath() << std::endl;
+	o << "Version = " << req.getVersion() << std::endl;
+	o << "Body    = " << req.getBody() << std::endl;
+	return (o);
+
+}
+
+
 std::string HttpRequest::getMethod() const
 {
 	return this->_method;
