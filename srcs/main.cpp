@@ -4,78 +4,33 @@
 #include "CgiHandler.hpp"
 #include "httpRequest.hpp"
 
+
 std::string parse_request(std::string type, std::string buffer, HttpRequest &req)
 {
-	std::istringstream stream(buffer);
-	std::string line;
-	std::string method;
-	std::string path;
-	std::string version;
-	std::string body;
-	if (type == "GET")
-	{
-		while (std::getline(stream, line))
-		{
-			size_t pos1 = line.find("GET");
-			size_t pos2 = line.find("HTTP");
-		
-			if (pos1 != std::string::npos && pos2 != std::string::npos)
-			{
-				method = line.substr(pos1, 4);
-				req.setMetode(method);
-				path = line.substr(pos1 + 4, pos2 - pos1 - 5);
-				req.setPath(path);
-				version = line.substr(pos2);
-				req.setVersion(version);
-			}
-			body += line + "\n";
-		}
-		req.setBody(body);
-		return ("GET");
-	}
-	if (type == "POST")
-	{
-		while (std::getline(stream, line))
-		{
-			size_t pos1 = line.find("POST");
-			size_t pos2 = line.find("HTTP");
-		
-			if (pos1 != std::string::npos && pos2 != std::string::npos)
-			{
-				method = line.substr(pos1, 5);
-				req.setMetode(method);
-				path = line.substr(pos1 + 5, pos2 - pos1 - 6);
-				req.setPath(path);
-				version = line.substr(pos2);
-				req.setVersion(version);
-			}
-			body += line + "\n";
-		}
-		req.setBody(body);
-		return ("POST");
-	}
-	if (type == "DELETE")
-	{
-		while (std::getline(stream, line))
-		{
-			size_t pos1 = line.find("DELETE");
-			size_t pos2 = line.find("HTTP");
-		
-			if (pos1 != std::string::npos && pos2 != std::string::npos)
-			{
-				method = line.substr(pos1, 7);
-				req.setMetode(method);
-				path = line.substr(pos1 + 7, pos2 - pos1 - 8);
-				req.setPath(path);
-				version = line.substr(pos2);
-				req.setVersion(version);
-			}
-			body += line + "\n";
-		}
-		req.setBody(body);
-		return ("DELETE");
-	}
-	return ("");
+    std::istringstream stream(buffer);
+    std::string line;
+    std::string method;
+    std::string path;
+    std::string version;
+    std::string body;
+    while (std::getline(stream, line))
+    {
+        size_t pos1 = line.find(type.c_str());
+        size_t pos2 = line.find("HTTP");
+
+        if (pos1 != std::string::npos && pos2 != std::string::npos)
+        {
+            method = line.substr(pos1, type.size() + 1);
+            req.setMetode(method);
+            path = line.substr(pos1 + type.size() + 1, pos2 - pos1 - (type.size() + 2));
+            req.setPath(path);
+            version = line.substr(pos2);
+            req.setVersion(version);
+        }
+        body += line + "\n";
+    }
+    req.setBody(body);
+    return (type);
 }
 
 std::string get_type_request(std::string buffer, HttpRequest &req)
