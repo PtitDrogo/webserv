@@ -67,14 +67,13 @@ int main(int argc, char **argv, char **envp)
 				parse_buffer_post(buffer , fds[i].fd, serv);
 			else if (type_request == "CGI")
 			{
-				cgiProtocol(envp, "helloworld.py"); //obviously temporary
+				cgiProtocol(envp, "time.py"); //obviously temporary
 				std::string tmp = fileToString(PATH_CGI_OUT);
-				std::cout << "Hi here is tmp" << tmp << std::endl;
 				send(fds[i].fd, tmp.c_str(), tmp.size(), 0);
 			}
 			else
 				generate_html_page_error(serv, fds[i].fd, "404");
-			std::cout << buffer << std::endl;
+			// std::cout << buffer << std::endl;
 		}
 	}
 	return (SUCCESS);

@@ -14,10 +14,11 @@ private:
     int             _exit_status;
     std::string     _path;
     pid_t _pid;
-    CgiHandler(); // Private default constructor because we cant have a cgi without a cgi
+    CgiHandler(); //have to build with request
 
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp);
-    void HandleCgiRequest(const std::string &request);
+    void HandleCgiRequest(const std::string &request); 
+    //Request should contain all the info i would hope
 };

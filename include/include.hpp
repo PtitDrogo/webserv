@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <poll.h>
+#include <sys/wait.h>
 
 
 //-----------InternalLibraries-----------//
