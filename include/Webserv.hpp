@@ -57,4 +57,7 @@ void 		generate_html_page_error(Config &conf, int client_socket, std::string err
 bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
+//-----------CGI-----------//
+void cgiHandler(char **envp);
+
 #endif

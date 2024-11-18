@@ -7,7 +7,6 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
 {
 	std::istringstream stream(buffer);
 	std::string line;
-
 	std::string method;
 	std::string path;
 	std::string version;
@@ -91,12 +90,12 @@ std::string get_type_request(std::string buffer, HttpRequest &req)
 			return (parse_request("POST", buffer, req));
 		if (line.find("DELETE"))
 			return (parse_request("DELETE", buffer, req));
+		//DEBUG DE TFREYDIE A SUPPR APRES
+		if (line.find("CGI") != std::string::npos)
+			return ("CGI");
 	}
 	return ("");
 }
-
-
-
 
 void printVectorloc2(std::vector<location> loc)
 {
@@ -178,11 +177,13 @@ void printVectorloc2(std::vector<location> loc)
 // }
 
 
-int main(int argc, char **argv)
+int main(int argc, char **argv,char **envp)
 {
 	Config conf;
 	Server serv;
 	HttpRequest req;
+  (void) envp;
+
 
 	if (argc != 2)
 	{
