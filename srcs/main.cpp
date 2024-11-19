@@ -1,5 +1,8 @@
 #include "Webserv.hpp"
 
+bool server_running = true;
+static void handleSignal(int signum);
+
 int main(int argc, char **argv,char **envp)
 {
 	Config conf;
@@ -21,8 +24,17 @@ int main(int argc, char **argv,char **envp)
 	std::vector<struct pollfd> fds;
 	addPollFD(server_socket, fds);
 
-	while (true)
+	// Rajouter les Serveurs Sur la liste des fds
+	// Je fout le start de i au nombre de serveur
+	// Puis du coup tout les serveurs rajoute les sockets client sur le meme truc en soit c'est des serveurs VIRTUELS !
+
+	//Je dois etre capable de rajouter plusieurs serveurs.
+	//La socket client doit avoir l'info quelquepart de quel serveur l'a creer.
+
+	while (server_running)
 	{
+		signal(SIGINT, &handleSignal);
+    	signal(SIGTERM, &handleSignal);
 		checkIfNewClient(fds, server_socket);
 		if (safe_poll(fds, server_socket) == FAILURE)
 			return FAILURE;
@@ -68,6 +80,15 @@ int main(int argc, char **argv,char **envp)
 		}
 	}
 	return SUCCESS;
+}
+
+
+static void handleSignal(int signum) {
+    static_cast<void>(signum);
+    std::cout << "server shutdown" << std::endl;
+    server_running = false;
+    signal(SIGINT, &handleSignal);
+    signal(SIGTERM, &handleSignal);
 }
 
 

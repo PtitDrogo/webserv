@@ -1,8 +1,6 @@
 #ifndef CGI_HANDLER_HPP
 # define CGI_HANDLER_HPP
 
-class HttpRequest;
-
 #include "Webserv.hpp"
 
 # define PATH_CGI_OUT "./cgi_tmp/webserv_cgi_stdout"

@@ -3,8 +3,6 @@
 
 #include "Webserv.hpp"
 
-class Server;
-
 class Config
 {
 	private :

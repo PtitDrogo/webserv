@@ -3,7 +3,6 @@
 
 #include "Webserv.hpp"
 
-class location;
 
 class Server
 {
