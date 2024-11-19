@@ -12,6 +12,12 @@ class Config;
 class HttpRequest;
 class Server;
 
+//Im just linking the client with the Server it was sending request to;
+typedef struct s_client {
+    int     fd;
+    Server  server;
+} t_client;
+
 
 //*********************************************************//
 //************************INCLUDES*************************//

@@ -38,7 +38,6 @@ int main(int argc, char **argv,char **envp)
 		checkIfNewClient(fds, server_socket);
 		if (safe_poll(fds, server_socket) == FAILURE)
 			return FAILURE;
-
 		for (size_t i = 1; i < fds.size(); ++i)
 		{
 			if (fds[i].revents & POLLRDHUP)
