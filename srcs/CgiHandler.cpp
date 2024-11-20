@@ -1,5 +1,8 @@
 #include "Webserv.hpp"
 
+#define TIME_OUT_CGI_MS 500
+
+//GET /config/cgi-bin/sleep10.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
@@ -32,35 +35,56 @@ void CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
     
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
+    //Does path have to take into account what root is defined as ?
     _path = "." + request.getPath();
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
     //Execute the fucking cgi;
-    int PID = fork();
-    if (PID == 0)
+    executeCGI();
+    executeTimeOut();
+    //Now I wait and life is good because I either waited for process or at most TimeoutMS;
+
+}
+
+pid_t    CgiHandler::executeCGI()
+{
+    int pid = fork();
+    if (pid < 0)
+    {
+        std::cout << "Fork failed" << std::endl; //oh no !
+        return pid;
+        //this will be an error 500 !
+    }
+    else if (pid == 0)
     {
         //Modern dup    
         std::freopen(PATH_CGI_IN, "r", stdin);
 		std::freopen(PATH_CGI_OUT, "w", stdout);
 		std::freopen(PATH_CGI_ERR, "w", stderr);
         execve(_path.c_str(), _argv, _envp);
-        std::cerr << "I failed to execve :(" << std::endl;
         std::cerr << "failed to execve, path was : " << _path << std::endl;
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
-    if (PID > 0)
-    {
-        int status;
-        waitpid(PID, &status, 0); //TODO: change this so server doesnt get blocked
-    }
-    else if (PID < 0)
-    {
-        std::cout << "Fork failed" << std::endl;
-		std::exit(EXIT_FAILURE); //tmp, just to be sure
-        //this will be an error 500 !
-    }
+    return (pid);
 }
+
+pid_t    CgiHandler::executeTimeOut()
+{
+    pid_t pidTimeOut = fork();
+	if (pidTimeOut == -1) 
+    {
+		std::cout << "Fork failed" << std::endl; //oh no !
+		return pidTimeOut;
+	}
+	else if (pidTimeOut == 0) 
+    {
+	    sleep(TIME_OUT_CGI_MS);
+		std::exit(EXIT_SUCCESS);
+	}
+	return pidTimeOut;
+}
+
 
 void    cgiProtocol(char *const *envp, const HttpRequest &request)
 {

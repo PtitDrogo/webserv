@@ -3,8 +3,6 @@
 bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
 
-//Adding function here to move it later;
-
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
@@ -12,23 +10,13 @@ int main(int argc, char **argv, char **envp)
 	std::vector<struct pollfd> fds;
 	(void) envp;
 
-
 	if (argc != 2)
 	{
 		std::cout << "error : use ./webserv file.conf" << std::endl;
 		return 0;
 	}
-
 	conf.parse_config_file(argv[1]);
 	size_t number_of_servers = conf.addAllServers(fds);
-
-	// Rajouter les Serveurs Sur la liste des fds
-	// Je fout le start de i au nombre de serveur
-	// Puis du coup tout les serveurs rajoute les sockets client sur le meme truc en soit c'est des serveurs VIRTUELS !
-
-	//Je dois etre capable de rajouter plusieurs serveurs.
-	//La socket client doit avoir l'info quelquepart de quel serveur l'a creer.
-
 	while (server_running)
 	{
 		signal(SIGINT, &handleSignal);

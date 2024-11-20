@@ -22,7 +22,9 @@ private:
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp);
-    void HandleCgiRequest(const HttpRequest &request); 
+    pid_t    CgiHandler::executeCGI();
+    pid_t    CgiHandler::executeTimeOut();
+    void    HandleCgiRequest(const HttpRequest &request); 
     //Request should contain all the info i would hope
 };
 
