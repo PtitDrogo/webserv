@@ -4,7 +4,7 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 {
 	std::istringstream stream(buffer);
 	std::string line;
-
+	int	server_index = conf.getIndexOfClientServer(client_socket);
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
@@ -26,13 +26,13 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket)
 			version = line.substr(pos2);
 			if (path == "/")
 			{
-				if (!conf.getServer()[0].getIndex().empty())
-					finalPath = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
+				if (!conf.getServer()[server_index].getIndex().empty())
+					finalPath = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
 				else
 					generate_html_page_error(conf, client_socket, "404");
 			}
 			else
-				finalPath = "." + conf.getServer()[0].getRoot() + path;
+				finalPath = "." + conf.getServer()[server_index].getRoot() + path;
 		}
 	}
 	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;

@@ -12,8 +12,6 @@ class Config;
 class HttpRequest;
 class Server;
 
-//Im just linking the client with the Server it was sending request to;
-
 
 //*********************************************************//
 //************************INCLUDES*************************//
@@ -21,10 +19,6 @@ class Server;
 
 #include "include.hpp"
 
-typedef struct s_client {
-    int     fd;
-    Server  &server;
-} t_client;
 
 //*********************************************************//
 //*************************DEFINES*************************//
@@ -53,7 +47,7 @@ int SetupClientAddress(int server_socket);
 
 
 //-----------HandleClients-----------//
-void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers);
+void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf);
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
 int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);

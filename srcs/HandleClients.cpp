@@ -2,7 +2,7 @@
 
 
 //Check if a new client wants to connect to our server
-void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers)
+void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf)
 {
     for (unsigned int i = 0; i < number_of_servers; i++)
 	{
@@ -10,6 +10,8 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 		{
 			int client_socket = SetupClientAddress(fds[i].fd);
 			addPollFD(client_socket, fds);
+			conf.addClient(client_socket, i);
+			//Ici je le rajoute a la liste des fd;
 			printf("DEBUG: Added client to the list\n");
 			//Technically cleaner with "continue ;" here, but it doesnt work somehow
 			// if we do that and its not necessary

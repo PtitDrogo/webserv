@@ -48,6 +48,16 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 	return (i);
 }
 
+void	Config::addClient(int client_fd, int server)
+{
+	_clients[client_fd] = server;
+}
+
+int		Config::getIndexOfClientServer(int client_fd)
+{
+	return (_clients[client_fd]);
+}
+
 int Config::SetupServerSocket(int i)
 {
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);

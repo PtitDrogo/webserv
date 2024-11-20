@@ -33,7 +33,7 @@ int main(int argc, char **argv, char **envp)
 	{
 		signal(SIGINT, &handleSignal);
     	signal(SIGTERM, &handleSignal);
-		checkIfNewClient(fds, number_of_servers);
+		checkIfNewClient(fds, number_of_servers, conf);
 		if (safe_poll(fds, number_of_servers) == FAILURE)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i)
