@@ -47,6 +47,7 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 {
 	std::istringstream stream(buffer);
 	std::string line;
+	int	server_index = conf.getIndexOfClientServer(client_socket);
 
 	if (!stream)
 	{
@@ -109,7 +110,7 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 				outfile.flush();
 				outfile.close();
 
-				std::string path = "." + conf.getServer()[0].getRoot() + conf.getServer()[0].getIndex();
+				std::string path = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
 				std::string file_content = readFile(path);
 				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 				send(client_socket, reponse.c_str(), reponse.size(), 0);
@@ -127,6 +128,7 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 {
 	std::string initial_data(buffer, recv_value);
+	int	server_index = conf.getIndexOfClientServer(fd);
 	size_t content_length_pos = initial_data.find("Content-Length: ");
 	if (content_length_pos == std::string::npos)
 	{
@@ -140,7 +142,7 @@ bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
 
 	int content_length_size_t = content_length;
-	if (content_length_size_t > conf.getServer()[0].getMaxBodySize())
+	if (content_length_size_t > conf.getServer()[server_index].getMaxBodySize())
 	{
 		generate_html_page_error(conf, fd, "400");
 		return false;

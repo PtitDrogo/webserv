@@ -7,7 +7,7 @@ class Config
 {
 	private :
 		std::vector<Server>    _server;
-		std::map<int, int>  _clients; //Link each clients fd to their server index
+		std::map<int, int>     _clients; //Link each clients fd to their server index
 		
 	public:
 		Config();

@@ -12,7 +12,7 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 {
 	std::istringstream stream(buffer);
 	std::string line;
-
+	int	server_index = conf.getIndexOfClientServer(client_socket);
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
@@ -35,7 +35,7 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 			method = line.substr(pos1, 7);
 			path = line.substr(pos1 + 7, pos2 - pos1 - 8);
 			version = line.substr(pos2);
-			finalPath = "." + conf.getServer()[0].getRoot() + path;
+			finalPath = "." + conf.getServer()[server_index].getRoot() + path;
 		}
 	}
 	if (!finalPath.empty())
