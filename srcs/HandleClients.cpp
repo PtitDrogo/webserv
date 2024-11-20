@@ -2,24 +2,32 @@
 
 
 //Check if a new client wants to connect to our server
-void    checkIfNewClient(std::vector<struct pollfd> &fds, int server_socket)
+void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers)
 {
-    if (fds[0].revents & POLLIN)
-    {
-        int client_socket = SetupClientAddress(server_socket);
-        addPollFD(client_socket, fds);
-        printf("DEBUG: Added client to the list\n");
-        //Technically cleaner with "continue ;" here, but it doesnt work somehow
-		// if we do that and its not necessary
-    }
+    for (unsigned int i = 0; i < number_of_servers; i++)
+	{
+		if (fds[i].revents & POLLIN)
+		{
+			int client_socket = SetupClientAddress(fds[i].fd);
+			addPollFD(client_socket, fds);
+			printf("DEBUG: Added client to the list\n");
+			//Technically cleaner with "continue ;" here, but it doesnt work somehow
+			// if we do that and its not necessary
+		}
+	}
 }
 //Checks all clients sockets to see if something happened
-int safe_poll(std::vector<struct pollfd> &fds, int server_socket)
+//In this function we are also polling the server, should we do that ??
+int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 {
     if (poll(fds.data(), fds.size(), -1) == -1)
     {
-        std::cerr << "Poll failed" << std::endl;
-        close(server_socket); //technically would have to do more cleanup than that;
+        //NOTE : if we use ctrlC or ctrl Z, this will print this, before pushing to prod i could check the static variable to know that its normal to fail this and not print.
+		std::cerr << "Poll failed" << std::endl;
+        for (unsigned int i = 0; i < number_of_servers; i++)
+		{
+			close(fds[i].fd); //do we have to do more cleanup ? I dont even know
+		}
         return FAILURE; //Question : Est ce que on doit vraiment quitter si poll fail ? Surement oui mais a voir.
     }
 	return SUCCESS;

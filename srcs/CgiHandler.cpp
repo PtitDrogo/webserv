@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-
+//GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;

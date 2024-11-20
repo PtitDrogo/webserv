@@ -13,7 +13,11 @@ class Config
 		~Config();
 		Config(const Config &copy);
 		Config &operator=(const Config &copy);
-		bool parse_config_file(Server &serv, std::string filename);
+		bool parse_config_file(std::string filename);
+
+		int		SetupServerSocket(int i);
+		size_t	addAllServers(std::vector<struct pollfd> &fds);
+		
 		// bool parse_config_file(std::string filename);
 
 		// bool parse_config_file(Server &serv, location &loc, std::string filename);

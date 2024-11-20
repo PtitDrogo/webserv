@@ -36,6 +36,52 @@ void Config::setServer(Server &serv)
 	this->_server.push_back(serv);
 }
 
+
+size_t Config::addAllServers(std::vector<struct pollfd> &fds)
+{
+	size_t i;
+	for (i = 0; i < _server.size(); i++)
+	{
+		int server_socket = SetupServerSocket(i);
+		addPollFD(server_socket, fds);
+	}
+	return (i);
+}
+
+int Config::SetupServerSocket(int i)
+{
+	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	int opt = 1;
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == -1)
+	{
+		std::cerr << "Erreur lors de la configuration du socket." << std::endl;
+		close(server_socket);
+		return -1;
+	}
+	sockaddr_in server_address;
+	server_address.sin_family = AF_INET;
+
+
+	int port = std::atoi(_server[i].getPort().c_str());
+
+	// int port = std::atoi(conf.getServer()[0].getPort().c_str());
+	server_address.sin_port = htons(port);
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) == -1)
+	{
+		std::cerr << "Erreur lors de la liaison du socket." << std::endl;
+		close(server_socket);
+		return -1;
+	}
+	if (listen(server_socket, 5) == -1)
+	{
+		std::cerr << "Erreur lors de la mise en écoute." << std::endl;
+		close(server_socket);
+		return -1;
+	}
+	return server_socket;
+}
+
 void printVectorloc(std::vector<location> loc)
 {
 	for (size_t i = 0; i < loc.size(); i++)
@@ -317,9 +363,8 @@ void Config::printConfig()
 	printVectorloc(serv[0].getLocation());
 }
 
-bool Config::parse_config_file(Server &serv, std::string filename)
+bool Config::parse_config_file(std::string filename)
 {
-	(void)serv;
 	std::ifstream file(filename.c_str());
 	if (!file.is_open())
 	{

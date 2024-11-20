@@ -13,10 +13,6 @@ class HttpRequest;
 class Server;
 
 //Im just linking the client with the Server it was sending request to;
-typedef struct s_client {
-    int     fd;
-    Server  server;
-} t_client;
 
 
 //*********************************************************//
@@ -24,6 +20,11 @@ typedef struct s_client {
 //*********************************************************//
 
 #include "include.hpp"
+
+typedef struct s_client {
+    int     fd;
+    Server  &server;
+} t_client;
 
 //*********************************************************//
 //*************************DEFINES*************************//
@@ -48,13 +49,12 @@ void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
 bool    preparePostParse(int fd, char *buffer, Config &conf, int recv_value);
 
 //-----------SetUpSocket-----------//
-int SetupSocket(Server serv, Config conf);
 int SetupClientAddress(int server_socket);
 
 
 //-----------HandleClients-----------//
-void    checkIfNewClient(std::vector<struct pollfd> &fds, int server_socket);
-int     safe_poll(std::vector<struct pollfd> &fds, int server_socket);
+void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers);
+int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
 int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
 void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);

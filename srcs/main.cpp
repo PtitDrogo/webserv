@@ -1,13 +1,15 @@
 #include "Webserv.hpp"
 
-bool server_running = true;
+bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
 
-int main(int argc, char **argv,char **envp)
+//Adding function here to move it later;
+
+int main(int argc, char **argv, char **envp)
 {
 	Config conf;
-	Server serv;
 	HttpRequest req;
+	std::vector<struct pollfd> fds;
 	(void) envp;
 
 
@@ -16,13 +18,9 @@ int main(int argc, char **argv,char **envp)
 		std::cout << "error : use ./webserv file.conf" << std::endl;
 		return 0;
 	}
-	conf.parse_config_file(serv, argv[1]);
 
-	int server_socket = SetupSocket(serv, conf);
-
-	// Préparer la structure pollfd
-	std::vector<struct pollfd> fds;
-	addPollFD(server_socket, fds);
+	conf.parse_config_file(argv[1]);
+	size_t number_of_servers = conf.addAllServers(fds);
 
 	// Rajouter les Serveurs Sur la liste des fds
 	// Je fout le start de i au nombre de serveur
@@ -35,10 +33,10 @@ int main(int argc, char **argv,char **envp)
 	{
 		signal(SIGINT, &handleSignal);
     	signal(SIGTERM, &handleSignal);
-		checkIfNewClient(fds, server_socket);
-		if (safe_poll(fds, server_socket) == FAILURE)
+		checkIfNewClient(fds, number_of_servers);
+		if (safe_poll(fds, number_of_servers) == FAILURE)
 			return FAILURE;
-		for (size_t i = 1; i < fds.size(); ++i)
+		for (size_t i = number_of_servers; i < fds.size(); ++i)
 		{
 			if (fds[i].revents & POLLRDHUP)
 			{
