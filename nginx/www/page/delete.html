@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Simple Website - Delete</title>
+	<link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
+	<style>
+		/* Style de base */
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #333;
+			color: white;
+			text-align: center;
+			margin: 0;
+			padding: 0;
+		}
+
+		/* Style du titre principal */
+		h1 {
+			color: rgb(243, 0, 0);
+			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+			font-size: 3vw;
+			margin-top: 10vh;
+		}
+
+		/* Style pour le titre de sous-section */
+		h3 {
+			color: aliceblue;
+			font-size: 2vw;
+			margin-top: 5vh;
+			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+		}
+
+		/* Style du bouton de suppression */
+		.delete-button {
+			font-size: 1.5vw;
+			padding: 15px 30px;
+			border: none;
+			border-radius: 5px;
+			background-color: rgb(243, 0, 0);
+			color: white;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+			text-transform: uppercase;
+		}
+
+		/* Effet de survol du bouton */
+		.delete-button:hover {
+			background-color: #c10000;
+		}
+
+		/* Style de l'input */
+		#fileName {
+			padding: 10px;
+			font-size: 1.2vw;
+			margin-top: 2vh;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			width: 50%;
+		}
+
+	</style>
+</head>
+<body>
+	<h1>DELETE</h1>
+	<div>
+		<h3>Supprimer une ressource</h3>
+		<input type="text" id="fileName" placeholder="Entrez le nom du fichier à supprimer">
+		<button id="deleteButton" class="delete-button">Supprimer la ressource</button>
+	</div>
+
+	<script>
+		document.getElementById('deleteButton').addEventListener('click', function() {
+			const fileName = document.getElementById('fileName').value.trim();
+			
+			if (!fileName) {
+				alert("Veuillez entrer un nom de fichier valide.");
+				return;
+			}
+
+			// Envoi de la requête DELETE
+			fetch(`../base_donnees/${fileName}`, {
+				method: 'DELETE'
+			})
+			.then(response => {
+				if (response.status === 200) {
+					alert(`Le fichier '${fileName}' a été supprimé avec succès.`);
+				} else {
+					alert(`Échec de la suppression du fichier '${fileName}'.`);
+				}
+			})
+			.catch(error => {
+				console.error('Une erreur est survenue :', error);
+			});
+		});
+	</script>
+</body>
+</html>
+
+

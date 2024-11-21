@@ -37,12 +37,20 @@ void Config::setServer(Server &serv)
 	this->_server.push_back(serv);
 }
 
+
+
 void printVectorloc(std::vector<location> loc)
 {
 	for (size_t i = 0; i < loc.size(); i++)
 	{
+		std::cout << "location { " << std::endl;
 		std::cout << "	Path: " << loc[i].getPath() << std::endl;
 		std::cout << "	Index: " << loc[i].getIndex() << std::endl;
+		std::cout << "	Root: " << loc[i].getRoot() << std::endl;
+		std::cout << "	Auto Index: " << loc[i].getAutoIndex() << std::endl;
+		std::cout << "	Allow Method: " << loc[i].getAllowMethod() << std::endl;
+		std::cout << "	Cgi Path: " << loc[i].getCgiPath() << std::endl;
+		std::cout << "}" << std::endl;
 	}
 }
 
@@ -74,6 +82,11 @@ void parse_listen(std::string line, Server &serv)
 			start++;
 		size_t end = line.find_first_of(" \t", start);
 		std::string port = line.substr(start, end - start);
+		if (!isdigit(port) || port.length() != 4)
+		{
+			std::cout << "Error: Invalid port number" << std::endl;
+			return;
+		}
 		serv.setPort(port);
 	}
 }
@@ -89,6 +102,11 @@ void parse_server_name(std::string line, Server &serv)
 			start++;
 		size_t end = line.find_first_of(" \t", start);
 		std::string server_name = line.substr(start, end - start);
+		if (server_name.empty() )
+		{
+			std::cout << "Error: Invalid server name" << std::endl;
+			return;
+		}
 		serv.setServerName(server_name);
 	}
 }
@@ -143,6 +161,7 @@ void parse_error_page(std::string line, Server &serv)
 	}
 }
 
+
 void parse_location(std::string line, Server &serv, std::ifstream &file)
 {
 	std::cout << "parse_location" << std::endl;	
@@ -185,7 +204,38 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
 				loc.setIndex(index);
-				break;
+			}
+			size_t rootPos = subLine.find("root");
+			if (rootPos != std::string::npos) {
+				size_t startRoot = subLine.find_first_not_of(" \t", rootPos + 4);
+				size_t endRoot = subLine.find_first_of(" \t;", startRoot);
+				std::string root = subLine.substr(startRoot, endRoot - startRoot);
+				loc.setRoot(root);
+			}
+			size_t autoIndexPos = subLine.find("auto_index");
+			if (autoIndexPos != std::string::npos) {
+				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 10);
+				size_t endAutoIndex = subLine.find_first_of(" \t;", startAutoIndex);
+				std::string autoIndex = subLine.substr(startAutoIndex, endAutoIndex - startAutoIndex);
+				if (autoIndex != "on" && autoIndex != "off") {
+					std::cerr << "Error: invalid value for auto_index" << std::endl;
+					return;
+				}
+				loc.setAutoIndex(autoIndex);
+			}
+			size_t allowMethodPos = subLine.find("allow_method");
+			if (allowMethodPos != std::string::npos) {
+				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 12); // 12 = length of "allow_method"
+				size_t endAllowMethod = subLine.find_first_of("\n", startAllowMethod); 
+				std::string allowMethod = subLine.substr(startAllowMethod, endAllowMethod - startAllowMethod);
+				loc.setAllowMethod(allowMethod);
+			}
+			size_t cgiPathPos = subLine.find("cgi_path");
+			if (cgiPathPos != std::string::npos) {
+				size_t startCgiPath = subLine.find_first_not_of(" \t", cgiPathPos + 8);
+				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
+				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
+				loc.setCgiPath(cgiPath);
 			}
 		}
 		serv.setLocation(loc);
@@ -277,23 +327,15 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 		if (line.find("root") != std::string::npos)
 			parse_root(line, serv);
 		if (line.find("max_body_size") != std::string::npos)
-		{
-			std::cout << "je suis iciiiiiiiiiiiiiiiiiiiii" << std::endl;
 			parse_max_body_size(line, serv);
-		}
 		if (line.find("error_page") != std::string::npos)
 			parse_error_page(line, serv);
 		if (line.find("location") != std::string::npos)
 			parse_location(line, serv, file);
 		if (line.find("auto_index") != std::string::npos)
-		{
 			parse_auto_index(line, serv);
-		}
 		if (line.find("}") != std::string::npos)
-		{
-			std::cout << "je suis ici" << std::endl;
 			break;
-		}
 	}
 	this->setServer(serv);
 }
@@ -301,7 +343,6 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 void Config::printConfig()
 {
 	std::cout << "printConfig" << std::endl;
-
 	std::vector<Server> serv = this->getServer();
 	std::ifstream file("./config/server.conf");
 
@@ -310,12 +351,41 @@ void Config::printConfig()
 	{
 		std::cout << line << std::endl;
 	}
-
 	std::cout << "--------------------------------" << std::endl;
 	printVector(serv[0].getErrorPage());
 	std::cout << "--------------------------------" << std::endl;	
 	printVectorServer(serv);
 	printVectorloc(serv[0].getLocation());
+}
+
+bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
+{
+	std::cout << "check_same_server_name" << std::endl;
+	if (serv[i].getServerName() == serv[j].getServerName())
+	{
+		std::cerr << "Error: same server name" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+bool check_same_port(std::vector<Server> serv)
+{
+	std::cout << "check_same_port" << std::endl;
+	for (size_t i = 0; i < serv.size(); i++)
+	{
+		for (size_t j = i + 1; j < serv.size(); j++)
+		{
+			std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
+			if (serv[i].getPort() == serv[j].getPort())
+			{
+				std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
+				if (check_same_server_name(serv, j , i) == false)
+					return false;
+			}
+		}
+	}
+	return true;
 }
 
 bool Config::parse_config_file(Server &serv, std::string filename)
@@ -328,9 +398,7 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		return false;
 	}
 	if (file.is_open())
-	{
 		std::cout << "File opened successfully" << std::endl;
-	}
 	std::string line;
 	while (std::getline(file, line))
 	{
@@ -341,6 +409,8 @@ bool Config::parse_config_file(Server &serv, std::string filename)
 		}
 	}
 	this->printConfig();
+	if (!check_same_port(this->getServer()))
+		return false;
 	return (true);
 }
 

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Simple Website - Download</title>
+	<link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
+	<style>
+		/* Style de base */
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #333;
+			color: white;
+			text-align: center;
+			margin: 0;
+			padding: 0;
+		}
+
+		/* Style du titre principal */
+		h1 {
+			color: rgb(243, 0, 0);
+			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+			font-size: 3vw;
+			margin-top: 10vh;
+		}
+
+		/* Style du bouton de téléchargement */
+		.download-button {
+			font-size: 1.5vw;
+			padding: 15px 30px;
+			border: none;
+			border-radius: 5px;
+			background-color: rgb(243, 0, 0);
+			color: white;
+			cursor: pointer;
+			text-decoration: none;
+			transition: background-color 0.3s ease;
+		}
+
+		/* Effet de survol du bouton */
+		.download-button:hover {
+			background-color: #c10000;
+		}
+	</style>
+</head>
+<body>
+	<h1>Download</h1>
+	<a href="../../assets/images/img2.gif" target="_blank" download="img2.gif">
+		<button class="download-button" type="button">Download a file</button>
+	</a>
+</body>
+</html>

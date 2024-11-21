@@ -20,6 +20,7 @@ SRCS	=		$(SRCS_DIR)/main.cpp \
 				$(SRCS_DIR)/delete.cpp \
 				$(SRCS_DIR)/httpRequest.cpp \
 				$(SRCS_DIR)/CgiHandler.cpp \
+				$(SRCS_DIR)/autoIndex.cpp \
 			
 #------------------------------------------------------------------------#
 

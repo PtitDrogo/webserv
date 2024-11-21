@@ -57,7 +57,7 @@ std::map<std::string , std::string> Server::getReturn() const
 	return (this->_return);
 }
 
-std::vector<location> Server::getLocation() const
+std::vector<location> &Server::getLocation()
 {
 	return (this->_location);
 }

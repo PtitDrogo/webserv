@@ -10,6 +10,7 @@
 #include "include.hpp"
 #include "server.hpp"
 #include "config.hpp"
+#include "httpRequest.hpp"
 
 
 //*********************************************************//
@@ -27,9 +28,12 @@
 
 
 class Config;
+class Server;
+class HttpRequest;
 
 //-----------ParseBuffer-----------//
-void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
+// void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
+void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req);
 void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
 
 //-----------SetUpSocket-----------//
@@ -59,5 +63,16 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
 //-----------CGI-----------//
 void cgiHandler(char **envp);
+
+std::string handleAutoIndex(const std::string& path);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files);
+std::vector<std::string> listDirectory(const std::string& directory);
+
+//-----------utils-----------//
+
+bool isdigit(std::string str);
+bool isExtension(std::string path);
+std::string trim(const std::string& str);
+
 
 #endif

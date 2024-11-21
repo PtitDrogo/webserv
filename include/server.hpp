@@ -6,7 +6,7 @@
 /*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/08 11:15:25 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/18 15:42:00 by ilbendib         ###   ########.fr       */
+/*   Updated: 2024/11/20 16:06:31 by ilbendib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ class Server
 		std::map<std::string , std::string> getReturn() const;
 		std::map<std::string ,std::string> getErrorPage() const;
 		int getMaxBodySize() const;
-		std::vector<location> getLocation() const;
+		std::vector<location> &getLocation();
 		std::string getAutoIndex() const;
 		// std::string getLocation() const;
 
