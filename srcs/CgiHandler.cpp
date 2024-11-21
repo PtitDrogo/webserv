@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-#define TIME_OUT_CGI_MS 500
+#define TIME_OUT_CGI_MS 500000
 
 //GET /config/cgi-bin/sleep10.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
@@ -33,20 +33,39 @@ CgiHandler::~CgiHandler() {}
 
 void CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
-    
+    // pid_t first_child_pid;
+    int   status;
+
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
     _path = "." + request.getPath();
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
     //Execute the fucking cgi;
-    executeCGI();
-    executeTimeOut();
-    //Now I wait and life is good because I either waited for process or at most TimeoutMS;
+    pid_t cgi_pid = executeCGI();
+    pid_t timeout_pid = executeTimeOut();
+
+    pid_t RaceWinnerPid = waitpid(-1, &status, WUNTRACED);
+    if (RaceWinnerPid == cgi_pid) 
+    {
+		std::cout << "process won" << std::endl;
+        if (kill(timeout_pid,SIGKILL) == -1) 
+			std::cerr << "Kill failed" << std::endl;
+	}
+	else 
+    {
+		std::cout << "timeout won" << std::endl;
+        if (kill(cgi_pid, SIGKILL) == -1) 
+            std::cerr << "Kill failed" << std::endl;
+	}
+    std::cout << "Waiting for the Process !" << std::endl;
+    waitpid(-1, NULL, WUNTRACED);
+    std::cout << "Waited for the Process !" << std::endl;
+    return ; //Returning void for now, I can potentially return the status of the process.
 
 }
 
-pid_t    CgiHandler::executeCGI()
+pid_t    CgiHandler::executeCGI() const
 {
     int pid = fork();
     if (pid < 0)
@@ -69,7 +88,7 @@ pid_t    CgiHandler::executeCGI()
     return (pid);
 }
 
-pid_t    CgiHandler::executeTimeOut()
+pid_t    CgiHandler::executeTimeOut() const
 {
     pid_t pidTimeOut = fork();
 	if (pidTimeOut == -1) 
@@ -79,10 +98,10 @@ pid_t    CgiHandler::executeTimeOut()
 	}
 	else if (pidTimeOut == 0) 
     {
-	    sleep(TIME_OUT_CGI_MS);
+	    usleep(TIME_OUT_CGI_MS);
 		std::exit(EXIT_SUCCESS);
 	}
-	return pidTimeOut;
+	return (pidTimeOut);
 }
 
 
@@ -93,6 +112,8 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request)
     cgi.HandleCgiRequest(request);
 
 }
+
+
 
 
 
