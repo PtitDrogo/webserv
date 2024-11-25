@@ -24,7 +24,7 @@ public:
     CgiHandler(char *const *envp);
     pid_t    executeCGI() const;
     pid_t    executeTimeOut() const;
-    void     HandleCgiRequest(const HttpRequest &request); 
+    bool     HandleCgiRequest(const HttpRequest &request); 
     //Request should contain all the info i would hope
 };
 

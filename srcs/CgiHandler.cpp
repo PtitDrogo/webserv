@@ -31,11 +31,11 @@ _pid(-1)
 CgiHandler::~CgiHandler() {}
 
 
-void CgiHandler::HandleCgiRequest(const HttpRequest &request)
+bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
     // pid_t first_child_pid;
     int   status;
-
+    bool  cgi_success;
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
     _path = "." + request.getPath();
@@ -51,17 +51,19 @@ void CgiHandler::HandleCgiRequest(const HttpRequest &request)
 		std::cout << "process won" << std::endl;
         if (kill(timeout_pid,SIGKILL) == -1) 
 			std::cerr << "Kill failed" << std::endl;
+        cgi_success = true;
 	}
 	else 
     {
 		std::cout << "timeout won" << std::endl;
-        if (kill(cgi_pid, SIGKILL) == -1) 
+        if (kill(cgi_pid, SIGKILL) == -1)
             std::cerr << "Kill failed" << std::endl;
+        cgi_success = false;
 	}
     std::cout << "Waiting for the Process !" << std::endl;
     waitpid(-1, NULL, WUNTRACED);
-    std::cout << "Waited for the Process !" << std::endl;
-    return ; //Returning void for now, I can potentially return the status of the process.
+    std::cout << "Waited for the Process ! Returning bool of : " << cgi_success << std::endl;
+    return cgi_success; //Returning void for now, I can potentially return the status of the process.
 
 }
 
@@ -105,11 +107,24 @@ pid_t    CgiHandler::executeTimeOut() const
 }
 
 
-void    cgiProtocol(char *const *envp, const HttpRequest &request)
+void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client)
 {
     CgiHandler cgi(envp);
-
-    cgi.HandleCgiRequest(request);
+    std::string response;
+    
+    if (cgi.HandleCgiRequest(request) == false)
+    {
+        response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
+        // std::cout << "GOT response : " << response << std::endl;
+    }
+    else
+    {
+        std::string cgi_output = fileToString(PATH_CGI_OUT);
+        response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+    }
+    send(fd_client, response.c_str(), response.size(), 0);
+    // std::cout << "sending response : " << response << std::endl;
+    return ;
 
 }
 

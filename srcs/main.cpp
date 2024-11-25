@@ -53,9 +53,7 @@ int main(int argc, char **argv, char **envp)
 				parse_buffer_delete(buffer, fds[i].fd, conf);
 			else if (type_request == "CGI")
 			{
-				cgiProtocol(envp, req); //obviously temporary
-				std::string tmp = fileToString(PATH_CGI_OUT);
-				send(fds[i].fd, tmp.c_str(), tmp.size(), 0);
+				cgiProtocol(envp, req, fds[i].fd);
 			}
 			else
 			{	
@@ -66,7 +64,6 @@ int main(int argc, char **argv, char **envp)
 	}
 	return SUCCESS;
 }
-
 
 static void handleSignal(int signum) {
     static_cast<void>(signum);

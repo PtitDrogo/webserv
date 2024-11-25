@@ -67,7 +67,7 @@ bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
 
 //-----------CGI-----------//
-void    cgiProtocol(char *const *envp, const HttpRequest &request);
+void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client);
 
 
 //-----------Utils-----------//
