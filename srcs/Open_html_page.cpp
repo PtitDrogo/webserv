@@ -30,6 +30,7 @@ void generate_html_page_error(Config &conf, int client_socket, std::string error
     
     // On récupère la map de l'erreur pour l'utiliser ensuite
     std::map<std::string, std::string> errorPageMap = conf.getServer()[server_index].getErrorPage();
+    //conf.getServer()[server_index].getRoot()
 
     // Recherche de l'erreur dans la map
     std::map<std::string, std::string>::iterator it = errorPageMap.find(error_code);
