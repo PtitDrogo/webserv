@@ -18,7 +18,9 @@ class Server;
 //*********************************************************//
 
 #include "include.hpp"
-
+#include "server.hpp"
+#include "config.hpp"
+#include "httpRequest.hpp"
 
 //*********************************************************//
 //*************************DEFINES*************************//
@@ -38,7 +40,8 @@ bool isCgiRequest(const HttpRequest &req);
 
 
 //-----------ParseBuffer-----------//
-void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
+// void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
+void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req);
 void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
 bool    preparePostParse(int fd, char *buffer, Config &conf, int recv_value);
 
@@ -77,5 +80,16 @@ std::string fileToString(const char *filePath);
 //-----------DEBUG-PRINTS-----------//
 void printVectorloc2(std::vector<location> loc);
 void printVectorServer2(std::vector<Server> serv);
+
+std::string handleAutoIndex(const std::string& path);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files);
+std::vector<std::string> listDirectory(const std::string& directory);
+
+//-----------utils-----------//
+
+bool isdigit(std::string str);
+bool isExtension(std::string path);
+std::string trim(const std::string& str);
+
 
 #endif

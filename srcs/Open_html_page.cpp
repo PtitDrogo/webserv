@@ -1,18 +1,43 @@
 #include "Webserv.hpp"
+#include "config.hpp"
+#include "server.hpp"
+#include <fstream>
+#include "sys/stat.h"
+
+bool isRegularFile(const std::string& path) {
+    struct stat buffer;
+    if (stat(path.c_str(), &buffer) != 0) {
+        // Échec de l'appel à stat
+        return false;
+    }
+    // Vérifie si le chemin est un fichier régulier
+    return S_ISREG(buffer.st_mode);
+}
 
 std::string readFile(std::string &path)
 {
-	std::ifstream file(path.c_str(), std::ios::binary);
-	if(!file.is_open())
-	{
-		std::cerr << "Error: could not open file" << std::endl;
-		return ("");
-	}
-	return std::string(
-		std::istreambuf_iterator<char>(file),
-		std::istreambuf_iterator<char>()
-	);
+    // Vérifie si c'est un fichier
+    std::cout << "DEBUG: path = " << path << std::endl;
+    // if (path != "/" && path.empty())
+    // {
+        if (!isRegularFile(path)) {
+            std::cerr << "Error: " << path << " is not a regular file." << std::endl;
+            return "";
+        }
+    // }
+
+    std::ifstream file(path.c_str(), std::ios::binary);
+    if (!file.is_open())
+    {
+        std::cerr << "Error: could not open file" << std::endl;
+        return "";
+    }
+    return std::string(
+        std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()
+    );
 }
+
 
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content)
 {

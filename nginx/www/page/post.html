@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Simple Website - POST</title>
+	<link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
+	<style>
+		/* Style de base */
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #333;
+			color: white;
+			text-align: center;
+			margin: 0;
+			padding: 0;
+		}
+
+		/* Style du titre principal */
+		h1 {
+			color: rgb(243, 0, 0);
+			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+			font-size: 4vw;
+			margin-top: 20px;
+		}
+
+		/* Style du sous-titre */
+		h2 {
+			color: rgb(243, 0, 0);
+			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+			font-size: 2vw;
+			margin-top: 5vh;
+		}
+
+		/* Style du formulaire */
+		form {
+			background-color: #444;
+			padding: 30px;
+			border-radius: 10px;
+			max-width: 600px;
+			margin: 30px auto;
+			box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+		}
+
+		/* Style des labels */
+		label {
+			font-size: 1.2vw;
+			display: block;
+			margin: 10px 0;
+		}
+
+		/* Style des champs de texte */
+		input[type="text"], input[type="email"], textarea {
+			width: 100%;
+			padding: 10px;
+			margin: 10px 0;
+			border-radius: 5px;
+			border: 1px solid #555;
+			font-size: 1.1vw;
+			background-color: #333;
+			color: white;
+		}
+
+		/* Style du bouton d'envoi */
+		button {
+			font-size: 1.5vw;
+			padding: 15px 30px;
+			border: none;
+			border-radius: 5px;
+			background-color: rgb(243, 0, 0);
+			color: white;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		/* Effet de survol du bouton */
+		button:hover {
+			background-color: #c10000;
+		}
+
+		/* Style du message de confirmation */
+		textarea {
+			font-family: Arial, sans-serif;
+		}
+
+	</style>
+</head>
+<body>
+	<h1>POST</h1>
+	<h2>Formulaire de soumission</h2>
+
+	<div>
+		<form method="post">
+			<label for="FileName">Nom du fichier :</label>
+			<input type="text" id="FileName" name="FileName" pattern="^[a-zA-Z0-9]+$" required><br><br>
+
+			<label for="name">Nom :</label>
+			<input type="text" id="name" name="name" pattern="^[a-zA-Z0-9]+$" required><br><br>
+			
+			<label for="email">Email :</label>
+			<input type="email" id="email" name="email" pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required><br><br>
+			
+			<label for="message">Contenu du fichier :</label><br>
+			<textarea id="message" name="message" rows="4" cols="50" pattern="^[a-zA-Z0-9]+$" required></textarea><br><br>
+			
+			<button type="submit">Envoyer</button>
+		</form>
+	</div>
+</body>
+</html>

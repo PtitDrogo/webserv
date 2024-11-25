@@ -31,7 +31,7 @@ class Server
 		std::map<std::string , std::string> getReturn() const;
 		std::map<std::string ,std::string> getErrorPage() const;
 		int getMaxBodySize() const;
-		std::vector<location> getLocation() const;
+		std::vector<location> &getLocation();
 		std::string getAutoIndex() const;
 		// std::string getLocation() const;
 
