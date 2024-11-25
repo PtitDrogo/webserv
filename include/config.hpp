@@ -1,11 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-#include "include.hpp"
-#include "server.hpp"
-#include <vector>        // Pour std::vector
-#include <string>        // Pour std::string
-#include <map>   
+#include "Webserv.hpp"
 
 class Server;
 

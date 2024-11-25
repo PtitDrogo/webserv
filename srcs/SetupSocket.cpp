@@ -1,18 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   SetupSocket.cpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ilbendib <ilbendib@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/11 18:21:30 by ilbendib          #+#    #+#             */
-/*   Updated: 2024/11/18 16:54:53 by ilbendib         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "config.hpp"
-#include "server.hpp"
-#include "poll.h"
 #include "Webserv.hpp"
 
 int SetupSocket(Server serv, Config conf)
