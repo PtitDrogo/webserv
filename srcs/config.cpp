@@ -92,6 +92,14 @@ int Config::SetupServerSocket(int i)
 	return server_socket;
 }
 
+void printMapRedirect(std::map<std::string, std::string> redirect)
+{
+	for (std::map<std::string, std::string>::iterator it = redirect.begin(); it != redirect.end(); ++it)
+	{
+		std::cout << "	Redirect: " << it->first << " => " << it->second << std::endl;
+	}
+}
+
 void printVectorloc(std::vector<location> loc)
 {
 	for (size_t i = 0; i < loc.size(); i++)
@@ -103,6 +111,7 @@ void printVectorloc(std::vector<location> loc)
 		std::cout << "	Auto Index: " << loc[i].getAutoIndex() << std::endl;
 		std::cout << "	Allow Method: " << loc[i].getAllowMethod() << std::endl;
 		std::cout << "	Cgi Path: " << loc[i].getCgiPath() << std::endl;
+		printMapRedirect(loc[i].getRedir());
 		std::cout << "}" << std::endl;
 	}
 }
@@ -113,13 +122,16 @@ void printVectorServer(std::vector<Server> serv)
 	{
 		std::cout << "server { " << std::endl;
 		std::cout << "	Port: " << serv[i].getPort() << std::endl;
+		std::cout << "	my host: " << serv[i].getHost() << std::endl;
 		std::cout << "	Server Name: " << serv[i].getServerName() << std::endl;
 		std::cout << "	Root: " << serv[i].getRoot() << std::endl;
 		std::cout << "	Index: " << serv[i].getIndex() << std::endl;
 		std::cout << "	Max Body Size: " << serv[i].getMaxBodySize() << std::endl;
 		std::cout << "	Auto Index: " << serv[i].getAutoIndex() << std::endl;
+
 		printVector(serv[i].getErrorPage());
 		printVectorloc(serv[i].getLocation());
+
 		std::cout << "}" << std::endl;
 	}
 }
@@ -135,11 +147,12 @@ void parse_listen(std::string line, Server &serv)
 			start++;
 		size_t end = line.find_first_of(" \t", start);
 		std::string port = line.substr(start, end - start);
-		if (!isdigit(port) || port.length() != 4)
+		if (port.size() > 4)
 		{
-			std::cout << "Error: Invalid port number" << std::endl;
-			return;
+			serv.setHost(port);
+			port = port.substr(port.find(':') + 1);
 		}
+		std::cout << "port------------- = " << port << std::endl;
 		serv.setPort(port);
 	}
 }
@@ -194,8 +207,6 @@ void parse_root(std::string line, Server &serv)
 	}
 }
 
-
-
 void parse_error_page(std::string line, Server &serv)
 {
 	std::cout << "parse_error_page" << std::endl;
@@ -213,7 +224,6 @@ void parse_error_page(std::string line, Server &serv)
 		printVector(serv.getErrorPage());
 	}
 }
-
 
 void parse_location(std::string line, Server &serv, std::ifstream &file)
 {
@@ -289,6 +299,20 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
 				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
 				loc.setCgiPath(cgiPath);
+			}
+			size_t redirPos = subLine.find("return");
+			if (redirPos != std::string::npos)
+			{
+				size_t startRedir = subLine.find_first_not_of(" \t", redirPos + 6);
+				size_t endRedir = subLine.find_first_of(" \t;", startRedir);
+				std::string error_code = subLine.substr(startRedir, endRedir - startRedir);
+				startRedir = endRedir;
+				while (startRedir < subLine.size() && std::isspace(subLine[startRedir]))
+					startRedir++;
+				endRedir = subLine.find_first_of(" \t;", startRedir);
+				std::string path = subLine.substr(startRedir, endRedir - startRedir);
+				loc.setRedir(error_code, path);
+				printMapRedirect(loc.getRedir());
 			}
 		}
 		serv.setLocation(loc);

@@ -53,85 +53,61 @@ void printVectorrr(std::vector<std::string> vec)
 
 void parse_allow_method(Config &conf, HttpRequest &req)
 {
-    // Récupérer les méthodes autorisées
-    std::string allow_methods = conf.getServer()[0].getLocation()[0].getAllowMethod();
-    std::vector<std::string> methods;
+	std::string allow_methods = conf.getServer()[0].getLocation()[0].getAllowMethod();
+	std::vector<std::string> methods;
 
-    // Découper la chaîne des méthodes autorisées
-    std::istringstream stream(allow_methods);
-    std::string method;
-    while (stream >> method) {
-        methods.push_back(method);
-    }
+	std::istringstream stream(allow_methods);
+	std::string method;
+	while (stream >> method) {
+		methods.push_back(method);
+	}
 
-    // Afficher les méthodes autorisées
-    std::cout << "DEBUG: getAllowMethod() = '" << allow_methods << "'" << std::endl;
-    for (size_t i = 0; i < methods.size(); ++i) {
-        std::cout << "vec[" << i << "] = " << methods[i] << std::endl;
-    }
+	std::cout << "DEBUG: getAllowMethod() = '" << allow_methods << "'" << std::endl;
+	for (size_t i = 0; i < methods.size(); ++i) {
+		std::cout << "vec[" << i << "] = " << methods[i] << std::endl;
+	}
 
-    // Récupérer la méthode de la requête
-    std::string request_method = req.getMethod();
-    request_method.erase(request_method.find_last_not_of(" \t\r\n") + 1); // Nettoyage
-    std::cout << "DEBUG: req.getMetode() (trimmed) = '" << request_method << "'" << std::endl;
+	std::string request_method = req.getMethod();
+	request_method.erase(request_method.find_last_not_of(" \t\r\n") + 1);
+	std::cout << "DEBUG: req.getMetode() (trimmed) = '" << request_method << "'" << std::endl;
 
-    // Vérifier si la méthode est dans la liste des méthodes autorisées
-    if (std::find(methods.begin(), methods.end(), request_method) == methods.end()) {
-        // La méthode n'est pas autorisée -> Erreur 400
-        generate_html_page_error(conf, 1, "400");
-    }
+	if (std::find(methods.begin(), methods.end(), request_method) == methods.end())
+		generate_html_page_error(conf, 1, "400");
 }
 
 std::string CheckLocation(const std::string& path, Config& conf, const std::vector<location>& locationPath, bool& locationMatched, HttpRequest &req)
 {
-    // Nettoyer le path en supprimant les espaces avant et après
-
 	(void) conf;
-	parse_allow_method(conf, req);
-    std::string cleanedPath = trim(path);
+	(void) req;
+	std::string cleanedPath = trim(path);
 
-    // Affiche les valeurs pour vérification
-    std::cout << "cleanedPath = |" << cleanedPath << "|" << std::endl;
-
-    // Parcours toutes les locations
-    for (size_t i = 0; i < locationPath.size(); ++i) {
-        std::string locationStr = locationPath[i].getPath();
-
-        // Nettoyer la location en supprimant les espaces avant et après
-        locationStr = trim(locationStr);
-
-        std::cout << "locationStr = |" << locationStr << "|" << std::endl;
-
-        // Vérifie si le path commence par locationStr
-        if (cleanedPath.find(locationStr) == 0) {
-            std::cout << "je rentre ici pour location = " << locationStr << std::endl;
-
-            // Si le chemin est plus court que locationStr, cela signifie qu'on n'a rien à extraire
-            if (cleanedPath.size() <= locationStr.size()) {
+	for (size_t i = 0; i < locationPath.size(); ++i)
+	{
+		std::string locationStr = locationPath[i].getPath();
+		locationStr = trim(locationStr);
+		if (cleanedPath.find(locationStr) == 0)
+		{
+			if (cleanedPath.size() <= locationStr.size())
+			{
 				locationMatched = true;
-                return "." + locationPath[i].getRoot();
-            }
-
-            // Sinon, on extrait la sous-chaîne relative après le path de la location
-            std::string relativePath = cleanedPath.substr(locationStr.size());
-
-            // Si le chemin relatif est vide ou juste un "/", retourner l'index ou la racine
-            if (relativePath.empty() || relativePath == "/") {
-                if (!locationPath[i].getIndex().empty()) {
+				return "." + locationPath[i].getRoot();
+			}
+			std::string relativePath = cleanedPath.substr(locationStr.size());
+			if (relativePath.empty() || relativePath == "/")
+			{
+				if (!locationPath[i].getIndex().empty())
+				{
 					locationMatched = true;
-                    return "." + locationPath[i].getRoot() + locationPath[i].getIndex();
-                }
+					return "." + locationPath[i].getRoot() + locationPath[i].getIndex();
+				}
 				locationMatched = true;
-                return "." + locationPath[i].getRoot(); // Retourne le root si pas d'index
-            }
+				return "." + locationPath[i].getRoot();
+			}
 			locationMatched = true;
-
-            // Retourne le chemin complet avec la partie relative
-            return "." + locationPath[i].getRoot() + relativePath;
-        }
-    }
-
-    return ""; // Si aucun match n'est trouvé
+			return "." + locationPath[i].getRoot() + relativePath;
+		}
+	}
+	return "";
 }
 
 
@@ -146,18 +122,43 @@ bool check_host(std::string line, Config &conf, int server_index)
 		host.erase(std::remove_if(host.begin(), host.end(), ::isspace), host.end());
 
 		std::cout << "-------------host = |" << host << "|" << std::endl;
-
-		std::string expected_host = conf.getServer()[server_index].getServerName() + ":" + conf.getServer()[server_index].getPort();
-		if (host != expected_host)
+		std::string my_host;
+		if (conf.getServer()[server_index].getHost().empty())
 		{
-			std::cout << "host.conf = |" << expected_host << "|" << std::endl;
-			std::cout << "Error: Host not found" << std::endl;
+			my_host = conf.getServer()[server_index].getServerName() + ":" + conf.getServer()[server_index].getPort();
+		}
+		else
+			my_host = conf.getServer()[server_index].getHost();
+		std::cout << "-------------my_host = |" << my_host << "|" << std::endl;
+		if (host != my_host)
+		{
+			std::cout << "host.conf = |" << my_host << "|" << std::endl;
 			return false;
 		}
 	}
 	return true;
 }
 
+
+void sendRedirection(int client_socket, const std::string& path) {
+    // Créer l'en-tête HTTP de redirection 301
+    std::ostringstream responseStream;
+	std::cout << "---------------------------------------------path = " << path << std::endl;
+    responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
+                   << "Location: " << path << "\r\n"
+                   << "Content-Type: text/html\r\n"
+                   << "Content-Length: 0\r\n"
+                   << "Connection: close\r\n"
+                   << "\r\n"; // Fin des en-têtes
+
+    std::string response = responseStream.str();
+
+    // Envoyer la réponse de redirection au client
+    send(client_socket, response.c_str(), response.size(), 0);
+
+    // Fermer la connexion (si nécessaire)
+    close(client_socket);
+}
 
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req)
 {
@@ -185,10 +186,8 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
-			std::cout << "path-----------------------------------" << path << std::endl;
 			bool locationMatched = false;
 			finalPath = CheckLocation(path, conf, locationPath, locationMatched, req);
-			std::cout << "finalPath-----------------------------------" << finalPath << std::endl;
 			if (!locationMatched)
 			{
 				if (path == "/")
@@ -222,6 +221,22 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 				else
 					finalPath = "." + conf.getServer()[server_index].getRoot() + path;
 			}
+			else 
+			{
+				std::map<std::string, std::string> redirMap = conf.getServer()[0].getLocation()[0].getRedir();
+
+				// Exemple : récupérer le chemin de redirection pour un code spécifique
+				
+				for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it) {
+					std::string errorCode = it->first;  // Code d'erreur
+					std::string path = it->second;      // URL de redirection
+
+					std::cout << "Redirection code: " << errorCode << ", path: " << path << std::endl;
+
+					// Appeler la fonction pour envoyer la redirection
+					sendRedirection(client_socket, path);
+				}
+			}
 		}
 		if (check_host(line, conf, server_index) == false)
 		{
@@ -229,7 +244,6 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 			return ;
 		}
 	}
-	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(conf, client_socket, "404");

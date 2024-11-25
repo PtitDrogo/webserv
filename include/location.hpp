@@ -12,6 +12,7 @@ class location
 		std::string _auto_index;
 		std::string _allow_method;
 		std::string _cgi_path;
+		std::map<std::string, std::string> _redir;
 
 
 	public :
@@ -27,6 +28,8 @@ class location
 		std::string getAutoIndex() const;
 		std::string getAllowMethod() const;
 		std::string getCgiPath() const;
+		std::map<std::string, std::string> getRedir() const;
+
 
 
 		//setter//
@@ -36,6 +39,7 @@ class location
 		void setAutoIndex(std::string auto_index);
 		void setAllowMethod(std::string allow_method);
 		void setCgiPath(std::string cgi_path);
+		void setRedir(std::string& error_code, std::string& path);
 };
 
 #endif

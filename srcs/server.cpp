@@ -28,6 +28,7 @@ Server &Server::operator=(const Server &copy)
 		this->_location = copy._location;
 		this->_max_body_size = copy._max_body_size;
 		this->_auto_index = copy._auto_index;
+		this->_host = copy._host;
 	}
 	return *this;
 }
@@ -75,6 +76,11 @@ int Server::getMaxBodySize() const
 std::string Server::getAutoIndex() const
 {
 	return (this->_auto_index);
+}
+
+std::string Server::getHost() const
+{
+	return (this->_host);
 }
 
 void Server::setPort(std::string port)
@@ -127,3 +133,7 @@ void Server::setAutoIndex(std::string auto_index)
 // 	this->_location = loc;
 // }
 
+void Server::setHost(std::string host)
+{
+	this->_host = host;
+}
