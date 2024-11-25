@@ -26,9 +26,10 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 void generate_html_page_error(Config &conf, int client_socket, std::string error_code)
 {
     std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
-
+    int	server_index = conf.getIndexOfClientServer(client_socket);
+    
     // On récupère la map de l'erreur pour l'utiliser ensuite
-    std::map<std::string, std::string> errorPageMap = conf.getServer()[0].getErrorPage();
+    std::map<std::string, std::string> errorPageMap = conf.getServer()[server_index].getErrorPage();
 
     // Recherche de l'erreur dans la map
     std::map<std::string, std::string>::iterator it = errorPageMap.find(error_code);
