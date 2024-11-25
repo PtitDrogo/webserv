@@ -35,7 +35,6 @@ int main(int argc, char **argv, char **envp)
 			}
 			if (!(fds[i].revents & POLLIN))
 				continue;
-
 			// Lecture initiale du buffer
 			char buffer[1024] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
