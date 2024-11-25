@@ -210,6 +210,7 @@ void parse_error_page(std::string line, Server &serv)
 		std::string error_file;
 		iss >> error_file;
 		serv.setErrorPage(error_code, error_file);
+		std::cout << "SETTING UP A SERVER WITH THIS ERROR PAGE" << std::endl;
 		printVector(serv.getErrorPage());
 	}
 }
@@ -364,6 +365,18 @@ void parse_auto_index(std::string line, Server &serv)
 	}
 }
 
+bool isCommentLine(const std::string line)
+{
+	for (unsigned int i = 0; i < line.size(); i++)
+	{
+		if (line[i] == '#')
+			return true;
+		else if (std::isspace(line[i]) == false)
+			return false;
+	}
+	return false;
+}
+
 void Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
@@ -371,6 +384,8 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 	std::cout << "createServerr" << std::endl;
 	while(std::getline(file, line))
 	{
+		if (isCommentLine(line) == true)
+			continue ;
 		if (line.find("listen") != std::string::npos)
 			parse_listen(line, serv);
 		if (line.find("server_name") != std::string::npos)
@@ -392,6 +407,7 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 	}
 	this->setServer(serv);
 }
+
 
 void Config::printConfig()
 {
@@ -456,6 +472,7 @@ bool Config::parse_config_file(std::string filename)
 	{
 		if (line.find("server") != std::string::npos)
 		{
+			std::cout << "CREATING SERVER" << std::endl;
 			Server serv;
 			createServerr(file, serv);
 		}

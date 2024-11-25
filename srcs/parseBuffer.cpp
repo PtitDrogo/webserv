@@ -53,7 +53,7 @@ void printVectorrr(std::vector<std::string> vec)
 
 void parse_allow_method(Config &conf, HttpRequest &req)
 {
-    // Récupérer les méthodes autorisées
+	// Récupérer les méthodes autorisées
     std::string allow_methods = conf.getServer()[0].getLocation()[0].getAllowMethod();
     std::vector<std::string> methods;
 
