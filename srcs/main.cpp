@@ -68,7 +68,11 @@ int main(int argc, char **argv,char **envp)
 			std::cout << "TYPE REQUEST IS : " << type_request << std::endl; 
 			if (type_request == "POST")
 			{
-				if (!preparePostParse(fds[i].fd, buffer, conf, recv_value))
+				std::string initial_data(buffer, recv_value);
+				size_t content_length_pos = initial_data.find("Content-Length: ");
+				if (content_length_pos == std::string::npos)
+				{
+					generate_html_page_error(conf, fds[i].fd, "400");
 					break;
 				}
 
@@ -104,7 +108,6 @@ int main(int argc, char **argv,char **envp)
 					body.append(buffer, recv_value);
 					total_received += recv_value;
 				}
-
 				parse_buffer_post(body, fds[i].fd, conf);
 			}
 			else if (type_request == "GET")

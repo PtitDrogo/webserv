@@ -75,7 +75,7 @@ void parse_allow_method(Config &conf, HttpRequest &req)
     }
 
     // Récupérer la méthode de la requête
-    std::string request_method = req.getMetode();
+    std::string request_method = req.getMethod();
     request_method.erase(request_method.find_last_not_of(" \t\r\n") + 1); // Nettoyage
     std::cout << "DEBUG: req.getMetode() (trimmed) = '" << request_method << "'" << std::endl;
 
