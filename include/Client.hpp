@@ -44,18 +44,4 @@ private:
 	void _sendResponse(const std::string& response);
 };
 
-
-// classe pour gerer la collection de sockets clients
-class ClientSocketManager 
-{
-public:
-	void addClient(int socket, Server& serv);
-	void removeClient(int socket);
-	Client& getClient(int socket);
-	bool hasClient(int socket) const;
-
-private:
-	std::map<int, Client> _clients;
-};
-
 #endif

@@ -15,20 +15,20 @@ bool isExtension(std::string path)
 	return (true);
 }
 
-void autoIndex(std::string path, Config &conf, int client_socket)
+void autoIndex(std::string path, const Client& client)
 {
 	std::string finalPath;
 	std::string reponse;
 	std::string file_content;
-	int	server_index = conf.getServerOfClient(client_socket);
+	const Server& server = client.getServer();
 
-	finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+	finalPath = "." + server.getRoot() + path;
 	std::vector<std::string> files = listDirectory(finalPath);
 	file_content = generateAutoIndexPage(finalPath, files);
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	std::cout << "reponse = " << reponse << std::endl;
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client_socket, reponse.c_str(), reponse.size(), 0);
+	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }
 
 
@@ -135,7 +135,7 @@ std::string CheckLocation(const std::string& path, Client& client, const std::ve
 }
 
 
-bool check_host(std::string line, Config &conf, const Server& Server)
+bool check_host(std::string line, const Server& Server)
 {
 	size_t pos = line.find("Host: ");
 	if (pos != std::string::npos)
@@ -159,7 +159,7 @@ bool check_host(std::string line, Config &conf, const Server& Server)
 }
 
 
-void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, HttpRequest &req)
+void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req)
 {
 	Server& 	server = client.getServer();
 	int 		client_socket = client.getSocket();
@@ -188,7 +188,7 @@ void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, Ht
 			version = line.substr(pos2);
 			std::cout << "path-----------------------------------" << path << std::endl;
 			bool locationMatched = false;
-			finalPath = CheckLocation(path, conf, locationPath, locationMatched, req);
+			finalPath = CheckLocation(path, client, locationPath, locationMatched, req);
 			std::cout << "finalPath-----------------------------------" << finalPath << std::endl;
 			if (!locationMatched)
 			{
@@ -198,7 +198,7 @@ void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, Ht
 						finalPath = "." + server.getRoot() + server.getIndex();
 					else if (server.getAutoIndex() == "on")
 					{
-						autoIndex(path, conf, client_socket);
+						autoIndex(path, client);
 						return ;
 					}
 					else
@@ -224,7 +224,7 @@ void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, Ht
 					finalPath = "." + server.getRoot() + path;
 			}
 		}
-		if (check_host(line, conf, server) == false)
+		if (check_host(line, server) == false)
 		{
 			generate_html_page_error(client, "400");
 			return ;
@@ -238,7 +238,7 @@ void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, Ht
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
-void parse_buffer_post(const Client& client, std::string buffer, Config &conf)
+void parse_buffer_post(const Client& client, std::string buffer)
 {
 	std::istringstream stream(buffer);
 	std::string line;
@@ -321,7 +321,7 @@ void parse_buffer_post(const Client& client, std::string buffer, Config &conf)
 	message.clear();
 }
 
-bool preparePostParse(const Client& client, char *buffer, Config &conf, int recv_value)
+bool preparePostParse(const Client& client, char *buffer, int recv_value)
 {
 	int 			fd = client.getSocket();
 	const Server& 	server = client.getServer();
@@ -366,6 +366,6 @@ bool preparePostParse(const Client& client, char *buffer, Config &conf, int recv
 		body.append(buffer, recv_value);
 		total_received += recv_value;
 	}
-	parse_buffer_post(client, body, conf);
+	parse_buffer_post(client, body);
 	return true;
 }

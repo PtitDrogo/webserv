@@ -119,20 +119,3 @@ Server& Client::getServer() const { return _server;}
 ClientUploadState& Client::getUploadState() {
     return _uploadState;
 }
-
-// Implémentation de ClientSocketManager
-void ClientSocketManager::addClient(int socket, Server& serv) {
-    _clients[socket] = Client(socket, serv);
-}
-
-void ClientSocketManager::removeClient(int socket) {
-    _clients.erase(socket);
-}
-
-Client& ClientSocketManager::getClient(int socket) {
-    return _clients[socket];
-}
-
-bool ClientSocketManager::hasClient(int socket) const {
-    return _clients.find(socket) != _clients.end();
-}

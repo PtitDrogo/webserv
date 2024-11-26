@@ -57,9 +57,9 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, HttpRequest &req);
-void	parse_buffer_post(const Client& client, std::string buffer, Config &conf);
-bool    preparePostParse(const Client& client, char *buffer, Config &conf, int recv_value);
+void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req);
+void	parse_buffer_post(const Client& client, std::string buffer);
+bool    preparePostParse(const Client& client, char *buffer, int recv_value);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
@@ -83,7 +83,7 @@ void 		generate_html_page_error(const Client& client, std::string error_code);
 //-----------Delete-----------//
 
 bool deleteFile(const std::string& path);
-void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
+void parse_buffer_delete(std::string buffer, int client_socket);
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client);

@@ -51,17 +51,26 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 
 void	Config::addClient(int client_fd, Server &serv)
 {
-	_clients[client_fd] = Client(client_fd, serv);
+	// On fait comme ca parce que la methode simple essaye de creer un client sans serveur et ca marche pas;
+	_clients.insert(std::map<int, Client>::value_type(client_fd, Client(client_fd, serv)));
 }
 
 Server &Config::getServerOfClient(int client_fd)
 {
-	return (_clients[client_fd].getServer());
+	std::map<int, Client>::const_iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
+        return it->second.getServer();
+    }
+	throw std::out_of_range("Somehow, your socket doesnt have a server"); //Un peu obliger de faire ca sinon jai rien a renvoyer;
 }
 
 Client &Config::getClientObject(int client_fd)
 {
-	return (_clients[client_fd]);
+	std::map<int, Client>::iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
+        return it->second;
+    }
+	throw std::out_of_range("Somehow, your socket isnt linked to a client object");
 }
 
 std::map<int, Client>& Config::getClientsMap()

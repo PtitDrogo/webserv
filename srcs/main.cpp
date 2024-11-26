@@ -48,20 +48,20 @@ int main(int argc, char **argv, char **envp)
 			std::cout << "TYPE REQUEST IS : " << type_request << std::endl; 
 			if (type_request == "POST")
 			{
-				if (preparePostParse(client, buffer, conf, recv_value) == false)
+				if (preparePostParse(client, buffer,recv_value) == false)
 					break ;
 			}
 			else if (type_request == "GET")
-				parse_buffer_get(buffer, conf, fds[i].fd, req);
+				parse_buffer_get(client, buffer,req);
 			else if (type_request == "DELETE")
-				parse_buffer_delete(buffer, fds[i].fd, conf);
+				parse_buffer_delete(buffer, fds[i].fd);
 			else if (type_request == "CGI")
 			{
 				cgiProtocol(envp, req, fds[i].fd);
 			}
 			else
 			{
-				generate_html_page_error(conf, fds[i].fd, "404");
+				generate_html_page_error(client, "404");
 			}
 			std::cout << req << std::endl;
 		}

@@ -106,7 +106,7 @@ pid_t    CgiHandler::executeTimeOut() const
 	return (pidTimeOut);
 }
 
-
+//ADD client there later;
 void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client)
 {
     CgiHandler cgi(envp);
