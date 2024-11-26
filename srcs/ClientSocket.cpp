@@ -2,7 +2,9 @@
 #include <iostream>
 #include <cstring>
 
-ClientSocket::ClientSocket() : _socket(-1), _server(NULL) {}
+// ClientSocket::ClientSocket() 
+// {}
+// //: _socket(-1), _server() 
 
 ClientSocket::~ClientSocket() {
     if (_socket != -1) {
@@ -28,9 +30,11 @@ ClientSocket& ClientSocket::operator=(const ClientSocket& other) {
     return *this;
 }
 
-void ClientSocket::handleNewClient(int clientSocket, Server& serv) {
+ClientSocket::ClientSocket(int clientSocket, Server& serv) :
+_socket(-1), _server(serv), _uploadState()
+{
     _socket = clientSocket;
-    _server = &serv;
+    _server = serv;
 
     char buffer[1024] = {0};
     int recv_value = recv(_socket, buffer, sizeof(buffer) - 1, 0);
@@ -105,7 +109,7 @@ void ClientSocket::setSocket(int socket) {
     _socket = socket;
 }
 
-void ClientSocket::setServer(Server* server) {
+void ClientSocket::setServer(Server& server) {
     _server = server;
 }
 
@@ -119,9 +123,7 @@ ClientUploadState& ClientSocket::getUploadState() {
 
 // Implémentation de ClientSocketManager
 void ClientSocketManager::addClient(int socket, Server& serv) {
-    _clients[socket] = ClientSocket();
-    _clients[socket].setSocket(socket);
-    _clients[socket].setServer(&serv);
+    _clients[socket] = ClientSocket(socket, serv);
 }
 
 void ClientSocketManager::removeClient(int socket) {
