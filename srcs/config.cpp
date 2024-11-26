@@ -4,7 +4,7 @@ Config::Config() {}
 
 Config::~Config() {}
 
-Config::Config(const Config &copy)
+Config::Config(const Config &copy) 
 {
 	*this = copy;
 }
@@ -14,6 +14,7 @@ Config &Config::operator=(const Config &copy)
 	if (this != &copy)
 	{
 		this->_servers = copy._servers;
+		this->_clients = copy._clients;
 	}
 	return *this;
 }
@@ -36,7 +37,7 @@ void Config::setServer(Server &serv)
 	this->_servers.push_back(serv);
 }
 
-
+//This adds all the server in the config file to the pollfd vector used by poll
 size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 {
 	size_t i;
@@ -48,14 +49,29 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 	return (i);
 }
 
-void	Config::addClient(int client_fd, int server)
+void	Config::addClient(int client_fd, Server &serv)
 {
-	_clients[client_fd] = server;
+	_clients[client_fd] = Client(client_fd, serv);
 }
 
-int		Config::getIndexOfClientServer(int client_fd)
+Server &Config::getServerOfClient(int client_fd)
+{
+	return (_clients[client_fd].getServer());
+}
+
+Client &Config::getClientObject(int client_fd)
 {
 	return (_clients[client_fd]);
+}
+
+std::map<int, Client>& Config::getClientsMap()
+{
+	return(_clients);
+}
+
+void Config::removeClient(int client_fd) 
+{
+    _clients.erase(client_fd);
 }
 
 int Config::SetupServerSocket(int i)

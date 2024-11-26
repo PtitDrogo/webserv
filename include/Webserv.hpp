@@ -57,9 +57,9 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req);
-void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
-bool    preparePostParse(int fd, char *buffer, Config &conf, int recv_value);
+void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, HttpRequest &req);
+void	parse_buffer_post(const Client& client, std::string buffer, Config &conf);
+bool    preparePostParse(const Client& client, char *buffer, Config &conf, int recv_value);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
@@ -68,9 +68,9 @@ int SetupClientAddress(int server_socket);
 //-----------HandleClients-----------//
 void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf);
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
-int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds);
+int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
-void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);
+void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
 
 
 
@@ -78,7 +78,7 @@ void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);
 std::string readFile(std::string &path);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
-void 		generate_html_page_error(Config &conf, int client_socket, std::string error_code);
+void 		generate_html_page_error(const Client& client, std::string error_code);
 
 //-----------Delete-----------//
 

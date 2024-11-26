@@ -26,11 +26,12 @@ int main(int argc, char **argv, char **envp)
 		checkIfNewClient(fds, number_of_servers, conf);
 		if (safe_poll(fds, number_of_servers) == FAILURE)
 			return FAILURE;
-		for (size_t i = number_of_servers; i < fds.size(); ++i)
+		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
+			Client &client = conf.getClientObject(fds[i].fd);
 			if (fds[i].revents & POLLRDHUP)
 			{
-				disconnectClient(fds, i);
+				disconnectClient(fds, i, conf);
 				break;
 			}
 			//In theory I should add the timeout check for CGI here;
@@ -39,7 +40,7 @@ int main(int argc, char **argv, char **envp)
 			// Lecture initiale du buffer
 			char buffer[1024] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-			if (handleRecvValue(recv_value, i, fds) == FAILURE)
+			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
 				break ;
 
 			std::string type_request = get_type_request(buffer, req);
@@ -47,7 +48,7 @@ int main(int argc, char **argv, char **envp)
 			std::cout << "TYPE REQUEST IS : " << type_request << std::endl; 
 			if (type_request == "POST")
 			{
-				if (preparePostParse(fds[i].fd, buffer, conf, recv_value) == false)
+				if (preparePostParse(client, buffer, conf, recv_value) == false)
 					break ;
 			}
 			else if (type_request == "GET")

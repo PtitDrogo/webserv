@@ -24,7 +24,9 @@ public:
 	void setServer(Server& server);
 
 	// getters
+	Server& getServer() const;
 	int getSocket() const;
+
 	ClientUploadState& getUploadState();
 
 private:

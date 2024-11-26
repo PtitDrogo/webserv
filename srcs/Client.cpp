@@ -114,6 +114,7 @@ void Client::setServer(Server& server) {
 int Client::getSocket() const {
     return _socket;
 }
+Server& Client::getServer() const { return _server;}
 
 ClientUploadState& Client::getUploadState() {
     return _uploadState;

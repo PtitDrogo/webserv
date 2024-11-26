@@ -20,7 +20,7 @@ void autoIndex(std::string path, Config &conf, int client_socket)
 	std::string finalPath;
 	std::string reponse;
 	std::string file_content;
-	int	server_index = conf.getIndexOfClientServer(client_socket);
+	int	server_index = conf.getServerOfClient(client_socket);
 
 	finalPath = "." + conf.getServer()[server_index].getRoot() + path;
 	std::vector<std::string> files = listDirectory(finalPath);
@@ -51,10 +51,11 @@ void printVectorrr(std::vector<std::string> vec)
 	}
 }
 
-void parse_allow_method(Config &conf, HttpRequest &req)
+void parse_allow_method(Client& client, HttpRequest &req)
 {
 	// Récupérer les méthodes autorisées
-    std::string allow_methods = conf.getServer()[0].getLocation()[0].getAllowMethod();
+	Server& server = client.getServer();
+    std::string allow_methods = server.getLocation()[0].getAllowMethod();
     std::vector<std::string> methods;
 
     // Découper la chaîne des méthodes autorisées
@@ -78,16 +79,15 @@ void parse_allow_method(Config &conf, HttpRequest &req)
     // Vérifier si la méthode est dans la liste des méthodes autorisées
     if (std::find(methods.begin(), methods.end(), request_method) == methods.end()) {
         // La méthode n'est pas autorisée -> Erreur 400
-        generate_html_page_error(conf, 1, "400");
+        generate_html_page_error(client, "400");
     }
 }
 
-std::string CheckLocation(const std::string& path, Config& conf, const std::vector<location>& locationPath, bool& locationMatched, HttpRequest &req)
+std::string CheckLocation(const std::string& path, Client& client, const std::vector<location>& locationPath, bool& locationMatched, HttpRequest &req)
 {
     // Nettoyer le path en supprimant les espaces avant et après
 
-	(void) conf;
-	parse_allow_method(conf, req);
+	parse_allow_method(client, req);
     std::string cleanedPath = trim(path);
 
     // Affiche les valeurs pour vérification
@@ -135,7 +135,7 @@ std::string CheckLocation(const std::string& path, Config& conf, const std::vect
 }
 
 
-bool check_host(std::string line, Config &conf, int server_index)
+bool check_host(std::string line, Config &conf, const Server& Server)
 {
 	size_t pos = line.find("Host: ");
 	if (pos != std::string::npos)
@@ -147,7 +147,7 @@ bool check_host(std::string line, Config &conf, int server_index)
 
 		std::cout << "-------------host = |" << host << "|" << std::endl;
 
-		std::string expected_host = conf.getServer()[server_index].getServerName() + ":" + conf.getServer()[server_index].getPort();
+		std::string expected_host = Server.getServerName() + ":" + Server.getPort();
 		if (host != expected_host)
 		{
 			std::cout << "host.conf = |" << expected_host << "|" << std::endl;
@@ -159,18 +159,19 @@ bool check_host(std::string line, Config &conf, int server_index)
 }
 
 
-void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req)
+void	parse_buffer_get(const Client& client, std::string buffer, Config &conf, HttpRequest &req)
 {
+	Server& 	server = client.getServer();
+	int 		client_socket = client.getSocket();
 	std::istringstream stream(buffer);
 	std::string line;
-	int	server_index = conf.getIndexOfClientServer(client_socket);
 	std::string method;
 	std::string path;
 	std::string version;
 	std::string finalPath;
 	std::string reponse;
 	std::string file_content;
-	std::vector<location> locationPath = conf.getServer()[server_index].getLocation();
+	std::vector<location> locationPath = server.getLocation();
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
@@ -193,19 +194,19 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 			{
 				if (path == "/")
 				{
-					if (!conf.getServer()[server_index].getIndex().empty())
-						finalPath = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
-					else if (conf.getServer()[server_index].getAutoIndex() == "on")
+					if (!server.getIndex().empty())
+						finalPath = "." + server.getRoot() + server.getIndex();
+					else if (server.getAutoIndex() == "on")
 					{
 						autoIndex(path, conf, client_socket);
 						return ;
 					}
 					else
-						generate_html_page_error(conf, client_socket, "404");
+						generate_html_page_error(client, "404");
 				}
-				else if (conf.getServer()[server_index].getAutoIndex() == "on" && conf.getServer()[server_index].getIndex().empty())
+				else if (server.getAutoIndex() == "on" && server.getIndex().empty())
 				{
-					finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+					finalPath = "." + server.getRoot() + path;
 					if (!isExtension(finalPath))
 					{
 						std::vector<std::string> files = listDirectory(finalPath);
@@ -220,28 +221,28 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 					return ;
 				}
 				else
-					finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+					finalPath = "." + server.getRoot() + path;
 			}
 		}
-		if (check_host(line, conf, server_index) == false)
+		if (check_host(line, conf, server) == false)
 		{
-			generate_html_page_error(conf, client_socket, "400");
+			generate_html_page_error(client, "400");
 			return ;
 		}
 	}
 	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
-		generate_html_page_error(conf, client_socket, "404");
+		generate_html_page_error(client, "404");
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
-void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
+void parse_buffer_post(const Client& client, std::string buffer, Config &conf)
 {
 	std::istringstream stream(buffer);
 	std::string line;
-	int	server_index = conf.getIndexOfClientServer(client_socket);
+	const Server& 	server = client.getServer();
 
 	if (!stream)
 	{
@@ -290,7 +291,7 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 			path = "./config/page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			send(client_socket, reponse.c_str(), reponse.size(), 0);
+			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 			infile.close();
 		}
 		else
@@ -305,10 +306,10 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 				outfile.flush();
 				outfile.close();
 
-				std::string path = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
+				std::string path = "." + server.getRoot() + server.getIndex();
 				std::string file_content = readFile(path);
 				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-				send(client_socket, reponse.c_str(), reponse.size(), 0);
+				send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 			}
 		}
 	}
@@ -320,14 +321,16 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 	message.clear();
 }
 
-bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
+bool preparePostParse(const Client& client, char *buffer, Config &conf, int recv_value)
 {
-	int	server_index = conf.getIndexOfClientServer(fd);
-	std::string initial_data(buffer, recv_value);
-	size_t content_length_pos = initial_data.find("Content-Length: ");
+	int 			fd = client.getSocket();
+	const Server& 	server = client.getServer();
+	std::string 	initial_data(buffer, recv_value);
+	size_t      	content_length_pos = initial_data.find("Content-Length: ");
+
 	if (content_length_pos == std::string::npos)
 	{
-		generate_html_page_error(conf, fd, "400");
+		generate_html_page_error(client, "400");
 		return false;
 	}
 
@@ -336,9 +339,9 @@ bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 	int content_length = 0;
 	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
 
-	if (content_length > conf.getServer()[server_index].getMaxBodySize())
+	if (content_length > server.getMaxBodySize())
 	{
-		generate_html_page_error(conf, fd, "413");
+		generate_html_page_error(client, "413");
 		return false;
 	}
 
@@ -356,13 +359,13 @@ bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 		if (recv_value <= 0)
 		{
 			std::cerr << "Erreur : données POST incomplètes." << std::endl;
-			generate_html_page_error(conf, fd, "400");
+			generate_html_page_error(client, "400");
 			return false;
 		}
 
 		body.append(buffer, recv_value);
 		total_received += recv_value;
 	}
-	parse_buffer_post(body, fd, conf);
+	parse_buffer_post(client, body, conf);
 	return true;
 }

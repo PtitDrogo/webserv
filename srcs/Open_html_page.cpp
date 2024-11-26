@@ -48,13 +48,13 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"\r\n" + content);
 }
 
-void generate_html_page_error(Config &conf, int client_socket, std::string error_code)
+void generate_html_page_error(const Client& client, std::string error_code)
 {
     std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
-    int	server_index = conf.getIndexOfClientServer(client_socket);
-    
+    const Server& server = client.getServer();
+
     // On récupère la map de l'erreur pour l'utiliser ensuite
-    std::map<std::string, std::string> errorPageMap = conf.getServer()[server_index].getErrorPage();
+    std::map<std::string, std::string> errorPageMap = server.getErrorPage();
     //conf.getServer()[server_index].getRoot()
 
     // Recherche de l'erreur dans la map
@@ -77,5 +77,5 @@ void generate_html_page_error(Config &conf, int client_socket, std::string error
     std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
 
     // Envoi de la réponse
-    send(client_socket, reponse.c_str(), reponse.size(), 0);
+    send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }
