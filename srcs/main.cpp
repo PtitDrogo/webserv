@@ -39,7 +39,7 @@ int main(int argc, char **argv, char **envp)
 			char buffer[1024] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (handleRecvValue(recv_value, i, fds) == FAILURE)
-				break;
+				break ;
 
 			std::string type_request = get_type_request(buffer, req);
 			// parse_allow_method(req, conf, fds[i].fd);
