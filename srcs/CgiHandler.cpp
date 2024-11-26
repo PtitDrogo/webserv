@@ -112,6 +112,8 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client
     CgiHandler cgi(envp);
     std::string response;
     
+
+    //So im gonna need to add the pipe of the cgi to the fucking poll fd list, SAD.
     if (cgi.HandleCgiRequest(request) == false)
     {
         response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");

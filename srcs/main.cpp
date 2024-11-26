@@ -59,7 +59,7 @@ int main(int argc, char **argv, char **envp)
 				cgiProtocol(envp, req, fds[i].fd);
 			}
 			else
-			{	
+			{
 				generate_html_page_error(conf, fds[i].fd, "404");
 			}
 			std::cout << req << std::endl;
