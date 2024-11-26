@@ -33,4 +33,9 @@
 #include "httpRequest.hpp"
 #include "CgiHandler.hpp"
 
+//llitot classes
+#include "HttpRequestParser.hpp"
+#include "ClientUploadState.hpp" 
+#include "ClientSocket.hpp"
+
 #endif

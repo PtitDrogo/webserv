@@ -51,13 +51,13 @@ void ClientSocket::_processNewRequest(const std::string& buffer) {
     std::string type_request = HttpRequestParser::getRequestType(buffer);
 
     if (type_request == "GET") {
-        HttpRequestParser::parseGetRequest(buffer, *_server, _socket);
+        HttpRequestParser::parseGetRequest(buffer, _server, _socket);
     } else if (type_request == "POST") {
         // initialiser l'état du client pour POST
         _uploadState.appendToBuffer(buffer.c_str(), buffer.length());
         _uploadState.setBytesReceived(buffer.length());
         
-        handleClientData(*_server);
+        handleClientData(_server);
     } else {
         std::cout << RED << "Error: Generation d'une page d'erreur pour les requetes non supportees" << RESET << std::endl;
         // generate_html_page_error(*_server, _socket, "404");
