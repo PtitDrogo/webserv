@@ -13,7 +13,7 @@ Config &Config::operator=(const Config &copy)
 {
 	if (this != &copy)
 	{
-		this->_server = copy._server;
+		this->_servers = copy._servers;
 	}
 	return *this;
 }
@@ -28,19 +28,19 @@ void printVector(std::map<std::string, std::string> errorPage)
 
 std::vector<Server> &Config::getServer()
 {
-	return this->_server;
+	return this->_servers;
 }
 
 void Config::setServer(Server &serv)
 {
-	this->_server.push_back(serv);
+	this->_servers.push_back(serv);
 }
 
 
 size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 {
 	size_t i;
-	for (i = 0; i < _server.size(); i++)
+	for (i = 0; i < _servers.size(); i++)
 	{
 		int server_socket = SetupServerSocket(i);
 		addPollFD(server_socket, fds);
@@ -72,7 +72,7 @@ int Config::SetupServerSocket(int i)
 	server_address.sin_family = AF_INET;
 
 
-	int port = std::atoi(_server[i].getPort().c_str());
+	int port = std::atoi(_servers[i].getPort().c_str());
 
 	// int port = std::atoi(conf.getServer()[0].getPort().c_str());
 	server_address.sin_port = htons(port);

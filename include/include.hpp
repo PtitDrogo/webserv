@@ -36,6 +36,6 @@
 //llitot classes
 #include "HttpRequestParser.hpp"
 #include "ClientUploadState.hpp" 
-#include "ClientSocket.hpp"
+#include "Client.hpp"
 
 #endif

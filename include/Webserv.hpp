@@ -8,9 +8,10 @@
 //*********************************************************//
 
 class location;
-class Config;
 class HttpRequest;
+class Config;
 class Server;
+class Client;
 
 
 //*********************************************************//

@@ -1,22 +1,20 @@
-#include "ClientSocket.hpp"
-#include <iostream>
-#include <cstring>
+#include "Client.hpp"
 
-// ClientSocket::ClientSocket() 
+// Client::Client() 
 // {}
 // //: _socket(-1), _server() 
 
-ClientSocket::~ClientSocket() {
+Client::~Client() {
     if (_socket != -1) {
         close(_socket);
     }
 }
 
-ClientSocket::ClientSocket(const ClientSocket& other) 
+Client::Client(const Client& other) 
     : _socket(other._socket), _server(other._server), 
       _uploadState(other._uploadState) {}
 
-ClientSocket& ClientSocket::operator=(const ClientSocket& other) {
+Client& Client::operator=(const Client& other) {
     if (this != &other) {
         // Fermer le socket existant si nécessaire
         if (_socket != -1) {
@@ -30,7 +28,7 @@ ClientSocket& ClientSocket::operator=(const ClientSocket& other) {
     return *this;
 }
 
-ClientSocket::ClientSocket(int clientSocket, Server& serv) :
+Client::Client(int clientSocket, Server& serv) :
 _socket(-1), _server(serv), _uploadState()
 {
     _socket = clientSocket;
@@ -47,7 +45,7 @@ _socket(-1), _server(serv), _uploadState()
     _processNewRequest(std::string(buffer));
 }
 
-void ClientSocket::_processNewRequest(const std::string& buffer) {
+void Client::_processNewRequest(const std::string& buffer) {
     std::string type_request = HttpRequestParser::getRequestType(buffer);
 
     if (type_request == "GET") {
@@ -64,7 +62,7 @@ void ClientSocket::_processNewRequest(const std::string& buffer) {
     }
 }
 
-void ClientSocket::handleClientData(Server& serv) {
+void Client::handleClientData(Server& serv) {
     char chunk[1024];
     int bytesRead = recv(_socket, chunk, sizeof(chunk) - 1, 0);
 
@@ -94,43 +92,43 @@ void ClientSocket::handleClientData(Server& serv) {
     }
 }
 
-void ClientSocket::disconnect() {
+void Client::disconnect() {
     if (_socket != -1) {
         close(_socket);
         _socket = -1;
     }
 }
 
-bool ClientSocket::isValidSocket() const {
+bool Client::isValidSocket() const {
     return _socket != -1;
 }
 
-void ClientSocket::setSocket(int socket) {
+void Client::setSocket(int socket) {
     _socket = socket;
 }
 
-void ClientSocket::setServer(Server& server) {
+void Client::setServer(Server& server) {
     _server = server;
 }
 
-int ClientSocket::getSocket() const {
+int Client::getSocket() const {
     return _socket;
 }
 
-ClientUploadState& ClientSocket::getUploadState() {
+ClientUploadState& Client::getUploadState() {
     return _uploadState;
 }
 
 // Implémentation de ClientSocketManager
 void ClientSocketManager::addClient(int socket, Server& serv) {
-    _clients[socket] = ClientSocket(socket, serv);
+    _clients[socket] = Client(socket, serv);
 }
 
 void ClientSocketManager::removeClient(int socket) {
     _clients.erase(socket);
 }
 
-ClientSocket& ClientSocketManager::getClient(int socket) {
+Client& ClientSocketManager::getClient(int socket) {
     return _clients[socket];
 }
 

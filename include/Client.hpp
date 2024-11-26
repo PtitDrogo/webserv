@@ -1,21 +1,16 @@
-#ifndef CLIENT_SOCKET_HPP
-#define CLIENT_SOCKET_HPP
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
-#include <string>
-#include <map>
-#include <sys/socket.h>
-#include <unistd.h>
-#include "ClientUploadState.hpp"
-#include "server.hpp" // change into "Server.hpp"
+#include "Webserv.hpp"
 // #include "HttpRequestParser.hpp"
 
-class ClientSocket 
+class Client 
 {
 public:
-	~ClientSocket();
-	ClientSocket(int clientSocket, Server &serv); //only way a client can be constructed.
-	ClientSocket(const ClientSocket& other);
-	ClientSocket& operator=(const ClientSocket& other);
+	~Client();
+	Client(int clientSocket, Server &serv); //only way a client can be constructed.
+	Client(const Client& other);
+	Client& operator=(const Client& other);
 
 	
 	// methodes principales de gestion du socket client
@@ -33,7 +28,7 @@ public:
 	ClientUploadState& getUploadState();
 
 private:
-	ClientSocket(); //We cannot make a client without its server
+	Client(); //We cannot make a client without its server
 	// attributs prives
 	int 			  _socket;
 	Server&			  _server;
@@ -54,11 +49,11 @@ class ClientSocketManager
 public:
 	void addClient(int socket, Server& serv);
 	void removeClient(int socket);
-	ClientSocket& getClient(int socket);
+	Client& getClient(int socket);
 	bool hasClient(int socket) const;
 
 private:
-	std::map<int, ClientSocket> _clients;
+	std::map<int, Client> _clients;
 };
 
 #endif
