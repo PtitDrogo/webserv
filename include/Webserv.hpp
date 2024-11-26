@@ -28,6 +28,7 @@ class Server;
 
 # define SUCCESS 0
 # define FAILURE 1
+# define POLL_TIMEOUT 5000
 
 //*********************************************************//
 //************************FUNCTIONS************************//

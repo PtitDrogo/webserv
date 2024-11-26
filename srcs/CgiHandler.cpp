@@ -63,7 +63,7 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
     std::cout << "Waiting for the Process !" << std::endl;
     waitpid(-1, NULL, WUNTRACED);
     std::cout << "Waited for the Process ! Returning bool of : " << cgi_success << std::endl;
-    return cgi_success; //Returning void for now, I can potentially return the status of the process.
+    return cgi_success;
 
 }
 

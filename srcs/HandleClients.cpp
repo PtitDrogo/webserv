@@ -22,7 +22,7 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 //In this function we are also polling the server, should we do that ??
 int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 {
-    if (poll(fds.data(), fds.size(), -1) == -1)
+    if (poll(fds.data(), fds.size(), POLL_TIMEOUT) == -1) //
     {
         //NOTE : if we use ctrlC or ctrl Z, this will print this, before pushing to prod i could check the static variable to know that its normal to fail this and not print.
 		std::cerr << "Poll failed" << std::endl;

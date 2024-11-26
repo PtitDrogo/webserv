@@ -33,6 +33,7 @@ int main(int argc, char **argv, char **envp)
 				disconnectClient(fds, i);
 				break;
 			}
+			//In theory I should add the timeout check for CGI here;
 			if (!(fds[i].revents & POLLIN))
 				continue;
 			// Lecture initiale du buffer
@@ -46,48 +47,8 @@ int main(int argc, char **argv, char **envp)
 			std::cout << "TYPE REQUEST IS : " << type_request << std::endl; 
 			if (type_request == "POST")
 			{
-				int	server_index = conf.getIndexOfClientServer(fds[i].fd);
-				std::string initial_data(buffer, recv_value);
-				size_t content_length_pos = initial_data.find("Content-Length: ");
-				if (content_length_pos == std::string::npos)
-				{
-					generate_html_page_error(conf, fds[i].fd, "400");
-					break;
-				}
-
-				size_t length_start = content_length_pos + 16;
-				size_t length_end = initial_data.find("\r\n", length_start);
-				int content_length = 0;
-				std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
-
-				if (content_length > conf.getServer()[server_index].getMaxBodySize())
-				{
-					generate_html_page_error(conf, fds[i].fd, "413");
-					break;
-				}
-
-				// Extraire le corps après la ligne vide qui suit les en-têtes
-				std::string body = initial_data.substr(initial_data.find("\r\n\r\n") + 4);
-
-				// Afficher le contenu reçu pour déboguer
-				std::cout << "initial_data = " << initial_data << std::endl;
-				std::cout << "body = " << body << std::endl;
-
-				int total_received = body.size();
-				while (total_received < content_length)
-				{
-					recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-					if (recv_value <= 0)
-					{
-						std::cerr << "Erreur : données POST incomplètes." << std::endl;
-						generate_html_page_error(conf, fds[i].fd, "400");
-						break;
-					}
-
-					body.append(buffer, recv_value);
-					total_received += recv_value;
-				}
-				parse_buffer_post(body, fds[i].fd, conf);
+				if (preparePostParse(fds[i].fd, buffer, conf, recv_value) == false)
+					break ;
 			}
 			else if (type_request == "GET")
 				parse_buffer_get(buffer, conf, fds[i].fd, req);

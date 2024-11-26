@@ -322,8 +322,8 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 
 bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 {
-	std::string initial_data(buffer, recv_value);
 	int	server_index = conf.getIndexOfClientServer(fd);
+	std::string initial_data(buffer, recv_value);
 	size_t content_length_pos = initial_data.find("Content-Length: ");
 	if (content_length_pos == std::string::npos)
 	{
@@ -336,18 +336,23 @@ bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 	int content_length = 0;
 	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
 
-	int content_length_size_t = content_length;
-	if (content_length_size_t > conf.getServer()[server_index].getMaxBodySize())
+	if (content_length > conf.getServer()[server_index].getMaxBodySize())
 	{
-		generate_html_page_error(conf, fd, "400");
+		generate_html_page_error(conf, fd, "413");
 		return false;
 	}
 
-	std::string body = initial_data;
+	// Extraire le corps après la ligne vide qui suit les en-têtes
+	std::string body = initial_data.substr(initial_data.find("\r\n\r\n") + 4);
+
+	// Afficher le contenu reçu pour déboguer
+	std::cout << "initial_data = " << initial_data << std::endl;
+	std::cout << "body = " << body << std::endl;
+
 	int total_received = body.size();
-	while (total_received < content_length_size_t)
+	while (total_received < content_length) //26 NOVEMBER TFREYDIE NOTE : PAS BIEN BLOQUERA LE SERVEUR SUR UN FICHIER TROP GROS
 	{
-		recv_value = recv(fd, buffer, sizeof(buffer), 0);
+		recv_value = recv(fd, buffer, sizeof(buffer), 0); 
 		if (recv_value <= 0)
 		{
 			std::cerr << "Erreur : données POST incomplètes." << std::endl;
@@ -359,5 +364,5 @@ bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 		total_received += recv_value;
 	}
 	parse_buffer_post(body, fd, conf);
-	return (true);
+	return true;
 }

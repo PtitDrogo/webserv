@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "ClientUploadState.hpp"
 #include "server.hpp" // change into "Server.hpp"
-#include "HttpRequestParser.hpp"
+// #include "HttpRequestParser.hpp"
 
 class ClientSocket {
 public:
@@ -32,8 +32,8 @@ public:
 
 private:
 	// attributs prives
-	int _socket;
-	Server* _server;
+	int 			  _socket;
+	Server* 		  _server;
 	ClientUploadState _uploadState;
 	
 	// methodes privees internes
