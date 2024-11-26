@@ -1,7 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "ClientUploadState.hpp"
 #include "Webserv.hpp"
+
 // #include "HttpRequestParser.hpp"
 
 class Client 
@@ -39,9 +41,9 @@ private:
 	// long long	  _timeStart; // init at -1;
 	
 	// methodes privees internes
-	void _processNewRequest(const std::string& buffer);
-	bool _receiveData();
-	void _sendResponse(const std::string& response);
+	// void _processNewRequest(const std::string& buffer);
+	// bool _receiveData();
+	// void _sendResponse(const std::string& response);
 };
 
 #endif

@@ -12,6 +12,8 @@ class HttpRequest;
 class Config;
 class Server;
 class Client;
+class HttpRequestParser;
+class ClientUploadState;
 
 
 //*********************************************************//
@@ -83,7 +85,7 @@ void 		generate_html_page_error(const Client& client, std::string error_code);
 //-----------Delete-----------//
 
 bool deleteFile(const std::string& path);
-void parse_buffer_delete(std::string buffer, int client_socket);
+void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client);

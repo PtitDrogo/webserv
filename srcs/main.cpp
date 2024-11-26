@@ -54,7 +54,7 @@ int main(int argc, char **argv, char **envp)
 			else if (type_request == "GET")
 				parse_buffer_get(client, buffer,req);
 			else if (type_request == "DELETE")
-				parse_buffer_delete(buffer, fds[i].fd);
+				parse_buffer_delete(buffer, client);
 			else if (type_request == "CGI")
 			{
 				cgiProtocol(envp, req, fds[i].fd);

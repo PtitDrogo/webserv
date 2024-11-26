@@ -29,69 +29,62 @@ Client& Client::operator=(const Client& other) {
 }
 
 Client::Client(int clientSocket, Server& serv) :
-_socket(-1), _server(serv), _uploadState()
+_socket(clientSocket), _server(serv), _uploadState()
 {
-    _socket = clientSocket;
-    _server = serv;
-
-    char buffer[1024] = {0};
-    int recv_value = recv(_socket, buffer, sizeof(buffer) - 1, 0);
-
-    if (recv_value <= 0) {
-        disconnect();
-        return;
-    }
-
-    _processNewRequest(std::string(buffer));
+    //There used to be stuff here, i think there should be nothing.
+    // we shouldnt call recve when creating a child socket.
 }
 
-void Client::_processNewRequest(const std::string& buffer) {
-    std::string type_request = HttpRequestParser::getRequestType(buffer);
+//TFREYDIE NOTE : these methods call methods that dont exist, im assuming they exist somewhere else
 
-    if (type_request == "GET") {
-        HttpRequestParser::parseGetRequest(buffer, _server, _socket);
-    } else if (type_request == "POST") {
-        // initialiser l'état du client pour POST
-        _uploadState.appendToBuffer(buffer.c_str(), buffer.length());
-        _uploadState.setBytesReceived(buffer.length());
+// void Client::_processNewRequest(const std::string& buffer) {
+//     std::string type_request = HttpRequestParser::getRequestType(buffer);
+
+//     if (type_request == "GET") {
+//         HttpRequestParser::parseGetRequest(buffer, _server, _socket);
+//     } else if (type_request == "POST") {
+//         // initialiser l'état du client pour POST
+//         _uploadState.appendToBuffer(buffer.c_str(), buffer.length());
+//         _uploadState.setBytesReceived(buffer.length());
         
-        handleClientData(_server);
-    } else {
-        std::cout << RED << "Error: Generation d'une page d'erreur pour les requetes non supportees" << RESET << std::endl;
-        // generate_html_page_error(*_server, _socket, "404");
-    }
-}
+//         handleClientData(_server);
+//     } else {
+//         std::cout << RED << "Error: Generation d'une page d'erreur pour les requetes non supportees" << RESET << std::endl;
+//         // generate_html_page_error(*_server, _socket, "404");
+//     }
+// }
 
-void Client::handleClientData(Server& serv) {
-    char chunk[1024];
-    int bytesRead = recv(_socket, chunk, sizeof(chunk) - 1, 0);
+// void Client::handleClientData(Server& serv) {
+//     char chunk[1024];
+//     int bytesRead = recv(_socket, chunk, sizeof(chunk) - 1, 0);
 
-    if (bytesRead <= 0) {
-        disconnect();
-        return;
-    }
+//     if (bytesRead <= 0) {
+//         disconnect();
+//         return;
+//     }
 
-    chunk[bytesRead] = '\0';
-    _uploadState.appendToBuffer(chunk, bytesRead);
-    _uploadState.setBytesReceived(_uploadState.getBytesReceived() + bytesRead);
+//     chunk[bytesRead] = '\0';
+//     _uploadState.appendToBuffer(chunk, bytesRead);
+//     _uploadState.setBytesReceived(_uploadState.getBytesReceived() + bytesRead);
 
-    // logique de parsing des en-tetes et du contenu
-    if (!_uploadState.areHeadersParsed()) {
-        size_t headerEnd = _uploadState.getBuffer().find("\r\n\r\n");
-        if (headerEnd == std::string::npos) {
-            return; // en-tetes pas encore complets
-        }
+//     // logique de parsing des en-tetes et du contenu
+//     if (!_uploadState.areHeadersParsed()) {
+//         size_t headerEnd = _uploadState.getBuffer().find("\r\n\r\n");
+//         if (headerEnd == std::string::npos) {
+//             return; // en-tetes pas encore complets
+//         }
 
-        _uploadState.setHeadersParsed(true);
-    }
+//         _uploadState.setHeadersParsed(true);
+//     }
 
-    // verifier si toutes les donnees ont ete reçues
-    if (_uploadState.getBytesReceived() >= _uploadState.getContentLength()) {
-        HttpRequestParser::parsePostRequest(_uploadState.getBuffer(), _socket, serv);
-        disconnect();
-    }
-}
+//     // verifier si toutes les donnees ont ete reçues
+//     if (_uploadState.getBytesReceived() >= _uploadState.getContentLength()) {
+//         HttpRequestParser::parsePostRequest(_uploadState.getBuffer(), _socket, serv);
+//         disconnect();
+//     }
+// }
 
+//presumably disconnect would need to also take itself away from the client MAP
 void Client::disconnect() {
     if (_socket != -1) {
         close(_socket);
