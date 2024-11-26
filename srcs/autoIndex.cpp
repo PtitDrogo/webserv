@@ -88,7 +88,7 @@ std::string create_page(std::string html, std::string directory)
 }
 
 
-std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files)
+std::string generateAutoIndexPage(Config &conf, const std::string& directory, const std::vector<std::string>& files, bool islocation)
 {
 	std::cout << "directory-------------------------------------- = " << directory << std::endl;
 	std::string html;
@@ -98,8 +98,57 @@ std::string generateAutoIndexPage(const std::string& directory, const std::vecto
 		if (*it == "." || *it == "..")
 			continue;
 		std::string relativePath = directory;
-		if (relativePath.find("./config") == 0)
-			relativePath = relativePath.substr(8);
+
+
+
+        if (islocation == true)
+        {
+            std::string rootLoc = conf.getServer()[0].getLocation()[0].getRoot();
+            std::cout << "relativePath: " << relativePath << std::endl;
+            std::cout << "rootLoc: " << rootLoc << std::endl;
+
+            std::string rootLocRelative = rootLoc.substr(1);  // Supprime le premier '/' pour rendre `rootLoc` relatif
+            std::cout << "rootLocRelative: " << rootLocRelative << std::endl;
+
+            // Supprime './' du début de relativePath si présent
+            if (relativePath.find("./") == 0) {
+                relativePath = relativePath.substr(2);  // Retire './' du début
+            }
+
+            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
+
+            if (relativePath.find(rootLocRelative) == 0) {
+                relativePath = relativePath.substr(rootLocRelative.size());
+                std::cout << "relativePath modifié: " << relativePath << std::endl;
+            }
+        }
+
+        else {
+            std::string root = conf.getServer()[0].getRoot();
+            std::cout << "relativePath: " << relativePath << std::endl;
+            std::cout << "root: " << root << std::endl;
+
+            std::string rootRelative = root.substr(1);  // Supprime le premier '/' pour rendre `root` relatif
+            std::cout << "rootRelative: " << rootRelative << std::endl;
+
+            // Supprime './' du début de relativePath si présent
+            if (relativePath.find("./") == 0) {
+                relativePath = relativePath.substr(2);  // Retire './' du début
+            }
+
+            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
+
+            if (relativePath.find(rootRelative) == 0) {
+                relativePath = relativePath.substr(rootRelative.size());
+                std::cout << "relativePath modifié: " << relativePath << std::endl;
+            }
+        }
+
+
+
+
+
+
 		if (!relativePath.empty() && relativePath[relativePath.size() - 1] != '/')
 			relativePath += "/";
 		relativePath += *it;

@@ -15,19 +15,26 @@ bool isExtension(std::string path)
 	return (true);
 }
 
-void autoIndex(std::string path, Config &conf, int client_socket)
+void autoIndex(std::string path, Config &conf, int client_socket, bool islocation)
 {
 	std::string finalPath;
 	std::string reponse;
 	std::string file_content;
+	(void) conf;
 	int	server_index = conf.getIndexOfClientServer(client_socket);
 
-	finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+	if (islocation == true)
+	{
+		std::cout << "haaaaaaaaaaaaaaaaaaaaaaaaaaaaa----d--d-d-d-d-d-d--d" << std::endl;
+		finalPath = path;
+	}
+	else 
+		finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+	std::cout << "---------------------------------------finalPath = |" << finalPath << "|" << std::endl;
 	std::vector<std::string> files = listDirectory(finalPath);
-	file_content = generateAutoIndexPage(finalPath, files);
+	file_content = generateAutoIndexPage(conf, finalPath, files, islocation);
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	std::cout << "reponse = " << reponse << std::endl;
-	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+	std::cout << "reponse = |" << reponse << "|" << std::endl;
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
@@ -87,6 +94,7 @@ std::string CheckLocation(const std::string& path, Config& conf, const std::vect
 		locationStr = trim(locationStr);
 		if (cleanedPath.find(locationStr) == 0)
 		{
+			std::cout << "locationStr = |" << locationStr << "|" << std::endl;
 			if (cleanedPath.size() <= locationStr.size())
 			{
 				locationMatched = true;
@@ -140,25 +148,99 @@ bool check_host(std::string line, Config &conf, int server_index)
 }
 
 
-void sendRedirection(int client_socket, const std::string& path) {
-    // Créer l'en-tête HTTP de redirection 301
-    std::ostringstream responseStream;
+void sendRedirection(int client_socket, const std::string& path)
+{
+	std::ostringstream responseStream;
 	std::cout << "---------------------------------------------path = " << path << std::endl;
-    responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
-                   << "Location: " << path << "\r\n"
-                   << "Content-Type: text/html\r\n"
-                   << "Content-Length: 0\r\n"
-                   << "Connection: close\r\n"
-                   << "\r\n"; // Fin des en-têtes
-
-    std::string response = responseStream.str();
-
-    // Envoyer la réponse de redirection au client
-    send(client_socket, response.c_str(), response.size(), 0);
-
-    // Fermer la connexion (si nécessaire)
-    close(client_socket);
+	responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
+				<< "Location: " << path << "\r\n"
+				<< "Content-Type: text/html\r\n"
+				<< "Content-Length: 0\r\n"
+				<< "Connection: close\r\n"
+				<< "\r\n";
+	std::string response = responseStream.str();
+	send(client_socket, response.c_str(), response.size(), 0);
+	close(client_socket);
 }
+
+std::string parse_no_location(std::string path, Config &conf, int server_index, std::string finalPath, int client_socket, bool islocation)
+{
+	std::string reponse;
+	std::string file_content;
+
+	if (path == "/")
+	{
+		if (!conf.getServer()[server_index].getIndex().empty())
+			finalPath = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
+		else if (conf.getServer()[server_index].getAutoIndex() == "on")
+		{
+			autoIndex(path, conf, client_socket, islocation);
+			return "";
+		}
+		else
+			generate_html_page_error(conf, client_socket, "404");
+	}
+	else if (conf.getServer()[server_index].getAutoIndex() == "on" && conf.getServer()[server_index].getIndex().empty())
+	{
+		finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+		if (!isExtension(finalPath))
+		{
+			std::vector<std::string> files = listDirectory(finalPath);
+			file_content = generateAutoIndexPage(conf, finalPath, files, islocation);
+		}
+		else if (isExtension(finalPath))
+			file_content = readFile(finalPath);
+		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		std::cout << "reponse = " << reponse << std::endl;
+		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client_socket, reponse.c_str(), reponse.size(), 0);
+		return "";
+	}
+	else
+		finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+	return finalPath;
+}
+
+std::string parse_with_location(Config &conf, int client_socket, std::string finalPath, bool islocation)
+{
+	std::cout << "je rentre laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
+	std::cout << "finalPdddddddddddddath = |" << finalPath << "|" << std::endl;
+	islocation = true;
+	if (conf.getServer()[0].getLocation()[0].getIndex().empty() == false)
+	{
+		std::cout << "je suis ici trbl" << std::endl;
+		finalPath = "." + conf.getServer()[0].getLocation()[0].getRoot() + conf.getServer()[0].getLocation()[0].getIndex();
+		std::cout << "finalPath = |" << finalPath << "|" << std::endl;
+		return finalPath;
+	}
+	else if (conf.getServer()[0].getLocation()[0].getAutoIndex() == "on")
+	{
+		std::cout << "valeur autoindex = |" << conf.getServer()[0].getLocation()[0].getAutoIndex() << "|" << std::endl;
+		std::cout << "ce final path la ------------------finalPath = |" << finalPath << "|" << std::endl;
+		if (conf.getServer()[0].getLocation()[0].getAutoIndex() == "on")
+		{
+			std::cout << "je rentre la ----------------------" << std::endl;
+			autoIndex(finalPath, conf, client_socket, islocation);
+		}
+		else
+		{
+			generate_html_page_error(conf, client_socket, "404");
+			return "";
+		}
+	}
+	std::map<std::string, std::string> redirMap = conf.getServer()[0].getLocation()[0].getRedir();
+	for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it)
+	{
+		std::string errorCode = it->first;
+		std::string path = it->second;
+		if (errorCode == "301" && path != "")
+			sendRedirection(client_socket, path);
+	}
+	return finalPath;
+}
+
+
+
 
 void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req)
 {
@@ -169,9 +251,11 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 	std::string path;
 	std::string version;
 	std::string finalPath;
+	std::string pathLoc;
 	std::string reponse;
 	std::string file_content;
 	std::vector<location> locationPath = conf.getServer()[server_index].getLocation();
+	bool islocation = false;
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
@@ -187,56 +271,14 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
 			bool locationMatched = false;
-			finalPath = CheckLocation(path, conf, locationPath, locationMatched, req);
-			if (!locationMatched)
-			{
-				if (path == "/")
-				{
-					if (!conf.getServer()[server_index].getIndex().empty())
-						finalPath = "." + conf.getServer()[server_index].getRoot() + conf.getServer()[server_index].getIndex();
-					else if (conf.getServer()[server_index].getAutoIndex() == "on")
-					{
-						autoIndex(path, conf, client_socket);
-						return ;
-					}
-					else
-						generate_html_page_error(conf, client_socket, "404");
-				}
-				else if (conf.getServer()[server_index].getAutoIndex() == "on" && conf.getServer()[server_index].getIndex().empty())
-				{
-					finalPath = "." + conf.getServer()[server_index].getRoot() + path;
-					if (!isExtension(finalPath))
-					{
-						std::vector<std::string> files = listDirectory(finalPath);
-						file_content = generateAutoIndexPage(finalPath, files);
-					}
-					else if (isExtension(finalPath))
-						file_content = readFile(finalPath);
-					reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-					std::cout << "reponse = " << reponse << std::endl;
-					reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-					send(client_socket, reponse.c_str(), reponse.size(), 0);
-					return ;
-				}
-				else
-					finalPath = "." + conf.getServer()[server_index].getRoot() + path;
-			}
-			else 
-			{
-				std::map<std::string, std::string> redirMap = conf.getServer()[0].getLocation()[0].getRedir();
-
-				// Exemple : récupérer le chemin de redirection pour un code spécifique
-				
-				for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it) {
-					std::string errorCode = it->first;  // Code d'erreur
-					std::string path = it->second;      // URL de redirection
-
-					std::cout << "Redirection code: " << errorCode << ", path: " << path << std::endl;
-
-					// Appeler la fonction pour envoyer la redirection
-					sendRedirection(client_socket, path);
-				}
-			}
+			pathLoc = CheckLocation(path, conf, locationPath, locationMatched, req);
+			std::cout << "pathloc = |" << pathLoc << "|" << std::endl;
+			if (!locationMatched)	
+				finalPath = parse_no_location(path, conf, server_index, pathLoc, client_socket, islocation);
+			else
+				finalPath = parse_with_location(conf, client_socket, pathLoc, islocation);
+			if (finalPath.empty() || finalPath == pathLoc)
+				return ;
 		}
 		if (check_host(line, conf, server_index) == false)
 		{
@@ -250,6 +292,12 @@ void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, Http
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
+
+
+
+
+
+
 
 void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 {
@@ -333,6 +381,14 @@ void parse_buffer_post(std::string buffer , int client_socket, Config &conf)
 	email.clear();
 	message.clear();
 }
+
+
+
+
+
+
+
+
 
 bool preparePostParse(int fd, char *buffer, Config &conf, int recv_value)
 {

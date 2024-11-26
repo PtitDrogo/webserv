@@ -275,9 +275,9 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
 				loc.setRoot(root);
 			}
-			size_t autoIndexPos = subLine.find("auto_index");
+			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {
-				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 10);
+				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 5);
 				size_t endAutoIndex = subLine.find_first_of(" \t;", startAutoIndex);
 				std::string autoIndex = subLine.substr(startAutoIndex, endAutoIndex - startAutoIndex);
 				if (autoIndex != "on" && autoIndex != "off") {
