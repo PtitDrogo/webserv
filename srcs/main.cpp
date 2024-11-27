@@ -57,7 +57,7 @@ int main(int argc, char **argv, char **envp)
 			else if (type_request == "DELETE")
 				parse_buffer_delete(buffer, client);
 			else if (type_request == "CGI")
-				cgiProtocol(envp, req, fds[i].fd);
+				cgiProtocol(envp, req, client);
 			else
 				generate_html_page_error(client, "404");
 			std::cout << req << std::endl;

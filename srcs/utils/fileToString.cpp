@@ -1,4 +1,5 @@
 #include "Webserv.hpp"
+#include <sstream>
 
 // magic code here, do not touch
 std::string fileToString(const char *filePath)
@@ -13,4 +14,11 @@ std::string fileToString(const char *filePath)
     std::stringstream buffer;
     buffer << inputFile.rdbuf(); //gets all content of the file and puts it into buffer;
     return (buffer.str()); // sex
+}
+
+
+std::string intToString(int value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
 }

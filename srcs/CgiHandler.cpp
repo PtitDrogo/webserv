@@ -19,13 +19,13 @@ Step to do a CGI:
 - We read cgi_tmp/webserv_cgi_stdout and send the content back to the client
 */
 
-
-CgiHandler::CgiHandler(char * const *envp) :
+CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
 _argv(NULL),
 _exit_status(-1),
 _path(""),
-_pid(-1)
+_pid(-1),
+_client(client)
 {}
 
 CgiHandler::~CgiHandler() {}
@@ -33,9 +33,8 @@ CgiHandler::~CgiHandler() {}
 
 bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
-    // pid_t first_child_pid;
     int   status;
-    bool  cgi_success;
+
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
     _path = "." + request.getPath();
@@ -43,32 +42,27 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 
     //Execute the fucking cgi;
     pid_t cgi_pid = executeCGI();
-    pid_t timeout_pid = executeTimeOut();
-
-    pid_t RaceWinnerPid = waitpid(-1, &status, WUNTRACED);
-    if (RaceWinnerPid == cgi_pid) 
-    {
-		std::cout << "process won" << std::endl;
-        if (kill(timeout_pid,SIGKILL) == -1) 
-			std::cerr << "Kill failed" << std::endl;
-        cgi_success = true;
-	}
-	else 
-    {
-		std::cout << "timeout won" << std::endl;
-        if (kill(cgi_pid, SIGKILL) == -1)
-            std::cerr << "Kill failed" << std::endl;
-        cgi_success = false;
-	}
-    std::cout << "Waiting for the Process !" << std::endl;
-    waitpid(-1, NULL, WUNTRACED);
-    std::cout << "Waited for the Process ! Returning bool of : " << cgi_success << std::endl;
-    return cgi_success;
+    if (cgi_pid == -1)
+        return false; //for now this will do;
+    return true;
 
 }
 
-pid_t    CgiHandler::executeCGI() const
+pid_t    CgiHandler::executeCGI()
 {
+    if (pipe(_pipe_in) < 0)
+	{
+        std::cerr << "Pipe failed, error 500 !" << std::endl;
+		return -1;
+	}
+	if (pipe(_pipe_out) < 0)
+	{
+        std::cerr << "Pipe failed, error 500 !" << std::endl;
+		close(_pipe_in[0]);
+		close(_pipe_in[1]);
+		return -1;
+	}
+
     int pid = fork();
     if (pid < 0)
     {
@@ -78,11 +72,13 @@ pid_t    CgiHandler::executeCGI() const
     }
     else if (pid == 0)
     {
-        //Modern dup    
-        std::freopen(PATH_CGI_IN, "r", stdin);
-		std::freopen(PATH_CGI_OUT, "w", stdout);
-		std::freopen(PATH_CGI_ERR, "w", stderr);
-        execve(_path.c_str(), _argv, _envp);
+        dup2(_pipe_in[0], STDIN_FILENO);
+		dup2(_pipe_out[1], STDOUT_FILENO);
+		close(_pipe_in[0]);
+		close(_pipe_in[1]);
+		close(_pipe_out[0]);
+		close(_pipe_out[1]);
+		execve(_path.c_str(), _argv, _envp);
         std::cerr << "failed to execve, path was : " << _path << std::endl;
         perror("execve");
         std::exit(EXIT_FAILURE);
@@ -107,11 +103,10 @@ pid_t    CgiHandler::executeTimeOut() const
 }
 
 //ADD client there later;
-void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client)
+void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client)
 {
-    CgiHandler cgi(envp);
+    CgiHandler cgi(envp, client);
     std::string response;
-    
 
     //So im gonna need to add the pipe of the cgi to the fucking poll fd list, SAD.
     if (cgi.HandleCgiRequest(request) == false)
@@ -121,17 +116,20 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client
     }
     else
     {
-        std::string cgi_output = fileToString(PATH_CGI_OUT);
-        response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+        client.setCgiPipeFD(cgi.getPipeOut()[0]);
+        // std::string cgi_output = fileToString(PATH_CGI_OUT);
+        // response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
     }
-    send(fd_client, response.c_str(), response.size(), 0);
+    //I wont directly send an answer to the server;
+
+    // send(client.getSocket(), response.c_str(), response.size(), 0);
     // std::cout << "sending response : " << response << std::endl;
     return ;
 
 }
 
-
-
+int     *CgiHandler::getPipeOut() {return _pipe_out;}
+int     *CgiHandler::getPipeIn() {return _pipe_in;}
 
 
 

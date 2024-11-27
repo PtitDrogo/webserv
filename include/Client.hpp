@@ -6,6 +6,17 @@
 
 // #include "HttpRequestParser.hpp"
 
+
+//This was an attempt at creating files.
+// typedef struct s_cgi_tmp_file {
+// 	int fd_in;
+// 	int fd_out;
+// 	int fd_err;
+// 	s_cgi_tmp_file() : fd_in(-1), fd_out(-1), fd_err(-1) {}
+// } t_cgi_tmp_file;
+// t_cgi_tmp_file&	getCgiFilesFds() ;
+
+
 class Client 
 {
 public:
@@ -24,6 +35,7 @@ public:
 	// setters pour configurer le socket
 	void setSocket(int socket);
 	void setServer(Server& server);
+	void Client::setCgiPipeFD(int fd);
 
 	// getters
 	Server& getServer() const;
@@ -37,7 +49,8 @@ private:
 	int 			  _socket;
 	Server&			  _server;
 	ClientUploadState _uploadState;
-	// bool			  _isCGIPipe;
+	bool			  _isCGIPipe; //maybe not useful;
+	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
 	// long long	  _timeStart; // init at -1;
 	
 	// methodes privees internes
