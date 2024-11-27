@@ -79,6 +79,7 @@ void parse_allow_method(Client& client, HttpRequest &req)
     // Vérifier si la méthode est dans la liste des méthodes autorisées
     if (std::find(methods.begin(), methods.end(), request_method) == methods.end()) {
         // La méthode n'est pas autorisée -> Erreur 400
+		// std::cout << "Allow methods" << allow_methods << "request_method" << request_method << std::endl;
         generate_html_page_error(client, "400");
     }
 }

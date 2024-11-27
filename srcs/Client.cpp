@@ -6,14 +6,14 @@
 
 Client::~Client() 
 {
-    // std::cout << "Im destroying a client and closing its fd !" << std::endl;
+    // std::cout << "Im destroying a client ! make sure this happens when you expect !" << std::endl;
 }
 
 Client::Client(const Client& other) 
     : _socket(other._socket), _server(other._server), 
       _uploadState(other._uploadState) 
 {
-    std::cout << "copy called" << std::endl;
+    // std::cout << "client copy constructor called" << std::endl;
 }
 
 Client& Client::operator=(const Client& other) {

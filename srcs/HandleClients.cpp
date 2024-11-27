@@ -33,7 +33,7 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 		}
         return FAILURE; //Question : Est ce que on doit vraiment quitter si poll fail ? Surement oui mais a voir.
     }
-	std::cout << "poll decided something happened" << std::endl;
+	// std::cout << "poll decided something happened" << std::endl;
 	return SUCCESS;
 }
 

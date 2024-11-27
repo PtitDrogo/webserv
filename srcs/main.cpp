@@ -30,14 +30,12 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
-			// std::cout << " fds[i].revents = "<< fds[i].revents << std::endl;
 			if (fds[i].revents & POLLRDHUP)
 			{
 				printf("disconnect client of main loop\n");
 				disconnectClient(fds, i, conf);
 				break;
 			}
-			//In theory I should add the timeout check for CGI here;
 			if (!(fds[i].revents & POLLIN))
 				continue;
 			// Lecture initiale du buffer
