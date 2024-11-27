@@ -6,8 +6,8 @@
 class Config
 {
 	private :
-		std::vector<Server>    _server;
-		std::map<int, int>     _clients; //Link each clients fd to their server index
+		std::vector<Server>        _servers;
+		std::map<int, Client>      _clients; //Link fd to their Client class associated (the server of the client will be inside that class)
 		
 	public:
 		Config();
@@ -18,14 +18,17 @@ class Config
 
 		int		SetupServerSocket(int i);
 		size_t	addAllServers(std::vector<struct pollfd> &fds);
-		void	addClient(int client_fd, int);
+		void	addClient(int client_fd, Server &serv);
 
 		// bool parse_config_file(std::string filename);
-		int		getIndexOfClientServer(int client_fd);
+		Server &getServerOfClient(int client_fd);
+		Client &getClientObject(int client_fd);
+		std::map<int, Client>& getClientsMap();
+		std::vector<Server> &getServer();
 
 		// bool parse_config_file(Server &serv, location &loc, std::string filename);
-		std::vector<Server> &getServer();
 		void setServer(Server &serv);
+		void removeClient(int client_fd);
 
 		void createServerr(std::ifstream &file , Server &serv);
 		void createServer(std::string line, std::ifstream &file);
