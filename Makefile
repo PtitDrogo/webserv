@@ -24,6 +24,9 @@ SRCS	=		$(SRCS_DIR)/main.cpp \
 				$(SRCS_DIR)/utils/fileToString.cpp \
 				$(SRCS_DIR)/parseRequest.cpp \
 				$(SRCS_DIR)/utils/debugPrints.cpp \
+				$(SRCS_DIR)/ClientUploadState.cpp \
+				$(SRCS_DIR)/Client.cpp \
+				$(SRCS_DIR)/HttpRequestParser.cpp \
 			
 #------------------------------------------------------------------------#
 
