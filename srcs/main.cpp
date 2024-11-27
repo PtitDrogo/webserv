@@ -18,6 +18,7 @@ int main(int argc, char **argv, char **envp)
 	if (conf.parse_config_file(argv[1]) == false)
 		std::cout << "Webserv : [WARNING] conflicting server name" << std::endl;
 	size_t number_of_servers = conf.addAllServers(fds);
+	std::cout << "Did I add 3 servers, current server count : " << number_of_servers << std::endl;
 
 	while (server_running)
 	{
@@ -29,8 +30,10 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
+			// std::cout << " fds[i].revents = "<< fds[i].revents << std::endl;
 			if (fds[i].revents & POLLRDHUP)
 			{
+				printf("disconnect client of main loop\n");
 				disconnectClient(fds, i, conf);
 				break;
 			}
@@ -56,13 +59,9 @@ int main(int argc, char **argv, char **envp)
 			else if (type_request == "DELETE")
 				parse_buffer_delete(buffer, client);
 			else if (type_request == "CGI")
-			{
 				cgiProtocol(envp, req, fds[i].fd);
-			}
 			else
-			{
 				generate_html_page_error(client, "404");
-			}
 			std::cout << req << std::endl;
 		}
 	}

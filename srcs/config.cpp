@@ -52,7 +52,9 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 void	Config::addClient(int client_fd, Server &serv)
 {
 	// On fait comme ca parce que la methode simple essaye de creer un client sans serveur et ca marche pas;
+	std::cout << "Hello start of insert" << std::endl;
 	_clients.insert(std::map<int, Client>::value_type(client_fd, Client(client_fd, serv)));
+	std::cout << "Hello end of insert" << std::endl;
 }
 
 Server &Config::getServerOfClient(int client_fd)

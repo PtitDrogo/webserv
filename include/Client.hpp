@@ -19,7 +19,7 @@ public:
 	// void handleNewClient(int clientSocket, Server& serv); //this function effectively doesnt exist or goes into the constructor
 	void handleClientData(Server& serv);
 	bool isValidSocket() const;
-	void disconnect();
+	// void disconnect();
 
 	// setters pour configurer le socket
 	void setSocket(int socket);

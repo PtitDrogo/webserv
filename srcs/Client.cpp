@@ -4,15 +4,17 @@
 // {}
 // //: _socket(-1), _server() 
 
-Client::~Client() {
-    if (_socket != -1) {
-        close(_socket);
-    }
+Client::~Client() 
+{
+    // std::cout << "Im destroying a client and closing its fd !" << std::endl;
 }
 
 Client::Client(const Client& other) 
     : _socket(other._socket), _server(other._server), 
-      _uploadState(other._uploadState) {}
+      _uploadState(other._uploadState) 
+{
+    std::cout << "copy called" << std::endl;
+}
 
 Client& Client::operator=(const Client& other) {
     if (this != &other) {
@@ -31,6 +33,7 @@ Client& Client::operator=(const Client& other) {
 Client::Client(int clientSocket, Server& serv) :
 _socket(clientSocket), _server(serv), _uploadState()
 {
+    // std::cout << "Defaultish constructor called" << std::endl;
     //There used to be stuff here, i think there should be nothing.
     // we shouldnt call recve when creating a child socket.
 }
@@ -85,12 +88,12 @@ _socket(clientSocket), _server(serv), _uploadState()
 // }
 
 //presumably disconnect would need to also take itself away from the client MAP
-void Client::disconnect() {
-    if (_socket != -1) {
-        close(_socket);
-        _socket = -1;
-    }
-}
+// void Client::disconnect() {
+//     if (_socket != -1) {
+//         close(_socket);
+//         _socket = -1;
+//     }
+// }
 
 bool Client::isValidSocket() const {
     return _socket != -1;
