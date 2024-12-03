@@ -187,10 +187,10 @@ void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req)
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
-			std::cout << "path-----------------------------------" << path << std::endl;
+			// std::cout << "path-----------------------------------" << path << std::endl;
 			bool locationMatched = false;
 			finalPath = CheckLocation(path, client, locationPath, locationMatched, req);
-			std::cout << "finalPath-----------------------------------" << finalPath << std::endl;
+			// std::cout << "finalPath-----------------------------------" << finalPath << std::endl;
 			if (!locationMatched)
 			{
 				if (path == "/")
@@ -231,7 +231,7 @@ void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req)
 			return ;
 		}
 	}
-	std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
+	// std::cout << "------------voici le path------------|" << finalPath << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(client, "404");
@@ -322,51 +322,118 @@ void parse_buffer_post(const Client& client, std::string buffer)
 	message.clear();
 }
 
-bool preparePostParse(const Client& client, char *buffer, int recv_value)
+bool preparePostParse(const Client& client, std::string buffer)
 {
-	int 			fd = client.getSocket();
 	const Server& 	server = client.getServer();
-	std::string 	initial_data(buffer, recv_value);
-	size_t      	content_length_pos = initial_data.find("Content-Length: ");
 
-	if (content_length_pos == std::string::npos)
+	if (client.getContentLength() == std::string::npos)
 	{
 		generate_html_page_error(client, "400");
 		return false;
 	}
 
-	size_t length_start = content_length_pos + 16;
-	size_t length_end = initial_data.find("\r\n", length_start);
-	int content_length = 0;
-	std::istringstream(initial_data.substr(length_start, length_end - length_start)) >> content_length;
-
-	if (content_length > server.getMaxBodySize())
+	if (client.getContentLength() > (size_t)server.getMaxBodySize())
 	{
 		generate_html_page_error(client, "413");
 		return false;
 	}
 
 	// Extraire le corps après la ligne vide qui suit les en-têtes
-	std::string body = initial_data.substr(initial_data.find("\r\n\r\n") + 4);
+	std::string body = buffer.substr(buffer.find("\r\n\r\n") + 4);
 
-	// Afficher le contenu reçu pour déboguer
-	std::cout << "initial_data = " << initial_data << std::endl;
-	std::cout << "body = " << body << std::endl;
+	// Extraire la boundary
+	std::string boundary = body.substr(0, body.find("\r\n"));
+	std::string numericBoundary;
+    for (size_t i = 0; i < boundary.size(); ++i) {
+        if (std::isdigit(boundary[i])) {
+            numericBoundary += boundary[i];
+        }
+    }
+    boundary = numericBoundary;
 
-	int total_received = body.size();
-	while (total_received < content_length) //26 NOVEMBER TFREYDIE NOTE : PAS BIEN BLOQUERA LE SERVEUR SUR UN FICHIER TROP GROS
-	{
-		recv_value = recv(fd, buffer, sizeof(buffer), 0); 
-		if (recv_value <= 0)
-		{
-			std::cerr << "Erreur : données POST incomplètes." << std::endl;
-			generate_html_page_error(client, "400");
+	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
+		std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
+
+
+		
+		std::string body = client.getRequest().substr(client.getHeadEnd());
+
+		const std::string key = "filename=\"";
+		size_t fileNamePos = body.find(key);
+
+		if (fileNamePos == std::string::npos) {
+			std::cerr << "Error: Filename not found." << std::endl;
 			return false;
 		}
 
-		body.append(buffer, recv_value);
-		total_received += recv_value;
+		size_t endPos = body.find("\"\r\n", fileNamePos);
+		if (endPos == std::string::npos) {
+			std::cerr << "Error: Invalid filename format." << std::endl;
+			return false;
+		}
+
+		std::string fileName = body.substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
+
+		// // Validation du nom de fichier pour éviter les chemins traversants
+		// if (fileName.find("/") != std::string::npos || fileName.find("..") != std::string::npos) {
+		// 	std::cerr << "Error: Invalid filename." << std::endl;
+		// 	return false;
+		// }
+
+		std::cout << MAGENTA << "fileName: \"" << fileName << "\"" << RESET << std::endl;
+
+		size_t contentTypePos = body.find("Content-Type:", body.find("--" + boundary));
+		if (contentTypePos == std::string::npos) {
+			std::cerr << "Error: Content-Type not found." << std::endl;
+			return false;
+		}
+
+		size_t contentTypeEnd = body.find("\r\n", contentTypePos);
+		if (contentTypeEnd == std::string::npos) {
+			std::cerr << "Error: Malformed Content-Type header." << std::endl;
+			return false;
+		}
+
+		std::string contentType = body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
+
+		std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
+
+		size_t contentStart = body.find("\r\n\r\n", contentTypeEnd);
+		if (contentStart == std::string::npos) {
+			std::cerr << "Error: Content start not found." << std::endl;
+			return false;
+		}
+		contentStart += 4;
+
+		// Pour Firefox, on soustrait 30 pour gérer correctement la fin du contenu
+		size_t contentEnd = body.find("--" + boundary, contentStart) - 30; 
+		if (contentEnd == std::string::npos) {
+			std::cerr << "Error: Content end not found." << std::endl;
+			return false;
+		}
+
+		std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
+
+		// std::cout << fileContent << std::endl;
+
+		fileName = "./config/base_donnees/" + fileName;
+
+		std::ofstream outFile(fileName.c_str(), std::ios::binary);
+		if (!outFile) {
+			std::cerr << "Error: Unable to create file: " << fileName << std::endl;
+			return false;
+		}
+		outFile.write(fileContent.data(), fileContent.size());
+		outFile.close();
+
+		std::cout << MAGENTA << "File saved successfully: " << fileName << RESET << std::endl;
+
+		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string file_content = readFile(path);
+		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 	}
-	parse_buffer_post(client, body);
+	else
+		parse_buffer_post(client, body);
 	return true;
 }

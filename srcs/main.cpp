@@ -39,28 +39,37 @@ int main(int argc, char **argv, char **envp)
 			if (!(fds[i].revents & POLLIN))
 				continue;
 			// Lecture initiale du buffer
-			char buffer[1024] = {0};
+			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
 				break ;
+			
+			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
+			client.appendToRequest(buffer, recv_value);
 
-			std::string type_request = get_type_request(buffer, req);
-			// parse_allow_method(req, conf, fds[i].fd);
-			std::cout << "TYPE REQUEST IS : " << type_request << std::endl; 
-			if (type_request == "POST")
-			{
-				if (preparePostParse(client, buffer,recv_value) == false)
-					break ;
+			// si on a recu toute la requete
+			if (client.getTotalRead() >= client.getContentLength()) {
+				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
+				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+
+				std::string type_request = get_type_request(client.getRequest(), req);
+				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
+				
+				if (type_request == "POST")
+				{
+					if (preparePostParse(client, client.getRequest()) == false)
+						break ;
+				}
+				else if (type_request == "GET")
+					parse_buffer_get(client, client.getRequest(),req);
+				else if (type_request == "DELETE")
+					parse_buffer_delete(client.getRequest(), client);
+				else if (type_request == "CGI")
+					cgiProtocol(envp, req, fds[i].fd);
+				else
+					generate_html_page_error(client, "404");
+				// std::cout << req << std::endl;
 			}
-			else if (type_request == "GET")
-				parse_buffer_get(client, buffer,req);
-			else if (type_request == "DELETE")
-				parse_buffer_delete(buffer, client);
-			else if (type_request == "CGI")
-				cgiProtocol(envp, req, fds[i].fd);
-			else
-				generate_html_page_error(client, "404");
-			std::cout << req << std::endl;
 		}
 	}
 	return SUCCESS;
