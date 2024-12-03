@@ -56,12 +56,11 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
 std::string get_type_request(std::string buffer, HttpRequest &req);
 bool isCgiRequest(const HttpRequest &req);
 
-
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
 void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req);
 void	parse_buffer_post(const Client& client, std::string buffer);
-bool    preparePostParse(const Client& client, char *buffer, int recv_value);
+bool    preparePostParse(const Client& client, std::string buffer);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
