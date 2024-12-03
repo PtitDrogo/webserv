@@ -44,6 +44,7 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 	for (i = 0; i < _servers.size(); i++)
 	{
 		int server_socket = SetupServerSocket(i);
+		_servers[i].setServerSocket(server_socket);
 		addPollFD(server_socket, fds);
 	}
 	return (i);

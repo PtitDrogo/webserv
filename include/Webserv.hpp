@@ -88,11 +88,13 @@ bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
-void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client);
+void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);
 
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
+std::string intToString(int value);
+std::string readFromPipeFd(int pipefd);
 
 
 //-----------DEBUG-PRINTS-----------//

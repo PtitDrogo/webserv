@@ -11,7 +11,8 @@ Client::~Client()
 
 Client::Client(const Client& other) 
     : _socket(other._socket), _server(other._server), 
-      _uploadState(other._uploadState) 
+      _uploadState(other._uploadState),
+      _cgi_fd(other._cgi_fd), _cgi_caller(other._cgi_caller)
 {
     // std::cout << "client copy constructor called" << std::endl;
 }
@@ -21,17 +22,19 @@ Client& Client::operator=(const Client& other) {
         // Fermer le socket existant si nécessaire
         if (_socket != -1) {
             close(_socket);
-        }
+        } //c sur ca va causer des soucis ca mais en vrai c'est logique atm
 
         _socket = other._socket;
         _server = other._server;
         _uploadState = other._uploadState;
+        _cgi_fd = other._cgi_fd;
+        _cgi_caller = other._cgi_caller;
     }
     return *this;
 }
 
 Client::Client(int clientSocket, Server& serv) :
-_socket(clientSocket), _server(serv), _uploadState()
+_socket(clientSocket), _server(serv), _uploadState(), _cgi_caller(NULL)
 {
     // std::cout << "Defaultish constructor called" << std::endl;
     //There used to be stuff here, i think there should be nothing.
@@ -95,22 +98,20 @@ _socket(clientSocket), _server(serv), _uploadState()
 //     }
 // }
 
-bool Client::isValidSocket() const {
-    return _socket != -1;
-}
+bool Client::isValidSocket() const {return _socket != -1;}
 
-void Client::setSocket(int socket) {
-    _socket = socket;
-}
+void Client::setSocket(int socket) {_socket = socket;}
+void Client::setServer(Server& server) {_server = server;}
+void Client::setCgiPipeFD(int fd) {_cgi_fd = fd;}
+void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
 
-void Client::setServer(Server& server) {
-    _server = server;
-}
 
-int Client::getSocket() const {
-    return _socket;
-}
+int Client::getSocket() const {return _socket;}
 Server& Client::getServer() const { return _server;}
+Client* Client::getCgiCaller() const { return _cgi_caller;}
+
+// t_cgi_tmp_file&	Client::getCgiFilesFds() {return _cgi_fds;}
+
 
 ClientUploadState& Client::getUploadState() {
     return _uploadState;
