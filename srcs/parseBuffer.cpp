@@ -55,7 +55,7 @@ void parse_allow_method(Client& client, HttpRequest &req)
 {
 	// Récupérer les méthodes autorisées
 	Server& server = client.getServer();
-    std::string allow_methods = server.getLocation()[0].getAllowMethod();
+    std::string allow_methods = server.getLocation()[0].getAllowMethod(); //This shouldnt be 0 !
     std::vector<std::string> methods;
 
     // Découper la chaîne des méthodes autorisées

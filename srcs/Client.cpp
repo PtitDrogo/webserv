@@ -9,7 +9,10 @@ Client::~Client()
 	// std::cout << "Im destroying a client ! make sure this happens when you expect !" << std::endl;
 }
 
-Client::Client(const Client& other) : _socket(other._socket), _server(other._server), _uploadState(other._uploadState), _request(other._request), _contentLength(other._contentLength), _totalRead(other._totalRead) {
+Client::Client(const Client& other) : _socket(other._socket), _server(other._server), 
+_uploadState(other._uploadState), _request(other._request), _contentLength(other._contentLength), 
+_totalRead(other._totalRead), _cgi_caller(other._cgi_caller)
+{
 	// std::cout << "client copy constructor called" << std::endl;
 }
 
@@ -30,7 +33,7 @@ Client& Client::operator=(const Client& other) {
 	return *this;
 }
 
-Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), _request() {
+Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), _request(), _cgi_caller(NULL) {
 	_contentLength = 0;
 	_totalRead = 0;
 	// std::cout << "Defaultish constructor called" << std::endl
@@ -95,26 +98,19 @@ Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(
 //     }
 // }
 
-bool Client::isValidSocket() const {
-	return _socket != -1;
-}
+bool Client::isValidSocket() const {return _socket != -1;}
 
-void Client::setSocket(int socket) {
-	_socket = socket;
-}
+void Client::setSocket(int socket) {_socket = socket;}
+void Client::setServer(Server& server) {_server = server;}
+void Client::setCgiPipeFD(int fd) {_cgi_fd = fd;}
+void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
 
-void Client::setServer(Server& server) {
-	_server = server;
-}
 
-int Client::getSocket() const {
-	return _socket;
-}
+int Client::getSocket() const {return _socket;}
 Server& Client::getServer() const { return _server;}
+Client* Client::getCgiCaller() const { return _cgi_caller;}
 
-ClientUploadState& Client::getUploadState() {
-	return _uploadState;
-}
+// t_cgi_tmp_file&	Client::getCgiFilesFds() {return _cgi_fds;}
 
 void    Client::appendToRequest(char *chunk, int recvValue) {
 	_request.append(chunk, recvValue);
