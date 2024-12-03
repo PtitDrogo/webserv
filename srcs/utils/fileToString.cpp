@@ -22,3 +22,26 @@ std::string intToString(int value) {
     oss << value;
     return oss.str();
 }
+
+
+std::string readFromPipeFd(int pipefd) 
+{
+    std::string result;
+    char buffer[4096];  // Buffer for reading
+    ssize_t bytesRead;
+
+    while (true) 
+	{
+        bytesRead = read(pipefd, buffer, sizeof(buffer));
+        if (bytesRead < 0) 
+		{
+            std::cout << "Error here, down the line, this should be a 500 error" << std::endl;
+			break;
+        }
+        if (bytesRead == 0)
+            break;
+        result.append(buffer, bytesRead);
+    }
+
+    return result;
+}

@@ -35,13 +35,16 @@ public:
 	// setters pour configurer le socket
 	void setSocket(int socket);
 	void setServer(Server& server);
-	void Client::setCgiPipeFD(int fd);
+	void setCgiPipeFD(int fd);
+	void setCgiCaller(Client *client_caller);
+	
 
 	// getters
 	Server& getServer() const;
 	int getSocket() const;
-
 	ClientUploadState& getUploadState();
+	Client* getCgiCaller() const;
+
 
 private:
 	Client(); //We cannot make a client without its server
@@ -49,8 +52,11 @@ private:
 	int 			  _socket;
 	Server&			  _server;
 	ClientUploadState _uploadState;
-	bool			  _isCGIPipe; //maybe not useful;
+
+
+	//CGI stuff
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
+	Client			  *_cgi_caller;
 	// long long	  _timeStart; // init at -1;
 	
 	// methodes privees internes

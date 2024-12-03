@@ -30,13 +30,43 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
+			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
 			if (fds[i].revents & POLLRDHUP)
 			{
 				printf("disconnect client of main loop\n");
 				disconnectClient(fds, i, conf);
-				break;
+				continue;
 			}
-			if (!(fds[i].revents & POLLIN))
+			printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
+			if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
+			{
+				printf("Pipe disconnected1\n");
+				//I want my client caller to send the content from the cgi pipe to its websocket;
+				//then we disconnect client of Pipe and all is well;
+
+				std::string cgi_output = readFromPipeFd(fds[i].fd);
+        		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+				send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0);
+				waitpid(-1, 0, 0); // Collect the child process ressources;
+				disconnectClient(fds, i, conf);
+				continue;
+				// wait;
+			}
+			if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
+			{
+				printf("Pipe disconnected2\n");
+				//I want my client caller to send the content from the cgi pipe to its websocket;
+				//then we disconnect client of Pipe and all is well;
+
+				std::string cgi_output = readFromPipeFd(fds[i].fd);
+        		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+				send(client.getSocket(), response.c_str(), response.size(), 0);
+				waitpid(-1, 0, 0); // Collect the child process ressources;
+				disconnectClient(fds, i, conf);
+				continue;
+				// wait;
+			}
+			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
 				continue;
 			// Lecture initiale du buffer
 			char buffer[1024] = {0};
@@ -57,7 +87,7 @@ int main(int argc, char **argv, char **envp)
 			else if (type_request == "DELETE")
 				parse_buffer_delete(buffer, client);
 			else if (type_request == "CGI")
-				cgiProtocol(envp, req, client);
+				cgiProtocol(envp, req, client, conf, fds);
 			else
 				generate_html_page_error(client, "404");
 			std::cout << req << std::endl;

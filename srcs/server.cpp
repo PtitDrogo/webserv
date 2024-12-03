@@ -77,6 +77,11 @@ std::string Server::getAutoIndex() const
 	return (this->_auto_index);
 }
 
+int Server::getServerSocket() const
+{
+	return (_server_socket);
+}
+
 void Server::setPort(std::string port)
 {
 	this->_port = port;
@@ -120,6 +125,11 @@ void Server::setMaxBodySize(int max_body_size)
 void Server::setAutoIndex(std::string auto_index)
 {
 	this->_auto_index = auto_index;
+}
+
+void Server::setServerSocket(int server_socket)
+{
+	_server_socket = server_socket;
 }
 
 // void Server::setLocation(std::string loc)

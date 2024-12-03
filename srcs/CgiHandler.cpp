@@ -33,7 +33,7 @@ CgiHandler::~CgiHandler() {}
 
 bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
-    int   status;
+    // int   status;
 
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
@@ -103,7 +103,7 @@ pid_t    CgiHandler::executeTimeOut() const
 }
 
 //ADD client there later;
-void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client)
+void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds)
 {
     CgiHandler cgi(envp, client);
     std::string response;
@@ -116,9 +116,21 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
     }
     else
     {
-        client.setCgiPipeFD(cgi.getPipeOut()[0]);
-        // std::string cgi_output = fileToString(PATH_CGI_OUT);
-        // response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+        //We add the pipe as a client to the client MAP and we add its FD to pollfd;
+        //Now when we check for POLLIN if current client is a pipe we skip, we only count the stuff where its hanging up;
+        //when the signal is POLLDHUP we will access the client of the caller of the cgi and send
+        //the content of pipeout[0] of client pipe to the socket fd of the cgicaller client;
+        //we then destroy pipe client, removing it both from pollfds vector AND the map;
+
+        //1. Add it to vector pollfds and map (I dont actually need the pipe to be a websocket)
+		int pipe_fd = cgi.getPipeOut()[0];
+        
+        addPollFD(pipe_fd, fds); //add to fds
+        conf.addClient(pipe_fd, client.getServer()); //add to map;
+        conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
+
+        std::string cgi_output = fileToString(PATH_CGI_OUT);
+        response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
     }
     //I wont directly send an answer to the server;
 

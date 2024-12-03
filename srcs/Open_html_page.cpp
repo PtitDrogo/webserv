@@ -77,5 +77,5 @@ void generate_html_page_error(const Client& client, std::string error_code)
     std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
 
     // Envoi de la réponse
-    send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+    send(client.getSocket(), reponse.c_str(), reponse.size(), 0); //TODO CHECK ALL SEND
 }
