@@ -8,6 +8,7 @@
 # define PATH_CGI_IN "./cgi_tmp/webserv_cgi_stdin"
 
 
+
 class CgiHandler
 {
 private:
@@ -16,16 +17,23 @@ private:
     char **         _argv;
     int             _exit_status;
     std::string     _path;
-    pid_t _pid;
+    pid_t           _pid;
+    int             _pipe_in[2];
+    int             _pipe_out[2];
+    Client&         _client; //client calling the cgi;
     CgiHandler(); //have to build with request
 
 public:
     ~CgiHandler();
-    CgiHandler(char *const *envp);
-    pid_t    executeCGI() const;
+    CgiHandler(char *const *envp, Client& client);
+    pid_t    executeCGI();
     pid_t    executeTimeOut() const;
     bool     HandleCgiRequest(const HttpRequest &request); 
     //Request should contain all the info i would hope
+
+    //getters
+    int     *getPipeOut();
+    int     *getPipeIn();
 };
 
 #endif

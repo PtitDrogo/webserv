@@ -8,9 +8,12 @@
 //*********************************************************//
 
 class location;
-class Config;
 class HttpRequest;
+class Config;
 class Server;
+class Client;
+class HttpRequestParser;
+class ClientUploadState;
 
 
 //*********************************************************//
@@ -28,6 +31,21 @@ class Server;
 
 # define SUCCESS 0
 # define FAILURE 1
+# define POLL_TIMEOUT 5000
+
+
+//*********************************************************//
+//*************************COLORS***************************//
+//*********************************************************//
+
+#define RESET	"\033[0m"
+#define MAGENTA	"\033[35m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[1;34m"
+#define GREEN "\033[32m"
+#define RED "\033[31m"
+#define NLINE std::cout << std::endl;
+
 
 //*********************************************************//
 //************************FUNCTIONS************************//
@@ -38,12 +56,11 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
 std::string get_type_request(std::string buffer, HttpRequest &req);
 bool isCgiRequest(const HttpRequest &req);
 
-
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(std::string buffer, Config &conf , int client_socket, HttpRequest &req);
-void	parse_buffer_post(std::string buffer , int client_socket, Config &conf);
-bool    preparePostParse(int fd, char *buffer, Config &conf, int recv_value);
+void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpRequest &req);
+void	parse_buffer_post(const Client& client, std::string buffer);
+bool    preparePostParse(const Client& client, std::string buffer);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
@@ -52,9 +69,9 @@ int SetupClientAddress(int server_socket);
 //-----------HandleClients-----------//
 void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf);
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
-int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds);
+int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
-void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);
+void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
 
 
 
@@ -62,19 +79,21 @@ void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i);
 std::string readFile(std::string &path);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
-void 		generate_html_page_error(Config &conf, int client_socket, std::string error_code);
+void 		generate_html_page_error(const Client& client, std::string error_code);
 
 //-----------Delete-----------//
 
 bool deleteFile(const std::string& path);
-void parse_buffer_delete(std::string buffer, int client_socket, Config &conf);
+void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
-void    cgiProtocol(char *const *envp, const HttpRequest &request, int fd_client);
+void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);
 
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
+std::string intToString(int value);
+std::string readFromPipeFd(int pipefd);
 
 
 //-----------DEBUG-PRINTS-----------//

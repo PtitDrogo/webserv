@@ -6,7 +6,7 @@ Config::Config() {
 
 Config::~Config() {}
 
-Config::Config(const Config &copy)
+Config::Config(const Config &copy) 
 {
 	*this = copy;
 }
@@ -15,9 +15,9 @@ Config &Config::operator=(const Config &copy)
 {
 	if (this != &copy)
 	{
-		this->_server = copy._server;
-		this->_clients = copy._clients;
 		this->islocation = copy.islocation;
+		this->_servers = copy._servers;
+		this->_clients = copy._clients;
 	}
 	return *this;
 }
@@ -42,34 +42,61 @@ void printVector(std::map<std::string, std::string> errorPage)
 
 std::vector<Server> &Config::getServer()
 {
-	return this->_server;
+	return this->_servers;
 }
 
 void Config::setServer(Server &serv)
 {
-	this->_server.push_back(serv);
+	this->_servers.push_back(serv);
 }
 
-
+//This adds all the server in the config file to the pollfd vector used by poll
 size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 {
 	size_t i;
-	for (i = 0; i < _server.size(); i++)
+	for (i = 0; i < _servers.size(); i++)
 	{
 		int server_socket = SetupServerSocket(i);
+		_servers[i].setServerSocket(server_socket);
 		addPollFD(server_socket, fds);
 	}
 	return (i);
 }
 
-void	Config::addClient(int client_fd, int server)
+void	Config::addClient(int client_fd, Server &serv)
 {
-	_clients[client_fd] = server;
+	// On fait comme ca parce que la methode simple essaye de creer un client sans serveur et ca marche pas;
+	std::cout << "Hello start of insert" << std::endl;
+	_clients.insert(std::map<int, Client>::value_type(client_fd, Client(client_fd, serv)));
+	std::cout << "Hello end of insert" << std::endl;
 }
 
-int		Config::getIndexOfClientServer(int client_fd)
+Server &Config::getServerOfClient(int client_fd)
 {
-	return (_clients[client_fd]);
+	std::map<int, Client>::const_iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
+        return it->second.getServer();
+    }
+	throw std::out_of_range("Somehow, your socket doesnt have a server"); //Un peu obliger de faire ca sinon jai rien a renvoyer;
+}
+
+Client &Config::getClientObject(int client_fd)
+{
+	std::map<int, Client>::iterator it = _clients.find(client_fd);
+    if (it != _clients.end()) {
+        return it->second;
+    }
+	throw std::out_of_range("Somehow, your socket isnt linked to a client object");
+}
+
+std::map<int, Client>& Config::getClientsMap()
+{
+	return(_clients);
+}
+
+void Config::removeClient(int client_fd) 
+{
+    _clients.erase(client_fd);
 }
 
 int Config::SetupServerSocket(int i)
@@ -86,7 +113,7 @@ int Config::SetupServerSocket(int i)
 	server_address.sin_family = AF_INET;
 
 
-	int port = std::atoi(_server[i].getPort().c_str());
+	int port = std::atoi(_servers[i].getPort().c_str());
 
 	// int port = std::atoi(conf.getServer()[0].getPort().c_str());
 	server_address.sin_port = htons(port);
@@ -235,6 +262,7 @@ void parse_error_page(std::string line, Server &serv)
 		std::string error_file;
 		iss >> error_file;
 		serv.setErrorPage(error_code, error_file);
+		std::cout << "SETTING UP A SERVER WITH THIS ERROR PAGE" << std::endl;
 		printVector(serv.getErrorPage());
 	}
 }
@@ -407,6 +435,18 @@ void parse_auto_index(std::string line, Server &serv)
 	}
 }
 
+bool isCommentLine(const std::string line)
+{
+	for (unsigned int i = 0; i < line.size(); i++)
+	{
+		if (line[i] == '#')
+			return true;
+		else if (std::isspace(line[i]) == false)
+			return false;
+	}
+	return false;
+}
+
 void Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
@@ -414,6 +454,8 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 	std::cout << "createServerr" << std::endl;
 	while(std::getline(file, line))
 	{
+		if (isCommentLine(line) == true)
+			continue ;
 		if (line.find("listen") != std::string::npos)
 			parse_listen(line, serv);
 		if (line.find("server_name") != std::string::npos)
@@ -435,6 +477,7 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 	}
 	this->setServer(serv);
 }
+
 
 void Config::printConfig()
 {
@@ -499,6 +542,7 @@ bool Config::parse_config_file(std::string filename)
 	{
 		if (line.find("server") != std::string::npos)
 		{
+			std::cout << "CREATING SERVER" << std::endl;
 			Server serv;
 			createServerr(file, serv);
 		}

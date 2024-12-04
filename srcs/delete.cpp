@@ -8,19 +8,21 @@ bool deleteFile(const std::string& path)
 		return false;
 }
 
-void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
+void parse_buffer_delete(std::string buffer, Client& client)
 {
 	std::istringstream stream(buffer);
 	std::string line;
-	int	server_index = conf.getIndexOfClientServer(client_socket);
+	Server& 	server = client.getServer();
+
+
 	if (!stream)
 	{
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return ;
 	}
-	if (conf.getServer()[server_index].getLocation()[0].getAllowMethod().find("DELETE") == std::string::npos && conf.getServer()[server_index].getLocation()[0].getAllowMethod().empty() == false)
+	if (server.getLocation()[0].getAllowMethod().find("DELETE") == std::string::npos && server.getLocation()[0].getAllowMethod().empty() == false)
 	{
-		generate_html_page_error(conf, client_socket, "404");
+		generate_html_page_error(client, "404");
 		return ;
 	}
 	std::string method;
@@ -42,7 +44,7 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 			version = line.substr(pos2);
 			if (path.find(".txt") == std::string::npos)
 				path = path + ".txt";
-			finalPath = "." + conf.getServer()[server_index].getRoot() + path;
+			finalPath = "." + server.getRoot() + path;
 		}
 	}
 	if (!finalPath.empty())
@@ -52,7 +54,7 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 		{
 			std::string file_content = readFile(finalPath);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			send(client_socket, reponse.c_str(), reponse.size(), 0);
+			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 			infile.close();
 			if (deleteFile(finalPath))
 				std::cout << "Fichier supprimé après lecture." << std::endl;
@@ -60,6 +62,9 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 				std::cerr << "Échec de la suppression du fichier." << std::endl;
 		}
 		else
-			generate_html_page_error(conf, client_socket, "404");
+		{
+			std::cerr << "Le fichier n'existe pas ou ne peut pas être ouvert." << std::endl;
+			generate_html_page_error(client, "404");
+		}
 	}
 }
