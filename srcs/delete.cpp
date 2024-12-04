@@ -20,6 +20,11 @@ void parse_buffer_delete(std::string buffer, Client& client)
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return ;
 	}
+	if (server.getLocation()[0].getAllowMethod().find("DELETE") == std::string::npos && server.getLocation()[0].getAllowMethod().empty() == false)
+	{
+		generate_html_page_error(client, "404");
+		return ;
+	}
 	std::string method;
 	std::string path;
 	std::string version;
@@ -37,16 +42,16 @@ void parse_buffer_delete(std::string buffer, Client& client)
 			method = line.substr(pos1, 7);
 			path = line.substr(pos1 + 7, pos2 - pos1 - 8);
 			version = line.substr(pos2);
+			if (path.find(".txt") == std::string::npos)
+				path = path + ".txt";
 			finalPath = "." + server.getRoot() + path;
 		}
 	}
 	if (!finalPath.empty())
 	{
-		std::cout << "finalPath = |" << finalPath << "|" << std::endl;
 		std::ifstream infile(finalPath.c_str());
 		if (infile.is_open())
 		{
-			std::cout << "Le fichier existe et est accessible pour lecture." << std::endl;
 			std::string file_content = readFile(finalPath);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);

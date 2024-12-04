@@ -30,8 +30,9 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			Client &client = conf.getClientObject(fds[i].fd);
 			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
+			std::cout << "fds.size() is : " << fds.size() << std::endl;
+			Client &client = conf.getClientObject(fds[i].fd);
 			if (fds[i].revents & POLLRDHUP)
 			{
 				printf("disconnect client of main loop\n");
@@ -64,7 +65,7 @@ int main(int argc, char **argv, char **envp)
 						break ;
 				}
 				else if (type_request == "GET")
-					parse_buffer_get(client, client.getRequest(),req);
+					parse_buffer_get(client.getRequest(), conf, client, req);
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
 				else if (type_request == "CGI")

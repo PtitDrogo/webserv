@@ -169,5 +169,7 @@ void parse_location(std::string line, location &loc, std::ifstream &file)
 			}
 		}
 		std::cout << subLine << std::endl;
+
+		# return 301 http://127.0.0.3:1080
 	}
 }
