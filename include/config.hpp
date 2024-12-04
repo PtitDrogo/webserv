@@ -8,6 +8,7 @@ class Config
 	private :
 		std::vector<Server>    _server;
 		std::map<int, int>     _clients; //Link each clients fd to their server index
+		bool islocation;
 		
 	public:
 		Config();
@@ -26,10 +27,12 @@ class Config
 		// bool parse_config_file(Server &serv, location &loc, std::string filename);
 		std::vector<Server> &getServer();
 		void setServer(Server &serv);
+		bool getIsLocation();
 
 		void createServerr(std::ifstream &file , Server &serv);
 		void createServer(std::string line, std::ifstream &file);
 		void printConfig();
+		void setIsLocation(bool islocation);
 };
 
 #endif

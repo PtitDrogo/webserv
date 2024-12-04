@@ -18,6 +18,11 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return ;
 	}
+	if (conf.getServer()[server_index].getLocation()[0].getAllowMethod().find("DELETE") == std::string::npos && conf.getServer()[server_index].getLocation()[0].getAllowMethod().empty() == false)
+	{
+		generate_html_page_error(conf, client_socket, "404");
+		return ;
+	}
 	std::string method;
 	std::string path;
 	std::string version;
@@ -35,16 +40,16 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 			method = line.substr(pos1, 7);
 			path = line.substr(pos1 + 7, pos2 - pos1 - 8);
 			version = line.substr(pos2);
+			if (path.find(".txt") == std::string::npos)
+				path = path + ".txt";
 			finalPath = "." + conf.getServer()[server_index].getRoot() + path;
 		}
 	}
 	if (!finalPath.empty())
 	{
-		std::cout << "finalPath = |" << finalPath << "|" << std::endl;
 		std::ifstream infile(finalPath.c_str());
 		if (infile.is_open())
 		{
-			std::cout << "Le fichier existe et est accessible pour lecture." << std::endl;
 			std::string file_content = readFile(finalPath);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client_socket, reponse.c_str(), reponse.size(), 0);
@@ -55,9 +60,6 @@ void parse_buffer_delete(std::string buffer, int client_socket, Config &conf)
 				std::cerr << "Échec de la suppression du fichier." << std::endl;
 		}
 		else
-		{
-			std::cerr << "Le fichier n'existe pas ou ne peut pas être ouvert." << std::endl;
 			generate_html_page_error(conf, client_socket, "404");
-		}
 	}
 }

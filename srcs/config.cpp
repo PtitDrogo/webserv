@@ -1,6 +1,8 @@
 #include "config.hpp"
 
-Config::Config() {}
+Config::Config() {
+	this->islocation = false;
+}
 
 Config::~Config() {}
 
@@ -14,8 +16,20 @@ Config &Config::operator=(const Config &copy)
 	if (this != &copy)
 	{
 		this->_server = copy._server;
+		this->_clients = copy._clients;
+		this->islocation = copy.islocation;
 	}
 	return *this;
+}
+
+bool Config::getIsLocation()
+{
+	return this->islocation;
+}
+
+void Config::setIsLocation(bool islocation)
+{
+	this->islocation = islocation;
 }
 
 void printVector(std::map<std::string, std::string> errorPage)
@@ -266,6 +280,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
+				std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
 				loc.setIndex(index);
 			}
 			size_t rootPos = subLine.find("root");
@@ -288,7 +303,11 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			}
 			size_t allowMethodPos = subLine.find("allow_method");
 			if (allowMethodPos != std::string::npos) {
-				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 12); // 12 = length of "allow_method"
+				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 13); // 12 = length of "allow_method"
+				if (startAllowMethod == std::string::npos) {
+					std::cerr << "Error: invalid value for allow_method" << std::endl;
+					return;
+				}
 				size_t endAllowMethod = subLine.find_first_of("\n", startAllowMethod); 
 				std::string allowMethod = subLine.substr(startAllowMethod, endAllowMethod - startAllowMethod);
 				loc.setAllowMethod(allowMethod);

@@ -100,8 +100,8 @@ std::string generateAutoIndexPage(Config &conf, const std::string& directory, co
 		std::string relativePath = directory;
 
 
-
-        if (islocation == true)
+        (void) islocation;
+        if (conf.getIsLocation() == true)
         {
             std::string rootLoc = conf.getServer()[0].getLocation()[0].getRoot();
             std::cout << "relativePath: " << relativePath << std::endl;

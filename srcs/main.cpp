@@ -26,6 +26,8 @@ int main(int argc, char **argv, char **envp)
 		checkIfNewClient(fds, number_of_servers, conf);
 		if (safe_poll(fds, number_of_servers) == FAILURE)
 			return FAILURE;
+
+		std::cout << "je suis la -----------------------------------------------------------------" << std::endl;
 		for (size_t i = number_of_servers; i < fds.size(); ++i)
 		{
 			if (fds[i].revents & POLLRDHUP)
