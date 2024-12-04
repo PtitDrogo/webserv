@@ -137,7 +137,7 @@ void sendRedirection(int client_socket, const std::string& path)
 				<< "\r\n";
 	std::string response = responseStream.str();
 	send(client_socket, response.c_str(), response.size(), 0);
-	close(client_socket);
+	// close(client_socket); //Derriere il est tj dans la liste de pollfd de poll !, Il va toujours etre dans ma map de clients;
 }
 
 std::string parse_no_location(std::string path, Config &conf, Client &client, std::string finalPath, int client_socket, bool islocation)
@@ -213,8 +213,8 @@ bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMe
 
 std::string parse_with_location(Config &conf, Client &client, std::string finalPath, bool islocation, HttpRequest &req)
 {
-	// std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-
+	std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
+	printf("coucou\n\n\n\n\n");
 	Server& server = client.getServer();
 	std::cout << "allow method " << server.getLocation()[0].getAllowMethod() << std::endl;
 	islocation = true;
@@ -235,7 +235,14 @@ std::string parse_with_location(Config &conf, Client &client, std::string finalP
 		generate_html_page_error(client, "404");
 		return "";
 	}
-
+	std::map<std::string, std::string> redirMap = server.getLocation()[0].getRedir();
+	for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it)
+	{
+		std::string errorCode = it->first;
+		std::string path = it->second;
+		if (errorCode == "301" && path != "")
+			sendRedirection(client.getSocket(), path);
+	}
 	std::cout << "index =" << server.getLocation()[0].getIndex() << std::endl;
 	if (server.getLocation()[0].getIndex().empty() == false)
 	{
@@ -253,14 +260,6 @@ std::string parse_with_location(Config &conf, Client &client, std::string finalP
 			generate_html_page_error(client, "404");
 			return "";
 		}
-	}
-	std::map<std::string, std::string> redirMap = server.getLocation()[0].getRedir();
-	for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it)
-	{
-		std::string errorCode = it->first;
-		std::string path = it->second;
-		if (errorCode == "301" && path != "")
-			sendRedirection(client.getSocket(), path);
 	}
 	return finalPath;
 }
@@ -307,8 +306,8 @@ void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpReq
 				finalPath = parse_no_location(path, conf, client, pathLoc, client_socket, conf.getIsLocation());
 			else
 				finalPath = parse_with_location(conf, client, pathLoc,  conf.getIsLocation(), req);
-			// if (finalPath.empty() || finalPath == pathLoc)
-			// 	return ;
+			if (finalPath.empty() || finalPath == pathLoc)
+				return ;
 			std::cout << "finalPath = |" << finalPath << "|" << std::endl;
 		}
 		if (check_host(line, server) == false)

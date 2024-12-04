@@ -80,7 +80,7 @@ void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
 		struct pollfd client_pollfd;
 		client_pollfd.fd = client_socket;
 		//POLLHUP because im going mad debugging this, but later will be useful for pipe
-		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client //
+		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client // NOT ADDING POLLOUT because it makes loop go infinite for now
 		client_pollfd.revents = 0;
 		fds.push_back(client_pollfd);
 	}

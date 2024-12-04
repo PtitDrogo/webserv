@@ -78,10 +78,18 @@ pid_t    CgiHandler::executeCGI()
 		close(_pipe_in[1]);
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
+        std::cerr << "about to execve" << _path.c_str() << std::endl;
 		execve(_path.c_str(), _argv, _envp);
         std::cerr << "failed to execve, path was : " << _path << std::endl;
         perror("execve");
         std::exit(EXIT_FAILURE);
+    }
+    else
+    {
+        close(_pipe_in[0]);
+		close(_pipe_in[1]);
+		// close(_pipe_out[0]);
+		close(_pipe_out[1]);
     }
     return (pid);
 }
@@ -106,13 +114,13 @@ pid_t    CgiHandler::executeTimeOut() const
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds)
 {
     CgiHandler cgi(envp, client);
-    std::string response;
+    // std::string response;
 
     //So im gonna need to add the pipe of the cgi to the fucking poll fd list, SAD.
     if (cgi.HandleCgiRequest(request) == false)
     {
-        response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
-        // std::cout << "GOT response : " << response << std::endl;
+        // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
+        std::cout << "Timeout CGI"<< std::endl;
     }
     else
     {
@@ -129,8 +137,8 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
         conf.addClient(pipe_fd, client.getServer()); //add to map;
         conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
 
-        std::string cgi_output = fileToString(PATH_CGI_OUT);
-        response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+        // std::string cgi_output = fileToString(PATH_CGI_OUT);
+        // response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
     }
     //I wont directly send an answer to the server;
 

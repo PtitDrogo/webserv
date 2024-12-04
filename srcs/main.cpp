@@ -2,7 +2,50 @@
 
 bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
+
+bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
+{
+	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
+	if (client.getCgiCaller() == NULL)
+		return (false);
+	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
+	{
+		printf("Pipe disconnected1\n");
+		//I want my client caller to send the content from the cgi pipe to its websocket;
+		//then we disconnect client of Pipe and all is well;
+
+		//Test close pipe;
+		
+		std::string cgi_output = readFromPipeFd(fds[i].fd);
+		printf("IF I LOSE IT ALL\n");
+		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+		printf("LOSE IT ALL\n");
+		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
+			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+		// waitpid(-1, 0, 0); // Collect the child process ressources;
+		printf("WHEN THE GROUND IS SHAKING\n");
+		disconnectClient(fds, i, conf);
+		return true;
+		// wait;
+	}
+	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
+	{
+		printf("Pipe disconnected2\n");
+		//I want my client caller to send the content from the cgi pipe to its websocket;
+		//then we disconnect client of Pipe and all is well;
+
+		std::string cgi_output = readFromPipeFd(fds[i].fd);
+		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
+			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+		disconnectClient(fds, i, conf);
+		return true;
+		// wait;
+	}
+	printf("exiting iscgistuff\n");
+	return false;
+}
+
 
 int main(int argc, char **argv, char **envp)
 {
@@ -30,18 +73,22 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
+			std::cout << "number of servers is : " << number_of_servers << std::endl;
+			
+			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
 			std::cout << "fds.size() is : " << fds.size() << std::endl;
-			Client &client = conf.getClientObject(fds[i].fd);
 			if (fds[i].revents & POLLRDHUP)
 			{
 				printf("disconnect client of main loop\n");
 				disconnectClient(fds, i, conf);
 				continue;
 			}
-			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
-			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
+			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
+			Client &client = conf.getClientObject(fds[i].fd);
+			if (isCgiStuff(client, conf, fds, i) == true)
+				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
+			std::cout << "ALLO" << std::endl;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
@@ -88,37 +135,4 @@ static void handleSignal(int signum) {
 }
 
 
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
-// {
-// 	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
-// 	{
-// 		printf("Pipe disconnected1\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
-// 	{
-// 		printf("Pipe disconnected2\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	return true;
-// }
 
