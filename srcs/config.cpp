@@ -83,7 +83,9 @@ Server &Config::getServerOfClient(int client_fd)
 Client &Config::getClientObject(int client_fd)
 {
 	std::map<int, Client>::iterator it = _clients.find(client_fd);
-    if (it != _clients.end()) {
+    std::cout << "size of map is : " << _clients.size() << std::endl;
+	std::cout << "looking for client fd" << client_fd << std::endl;
+	if (it != _clients.end()) {
         return it->second;
     }
 	throw std::out_of_range("Somehow, your socket isnt linked to a client object");
@@ -280,6 +282,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 		}
 		size_t end = line.find_first_of(" {", start);
 		std::string path = line.substr(start, end - start) + ' ';
+		std::cout << "path = " << path << std::endl;
 		loc.setPath(path);
 
 		size_t braceOpenPos = line.find('{', end);
