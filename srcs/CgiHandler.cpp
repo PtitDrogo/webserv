@@ -129,7 +129,8 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
         addPollFD(pipe_fd, fds); //add to fds
         conf.addClient(pipe_fd, client.getServer()); //add to map;
         conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
-    }
+		client.setCgiCallee(&conf.getClientObject(pipe_fd)); //Adding the pipe as callee of the initial client;
+	}
     return ;
 
 }

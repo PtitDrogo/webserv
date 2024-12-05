@@ -46,6 +46,19 @@ void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
 	--i;
 }
 
+void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
+{
+	std::cout << "Client disconnected" << std::endl;
+	for (std::vector<struct pollfd>::iterator it; it != fds.end(); it++)
+	{
+		if (it->fd == client.getSocket())
+			break;
+	}
+	
+	conf.removeClient(client.getSocket()); //Remove the client from the map of conf
+	close(client.getSocket());
+}
+
 
 //Parametres -> retour de recv, la liste de fds et l'index du client (pour deconnect sur fail)
 int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf)

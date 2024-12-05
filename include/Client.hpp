@@ -46,6 +46,7 @@ public:
 	void	setBody(std::string body);
 	void 	setCgiPipeFD(int fd);
 	void 	setCgiCaller(Client *client_caller);
+	void 	setCgiCallee(Client *client_caller);
 
 	// getters
 	Server&		getServer() const;
@@ -56,6 +57,7 @@ public:
 	size_t		getHeadEnd() const;
 	std::string getBody() const;
 	Client* 	getCgiCaller() const;
+	Client* 	getCgiCallee() const;
 	long long	getTimeStart() const;
 
 
@@ -76,6 +78,7 @@ private:
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
 	Client			  *_cgi_caller;
 	long long	  	  _time_start;
+	Client			  *_cgi_callee;
 	
 	// methodes privees internes
 	// void _processNewRequest(const std::string& buffer);

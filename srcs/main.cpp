@@ -41,8 +41,13 @@ int main(int argc, char **argv, char **envp)
 				break;
 			}
 			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
-			if (client.didClientTimeout() == true && client.getCgiCaller() != NULL)
+			if (client.didClientTimeout() == true)
 			{
+				if (client.getCgiCallee() != NULL)
+				{
+					// client.setSocket(client.getCgiCallee()->getSocket());
+					disconnectClient(fds, *client.getCgiCallee(), conf); //this crashes stuff
+				}
 				generate_html_page_error(client, "504");
 				disconnectClient(fds, i, conf);
 				continue;
