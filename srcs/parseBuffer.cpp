@@ -324,6 +324,10 @@ void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpReq
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
+
+
+
+
 void parse_buffer_post(const Client& client, std::string buffer)
 {
 	std::istringstream stream(buffer);

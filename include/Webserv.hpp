@@ -31,7 +31,8 @@ class ClientUploadState;
 
 # define SUCCESS 0
 # define FAILURE 1
-# define POLL_TIMEOUT 5000
+# define POLL_TIMEOUT_MILISECONDS 5000
+# define CGI_TIMEOUT_SECONDS 12
 
 
 //*********************************************************//

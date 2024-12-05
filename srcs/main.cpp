@@ -64,6 +64,17 @@ int main(int argc, char **argv, char **envp)
 	size_t number_of_servers = conf.addAllServers(fds);
 	std::cout << "Did I add 3 servers, current server count : " << number_of_servers << std::endl;
 
+	//Debug Location
+	// for (size_t i = 0; i < number_of_servers; i++)
+	// {
+	// 	Server &serv = conf.getServer()[i];
+	// 	for (size_t j = 0; j < serv.getLocation().size(); j++)
+	// 	{
+	// 		std::cout << "index of location :" << serv.getLocation()[j].getIndex() << std::endl;
+	// 	}
+	// }
+	
+
 	while (server_running)
 	{
 		signal(SIGINT, &handleSignal);
@@ -83,9 +94,15 @@ int main(int argc, char **argv, char **envp)
 				disconnectClient(fds, i, conf);
 				continue;
 			}
+			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
+			if (client.didClientTimeout() == true && client.getCgiCaller() != NULL)
+			{
+				generate_html_page_error(client, "504");
+				disconnectClient(fds, i, conf);
+				continue;
+			}
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
-			Client &client = conf.getClientObject(fds[i].fd);
 			if (isCgiStuff(client, conf, fds, i) == true)
 				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
 			std::cout << "ALLO" << std::endl;

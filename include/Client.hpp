@@ -34,6 +34,8 @@ public:
 	size_t	findContentLength();
 	bool	extractFileName();
 	// void disconnect();
+	bool	didClientTimeout() const;
+
 
 	// setters
 	void	setSocket(int socket);
@@ -42,8 +44,8 @@ public:
 	void	setTotalRead(size_t totalRead);
 	void	setHeadEnd(size_t heanEnd);
 	void	setBody(std::string body);
-	void setCgiPipeFD(int fd);
-	void setCgiCaller(Client *client_caller);
+	void 	setCgiPipeFD(int fd);
+	void 	setCgiCaller(Client *client_caller);
 
 	// getters
 	Server&		getServer() const;
@@ -53,7 +55,8 @@ public:
 	size_t		getTotalRead() const;
 	size_t		getHeadEnd() const;
 	std::string getBody() const;
-	Client* getCgiCaller() const;
+	Client* 	getCgiCaller() const;
+	long long	getTimeStart() const;
 
 
 private:
@@ -68,11 +71,11 @@ private:
 	size_t				_contentLength;
 	size_t				_totalRead;
 	size_t				_headEnd;
-	// bool			  _isCGIPipe;
+
 	//CGI stuff
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
 	Client			  *_cgi_caller;
-	// long long	  _timeStart; // init at -1;
+	long long	  	  _time_start;
 	
 	// methodes privees internes
 	// void _processNewRequest(const std::string& buffer);
