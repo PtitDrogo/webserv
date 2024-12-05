@@ -1,4 +1,0 @@
-name : Merge
-email : merge%40gmail.com
-content : yo+la+team
---------------------------------------
