@@ -30,14 +30,14 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			Client &client = conf.getClientObject(fds[i].fd);
-			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
 			if (fds[i].revents & POLLRDHUP)
 			{
 				printf("disconnect client of main loop\n");
 				disconnectClient(fds, i, conf);
 				continue;
 			}
+			Client &client = conf.getClientObject(fds[i].fd);
+			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
 			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
 			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
 				continue;
@@ -53,7 +53,9 @@ int main(int argc, char **argv, char **envp)
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
 				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				client.extractBody();													// debug Body only
+				std::cout << GREEN << client.getBody() << RESET << std::endl;			// debug Body only
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 

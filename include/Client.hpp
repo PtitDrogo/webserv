@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "ClientUploadState.hpp"
 #include "Webserv.hpp"
 
 // #include "HttpRequestParser.hpp"
@@ -32,7 +31,9 @@ public:
 	bool	isValidSocket() const;
 	void	appendToRequest(char *chunk, int recvValue);
 	size_t	findContentLength();
-	bool	extractFileName();
+	void	extractFileName();
+	void	extractBody();
+	void	extractContentType();
 	// void disconnect();
 
 	// setters
@@ -49,10 +50,13 @@ public:
 	Server&		getServer() const;
 	int			getSocket() const;
 	std::string	getRequest() const;
+	std::string getBody() const;
+	std::string	getFileName() const;
+	std::string getContentType() const;
+	std::string getBoundary() const;
 	size_t		getContentLength() const;
 	size_t		getTotalRead() const;
 	size_t		getHeadEnd() const;
-	std::string getBody() const;
 	Client* getCgiCaller() const;
 
 
@@ -61,10 +65,12 @@ private:
 	// attributs prives
 	int 			 	_socket;
 	Server&			 	_server;
-	ClientUploadState	_uploadState;
 
 	std::string			_request;
 	std::string			_body;
+	std::string			_fileName;
+	std::string			_contentType;
+	std::string			_boundary;
 	size_t				_contentLength;
 	size_t				_totalRead;
 	size_t				_headEnd;

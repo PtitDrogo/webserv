@@ -10,8 +10,9 @@ Client::~Client()
 }
 
 Client::Client(const Client& other) : _socket(other._socket), _server(other._server), 
-_uploadState(other._uploadState), _request(other._request), _contentLength(other._contentLength), 
-_totalRead(other._totalRead), _cgi_caller(other._cgi_caller)
+ _request(other._request), _body(other._body), _fileName(other._fileName),
+ _contentType(other._contentType), _boundary(other._boundary), 
+ _contentLength(other._contentLength), _totalRead(other._totalRead), _cgi_caller(other._cgi_caller)
 {
 	// std::cout << "client copy constructor called" << std::endl;
 }
@@ -25,17 +26,22 @@ Client& Client::operator=(const Client& other) {
 
 		_socket = other._socket;
 		_server = other._server;
-		_uploadState = other._uploadState;
 		_request = other._request;
+		_body = other._body;
+		_fileName = other._fileName;
+		_contentType = other._contentType;
+		_boundary = other._boundary;
 		_contentLength = other._contentLength;
 		_totalRead = other._totalRead;
+		_cgi_caller = other._cgi_caller;
+
 	}
 	return *this;
 }
 
-Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), _request(), _cgi_caller(NULL) {
-	_contentLength = 0;
-	_totalRead = 0;
+Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _request(),
+ _body(), _fileName(), _contentType(), _boundary(), _contentLength(0), _totalRead(0), _cgi_caller(NULL)
+{
 	// std::cout << "Defaultish constructor called" << std::endl
 	//There used to be stuff here, i think there should be nothing.
 	// we shouldnt call recve when creating a child socket.
@@ -115,95 +121,123 @@ Client* Client::getCgiCaller() const { return _cgi_caller;}
 void    Client::appendToRequest(char *chunk, int recvValue) {
 	_request.append(chunk, recvValue);
 	_totalRead += recvValue;
-	if (this->getContentLength() == 0 && this->findContentLength() != 0) {
-		this->setContentLength(this->findContentLength());
-		this->setHeadEnd(this->getRequest().find("\r\n\r\n"));
-		// std::cout << MAGENTA << "headEnd: " <<  this->getHeadEnd() << RESET << std::endl;	// debug print headEnd
+	if (getContentLength() == 0) {
+		setHeadEnd(getRequest().find("\r\n\r\n") + 4);
+		std::cout << MAGENTA << "headEnd: " <<  getHeadEnd() << RESET << std::endl;	// debug print headEnd
+		if (findContentLength() != 0) {
+			setContentLength(findContentLength());
 
-		// std::string test;												// debug print header
-		// test = this->getRequest().substr(0, this->getHeadEnd() + 4);	// debug print header
-		// std::cout << GREEN << "header: " << test << RESET << std::endl;	// debug print header
+			// std::string test;												// debug print header
+			// test = getRequest().substr(0, getHeadEnd() + 4);	// debug print header
+			// std::cout << GREEN << "header: " << test << RESET << std::endl;	// debug print header
 
-		this->setTotalRead(_totalRead - this->getHeadEnd() - 4);
-		std::cout << MAGENTA << "content_length: " << this->getContentLength() << RESET << std::endl;	// debug print content_length
+			setTotalRead(_totalRead - getHeadEnd() - 4);
+			std::cout << MAGENTA << "content_length: " << getContentLength() << RESET << std::endl;	// debug print content_length
+		}
 	}
-	std::cout << MAGENTA << "READ...: " << recvValue << "  " << this->getTotalRead() << RESET << std::endl;	// debug print totalRead
+	std::cout << MAGENTA << "READ...: " << recvValue << "  " << getTotalRead() << RESET << std::endl;	// debug print totalRead
 }
 
-std::string    Client::getRequest() const {
-	return (_request);
-}
-
-void	Client::setContentLength(size_t contentLength) {
-	_contentLength = contentLength;
-}
 
 size_t Client::findContentLength() {
-	size_t      	content_length_pos = _request.find("Content-Length: ");
+	size_t	content_length_pos = _request.find("Content-Length: ");
 	if (content_length_pos == std::string::npos)
 	{
 		_contentLength = 0;
 		return (_contentLength);
 	}
-
 	size_t length_start = content_length_pos + 16;
 	size_t length_end = _request.find("\r\n", length_start);
 	std::istringstream(_request.substr(length_start, length_end - length_start)) >> _contentLength;
 	return (_contentLength);
 }
 
-size_t	Client::getContentLength() const {
-	return (_contentLength);
+void	Client::setContentLength(size_t contentLength) { _contentLength = contentLength; }
+void	Client::setTotalRead(size_t totalRead) { _totalRead = totalRead; }
+void	Client::setHeadEnd(size_t headEnd) { _headEnd = headEnd; }
+void	Client::setBody(std::string body) { _body = body; }
+
+std::string	Client::getRequest() const { return (_request); }
+std::string	Client::getBody() const{ return (_body); }
+std::string	Client::getFileName() const { return (_fileName); }
+std::string	Client::getContentType() const { return (_contentType); }
+std::string	Client::getBoundary() const { return (_boundary); }
+size_t		Client::getContentLength() const { return (_contentLength); }
+size_t		Client::getTotalRead() const { return (_totalRead); }
+size_t		Client::getHeadEnd() const { return (_headEnd); }
+
+
+void Client::extractBody() {
+	_body = _request.substr(0, getHeadEnd());
 }
 
-size_t Client::getTotalRead() const {
-	return (_totalRead);
+void Client::extractFileName() {
+	const std::string key = "filename=\"";
+
+	extractBody();
+	size_t fileNamePos = getBody().find(key);
+
+	if (fileNamePos == std::string::npos) {
+		std::cerr << "Error: Filename not found." << std::endl;
+		return ; // try/catch ??
+	}
+
+	size_t endPos = getBody().find("\"\r\n", fileNamePos);
+	if (endPos == std::string::npos) {
+		std::cerr << "Error: Invalid filename format." << std::endl;
+		return ; // try/catch ??
+	}
+
+	std::string fileName = getBody().substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
+
+	// // Validation du nom de fichier pour éviter les chemins traversants
+	// if (fileName.find("/") != std::string::npos || fileName.find("..") != std::string::npos) {
+	// 	std::cerr << "Error: Invalid filename." << std::endl;
+	// 	return false;
+	// }
+
+	fileName = "./config/base_donnees/" + fileName;
+	_fileName = fileName;
 }
 
-void Client::setTotalRead(size_t totalRead) {
-	_totalRead = totalRead;
+
+void Client::extractContentType() {
+	size_t contentTypePos = _body.find("Content-Type:", _body.find("--" + _boundary));
+		if (contentTypePos == std::string::npos) {
+			std::cerr << "Error: Content-Type not found." << std::endl;
+			return ; // try catch ???
+		}
+
+		size_t contentTypeEnd = _body.find("\r\n", contentTypePos);
+		if (contentTypeEnd == std::string::npos) {
+			std::cerr << "Error: Malformed Content-Type header." << std::endl;
+			return ; // try catch ???
+		}
+		std::string contentType = _body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
+
+		std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
+
+		size_t contentStart = _body.find("\r\n\r\n", contentTypeEnd);
+		if (contentStart == std::string::npos) {
+			std::cerr << "Error: Content start not found." << std::endl;
+			return ; // try catch ???
+		}
+		contentStart += 4;
+
+		// Pour Firefox, on soustrait 30 pour gérer correctement la fin du contenu
+		size_t contentEnd = _body.find(_boundary + "--", contentStart); 
+		if (contentEnd == std::string::npos) {
+			std::cerr << "Error: Content end not found." << std::endl;
+			return ; // try catch ???
+		}
+
+		std::string fileContent = _body.substr(contentStart, contentEnd - contentStart);
+
+		std::ofstream outFile(_fileName.c_str(), std::ios::binary);
+		if (!outFile) {
+			std::cerr << "Error: Unable to create file: " << _fileName << std::endl;
+			return ; // try catch ???
+		}
+		outFile.write(fileContent.data(), fileContent.size());
+		outFile.close();
 }
-
-void Client::setHeadEnd(size_t headEnd) {
-	_headEnd = headEnd;
-}
-
-size_t Client::getHeadEnd() const{
-	return (_headEnd);
-}
-
-void Client::setBody(std::string body) {
-	_body = body;
-}
-
-std::string Client::getBody() const{
-	return (_body);
-}
-
-
-// bool Client::extractFileName() {
-// 	const std::string key = "filename=\"";
-
-// 	size_t fileNamePos = body.find(key);
-
-// 	if (fileNamePos == std::string::npos) {
-// 		std::cerr << "Error: Filename not found." << std::endl;
-// 		return false;
-// 	}
-
-// 	size_t endPos = body.find("\"\r\n", fileNamePos);
-// 	if (endPos == std::string::npos) {
-// 		std::cerr << "Error: Invalid filename format." << std::endl;
-// 		return false;
-// 	}
-
-// 	std::string fileName = body.substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
-
-// 	// // Validation du nom de fichier pour éviter les chemins traversants
-// 	// if (fileName.find("/") != std::string::npos || fileName.find("..") != std::string::npos) {
-// 	// 	std::cerr << "Error: Invalid filename." << std::endl;
-// 	// 	return false;
-// 	// }
-
-// 	fileName = "./config/base_donnees/" + fileName;
-// }
