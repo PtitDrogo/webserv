@@ -11,7 +11,7 @@ Client::~Client()
 
 Client::Client(const Client& other) : _socket(other._socket), _server(other._server), 
 _uploadState(other._uploadState), _request(other._request), _contentLength(other._contentLength), 
-_totalRead(other._totalRead), _cgi_caller(other._cgi_caller)
+_totalRead(other._totalRead), _cgi_caller(other._cgi_caller), _time_start(other._time_start)
 {
 	// std::cout << "client copy constructor called" << std::endl;
 }
@@ -29,11 +29,12 @@ Client& Client::operator=(const Client& other) {
 		_request = other._request;
 		_contentLength = other._contentLength;
 		_totalRead = other._totalRead;
+		_time_start = other._time_start;
 	}
 	return *this;
 }
 
-Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), _request(), _cgi_caller(NULL) {
+Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), _request(), _cgi_caller(NULL), _time_start(std::time(0)){
 	_contentLength = 0;
 	_totalRead = 0;
 	// std::cout << "Defaultish constructor called" << std::endl
@@ -109,8 +110,18 @@ void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
 int Client::getSocket() const {return _socket;}
 Server& Client::getServer() const { return _server;}
 Client* Client::getCgiCaller() const { return _cgi_caller;}
+long long	Client::getTimeStart() const { return _time_start;}
 
 // t_cgi_tmp_file&	Client::getCgiFilesFds() {return _cgi_fds;}
+
+bool	Client::didClientTimeout() const
+{
+	if ((std::time(0) - _time_start) > CGI_TIMEOUT_SECONDS )
+		return true;
+	return false;
+}
+
+
 
 void    Client::appendToRequest(char *chunk, int recvValue) {
 	_request.append(chunk, recvValue);

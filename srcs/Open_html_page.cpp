@@ -41,7 +41,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"Content-Type: " + contentType + "\r\n"
 			"Content-Length: " + to_string(content.size()) + "\r\n"
 			"Connection: close\r\n"
-			"\r\n" + content);
+			"\r\n" + content); //IT REALLY SHOULD BE CLOSE OR KEEP ALIVE DEPENDING ON CONTEXT;
 }
 
 void generate_default_error_page(std::string error_code, int client_socket)

@@ -139,7 +139,7 @@ void sendRedirection(int client_socket, const std::string& path)
 	std::string response = responseStream.str();
 	std::cout << RED "response = |" << response << "|" << RESET << std::endl;
 	send(client_socket, response.c_str(), response.size(), 0);
-	close(client_socket);
+	// close(client_socket); //Derriere il est tj dans la liste de pollfd de poll !, Il va toujours etre dans ma map de clients;
 }
 
 void check_password_username()
@@ -223,8 +223,8 @@ bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMe
 
 std::string parse_with_location(Config &conf, Client &client, std::string finalPath, bool islocation, HttpRequest &req)
 {
-	// std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-
+	std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
+	printf("coucou\n\n\n\n\n");
 	Server& server = client.getServer();
 	std::cout << "allow method " << server.getLocation()[0].getAllowMethod() << std::endl;
 	islocation = true;
@@ -272,7 +272,6 @@ std::string parse_with_location(Config &conf, Client &client, std::string finalP
 			return "";
 		}
 	}
-
 	return finalPath;
 }
 

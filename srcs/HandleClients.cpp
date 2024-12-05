@@ -23,7 +23,7 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 //In this function we are also polling the server, should we do that ??
 int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 {
-    if (poll(fds.data(), fds.size(), -1) == -1) //POLL_TIMEOUT
+    if (poll(fds.data(), fds.size(), POLL_TIMEOUT_MILISECONDS) == -1) //POLL_TIMEOUT
     {
         //NOTE : if we use ctrlC or ctrl Z, this will print this, before pushing to prod i could check the static variable to know that its normal to fail this and not print.
 		std::cerr << "Poll failed" << std::endl;
@@ -33,7 +33,6 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 		}
         return FAILURE; //Question : Est ce que on doit vraiment quitter si poll fail ? Surement oui mais a voir.
     }
-	// std::cout << "poll decided something happened" << std::endl;
 	return SUCCESS;
 }
 
@@ -80,7 +79,7 @@ void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
 		struct pollfd client_pollfd;
 		client_pollfd.fd = client_socket;
 		//POLLHUP because im going mad debugging this, but later will be useful for pipe
-		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client //
+		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client // NOT ADDING POLLOUT because it makes loop go infinite for now
 		client_pollfd.revents = 0;
 		fds.push_back(client_pollfd);
 	}
