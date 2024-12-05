@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Webserver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(54, 54, 54);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #222;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+            color: white;
+            width: 300px;
+            text-align: center;
+        }
+
+        .login-container h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: rgb(243, 0, 0);
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1rem;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-container button:hover {
+            background-color: #333;
+        }
+
+        .login-container a {
+            color: rgb(243, 0, 0);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .login-container a:hover {
+            text-decoration: underline;
+        }
+		.card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 25vh;
+        }
+
+        /* Styles des boutons */
+        .card button {
+            font-size: 3vw;
+            padding: 20px;
+            margin: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* Effet hover pour les boutons */
+        .card button:hover{
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div id="user-info">
+            <h2>Bienvenue, <span id="username"></span></h2>
+            <form action="/logout" method="POST">
+                <button type="submit">Se déconnecter</button>
+            </form>
+        </div>
+		<div class="card">
+			<div style="text-align: center;">
+				<a href="index.html"><button>home</button></a>
+			</div>
+		</div>
+    </div>
+</body>
+</html>

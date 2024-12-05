@@ -14,7 +14,7 @@ class Server;
 class Client;
 class HttpRequestParser;
 class ClientUploadState;
-
+class Cookies;
 
 //*********************************************************//
 //************************INCLUDES*************************//
@@ -24,6 +24,7 @@ class ClientUploadState;
 #include "server.hpp"
 #include "config.hpp"
 #include "httpRequest.hpp"
+#include "Cookies.hpp"
 
 //*********************************************************//
 //*************************DEFINES*************************//
@@ -60,8 +61,8 @@ bool isCgiRequest(const HttpRequest &req);
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
 void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpRequest &req);
-void	parse_buffer_post(const Client& client, std::string buffer);
-bool    preparePostParse(const Client& client, std::string buffer);
+void	parse_buffer_post(const Client& client, std::string buffer, Cookies &cook);
+bool    preparePostParse(const Client& client, std::string buffer, Cookies &cook);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);

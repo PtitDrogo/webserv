@@ -1,4 +1,5 @@
 #include "Webserv.hpp"
+#include "Cookies.hpp"
 
 bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
@@ -7,6 +8,7 @@ int main(int argc, char **argv, char **envp)
 {
 	Config conf;
 	HttpRequest req;
+	Cookies cook;
 	std::vector<struct pollfd> fds;
 	(void) envp;
 
@@ -34,15 +36,21 @@ int main(int argc, char **argv, char **envp)
 			std::cout << "fds.size() is : " << fds.size() << std::endl;
 			if (fds[i].revents & POLLRDHUP)
 			{
-				printf("disconnect client of main loop\n");
+				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, i, conf);
-				continue;
+				break;
 			}
+<<<<<<< HEAD
 			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
 			if (client.didClientTimeout() == true && client.getCgiCaller() != NULL)
 			{
 				generate_html_page_error(client, "504");
 				disconnectClient(fds, i, conf);
+=======
+			Client &client = conf.getClientObject(fds[i].fd);
+			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
+			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
+>>>>>>> main
 				continue;
 			}
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
@@ -69,7 +77,7 @@ int main(int argc, char **argv, char **envp)
 				
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client, client.getRequest()) == false)
+					if (preparePostParse(client, client.getRequest(), cook) == false)
 						break ;
 				}
 				else if (type_request == "GET")
@@ -80,7 +88,7 @@ int main(int argc, char **argv, char **envp)
 					cgiProtocol(envp, req, client, conf, fds);
 				else
 					generate_html_page_error(client, "404");
-				// std::cout << req << std::endl;
+				std::cout << req << std::endl;
 			}
 		}
 	}
