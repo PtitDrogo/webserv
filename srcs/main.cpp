@@ -40,17 +40,11 @@ int main(int argc, char **argv, char **envp)
 				disconnectClient(fds, i, conf);
 				break;
 			}
-<<<<<<< HEAD
 			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
 			if (client.didClientTimeout() == true && client.getCgiCaller() != NULL)
 			{
 				generate_html_page_error(client, "504");
 				disconnectClient(fds, i, conf);
-=======
-			Client &client = conf.getClientObject(fds[i].fd);
-			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
-			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
->>>>>>> main
 				continue;
 			}
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
