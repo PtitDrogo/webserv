@@ -33,28 +33,23 @@ std::string readFromPipeFd(int pipefd)
 
     while (true) 
 	{
-        printf("DEBUT BOUCLE\n");
         bzero(&buffer, sizeof(buffer));
         bytesRead = read(pipefd, buffer, sizeof(buffer));
-        printf("Je suis la %li\n", bytesRead);
         if (bytesRead < 0) 
 		{
             std::cout << "Error here, down the line, this should be a 500 error" << std::endl;
 			break;
         }
         if (bytesRead == 0)
-        {    
-            printf("LET ME OUT\n");
             break;
-        }
-        std::cout << "result is : |" << result << "|" << std::endl;
+        // std::cout << "result is : |" << result << "|" << std::endl;
         result.append(buffer, bytesRead);
-        std::cout << "AFTER result is : |" << result << "|" << std::endl;
-        printf("Je suis la\n");
+        // std::cout << "AFTER result is : |" << result << "|" << std::endl;
+        // printf("Je suis la\n");
         // break ; //Plus rien a foutre
     }
 
-    std::cerr << "je suis sorti" << std::endl;
-    printf("Je suis sorti\n");
+    // std::cerr << "je suis sorti" << std::endl;
+    // printf("Je suis sorti\n");
     return result;   
 }

@@ -89,7 +89,7 @@ void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);
-
+bool    isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
