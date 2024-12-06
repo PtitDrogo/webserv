@@ -47,17 +47,30 @@ int main(int argc, char **argv, char **envp)
 				break;
 			}
 			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
-			// if (client.didClientTimeout() == true)
-			// {
-			// 	if (client.getCgiCallee() != NULL)
-			// 	{
-			// 		// client.setSocket(client.getCgiCallee()->getSocket());
-			// 		disconnectClient(fds, *client.getCgiCallee(), conf); //this crashes stuff
-			// 	}
-			// 	generate_html_page_error(client, "504");
-			// 	disconnectClient(fds, i, conf);
-			// 	continue;
-			// }
+			if (client.didClientTimeout() == true)
+			{
+				if (client.getCgiCallee() == NULL && client.getCgiCaller() == NULL)
+				{
+					generate_html_page_error(client, "504");
+					disconnectClient(fds, i, conf);
+					continue;
+				}
+				if (client.getCgiCallee() != NULL)
+				{
+					// client.setSocket(client.getCgiCallee()->getSocket());
+					generate_html_page_error(client, "504");
+					disconnectClient(fds, *client.getCgiCallee(), conf); //Disconnect Pipe //this crashes stuff
+					disconnectClient(fds, client, conf); //Disconnect this first, I think timeout = disconnect is good;
+				}
+				if (client.getCgiCaller() != NULL)
+				{
+					//This mean somehow we got to the pipe before caller of pipe;
+					generate_html_page_error(*client.getCgiCaller(), "504");
+					disconnectClient(fds, *client.getCgiCaller(), conf);
+					disconnectClient(fds, client, conf);
+					
+				}
+			}
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)

@@ -49,7 +49,7 @@ void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
-	std::vector<struct pollfd>::iterator it;
+	std::vector<struct pollfd>::iterator it = fds.begin();
 	for (; it != fds.end(); it++)
 	{
 		if (it->fd == client.getSocket())
