@@ -40,23 +40,24 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
-	fds.erase(fds.begin() + i);   //Remove the client from the vector of pollfds;
-	conf.removeClient(fds[i].fd); //Remove the client from the map of conf
 	close(fds[i].fd);
+	conf.removeClient(fds[i].fd); //Remove the client from the map of conf
+	fds.erase(fds.begin() + i);   //Remove the client from the vector of pollfds;
 	--i;
 }
 
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
-	for (std::vector<struct pollfd>::iterator it; it != fds.end(); it++)
+	std::vector<struct pollfd>::iterator it;
+	for (; it != fds.end(); it++)
 	{
 		if (it->fd == client.getSocket())
 			break;
 	}
-	
-	conf.removeClient(client.getSocket()); //Remove the client from the map of conf
 	close(client.getSocket());
+	conf.removeClient(client.getSocket()); //Remove the client from the map of conf
+	fds.erase(it);
 }
 
 
@@ -92,7 +93,7 @@ void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
 		struct pollfd client_pollfd;
 		client_pollfd.fd = client_socket;
 		//POLLHUP because im going mad debugging this, but later will be useful for pipe
-		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client // NOT ADDING POLLOUT because it makes loop go infinite for now
+		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP | POLLERR; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client // NOT ADDING POLLOUT because it makes loop go infinite for now
 		client_pollfd.revents = 0;
 		fds.push_back(client_pollfd);
 	}
