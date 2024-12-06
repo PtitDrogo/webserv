@@ -34,18 +34,42 @@ int main(int argc, char **argv, char **envp)
 			std::cout << "number of servers is : " << number_of_servers << std::endl;
 			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
 			std::cout << "fds.size() is : " << fds.size() << std::endl;
-			if (fds[i].revents & POLLRDHUP)
+			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, i, conf);
 				break;
 			}
-			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
-			if (client.didClientTimeout() == true && client.getCgiCaller() != NULL)
+			if (fds[i].revents & POLLERR)
 			{
-				generate_html_page_error(client, "504");
+				printf("error with this client, were killing it, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, i, conf);
-				continue;
+				break;
+			}
+			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
+			if (client.didClientTimeout() == true)
+			{
+				if (client.getCgiCallee() == NULL && client.getCgiCaller() == NULL)
+				{
+					generate_html_page_error(client, "504");
+					disconnectClient(fds, i, conf);
+					continue;
+				}
+				if (client.getCgiCallee() != NULL)
+				{
+					// client.setSocket(client.getCgiCallee()->getSocket());
+					generate_html_page_error(client, "504");
+					disconnectClient(fds, *client.getCgiCallee(), conf); //Disconnect Pipe //this crashes stuff
+					disconnectClient(fds, client, conf); //Disconnect this first, I think timeout = disconnect is good;
+				}
+				if (client.getCgiCaller() != NULL)
+				{
+					//This mean somehow we got to the pipe before caller of pipe;
+					generate_html_page_error(*client.getCgiCaller(), "504");
+					disconnectClient(fds, *client.getCgiCaller(), conf);
+					disconnectClient(fds, client, conf);
+					
+				}
 			}
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
