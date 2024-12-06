@@ -47,6 +47,7 @@ public:
 	void 	setCgiPipeFD(int fd);
 	void 	setCgiCaller(Client *client_caller);
 	void 	setCgiCallee(Client *client_caller);
+	void 	setCgiPID(pid_t pid);
 
 	// getters
 	Server&		getServer() const;
@@ -59,6 +60,7 @@ public:
 	Client* 	getCgiCaller() const;
 	Client* 	getCgiCallee() const;
 	long long	getTimeStart() const;
+	pid_t		getCgiPID() const;
 
 
 private:
@@ -79,7 +81,7 @@ private:
 	Client			  *_cgi_caller;
 	long long	  	  _time_start;
 	Client			  *_cgi_callee;
-	
+	pid_t			  _pid;
 	// methodes privees internes
 	// void _processNewRequest(const std::string& buffer);
 	// bool _receiveData();

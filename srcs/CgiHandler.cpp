@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-
+#include <fcntl.h>
 
 //GET /config/cgi-bin/sleep10.py HTTP/1.1
 //GET /config/cgi-bin/sleep20.py HTTP/1.1
@@ -25,7 +25,7 @@ _envp(envp),
 _argv(NULL),
 _exit_status(-1),
 _path(""),
-_pid(-1),
+_pid(-42),
 _client(client)
 {}
 
@@ -43,6 +43,8 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
     pid_t cgi_pid = executeCGI();
+	std::cout << std::endl << std::endl << "CGI PID IS :" << cgi_pid << std::endl << std::endl;
+	_pid = cgi_pid;
     if (cgi_pid == -1)
         return false;
     return true;
@@ -73,10 +75,14 @@ pid_t    CgiHandler::executeCGI()
     }
     else if (pid == 0)
     {
-        // dup2(_pipe_in[0], STDIN_FILENO);
+        int null_fd = open("/dev/null", O_WRONLY);
+		// dup2(_pipe_in[0], STDIN_FILENO);
 		dup2(_pipe_out[1], STDOUT_FILENO);
+		dup2(null_fd, STDERR_FILENO);
+
 		// close(_pipe_in[0]);
 		// close(_pipe_in[1]);
+		close(null_fd);
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
@@ -120,12 +126,14 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
     if (cgi.HandleCgiRequest(request) == false)
     {
         // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
-        std::cout << "Timeout CGI"<< std::endl;
+        std::cout << "Error executing CGI"<< std::endl;
     }
     else
     {
 		int pipe_fd = cgi.getPipeOut()[0];
         
+		client.setCgiPID(cgi.getPID());
+		std::cout << "After setting, client PID is :" << client.getCgiPID() << std::endl;
         addPollFD(pipe_fd, fds); //add to fds
         conf.addClient(pipe_fd, client.getServer()); //add to map;
         conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
@@ -137,11 +145,13 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
 
 int     *CgiHandler::getPipeOut() {return _pipe_out;}
 int     *CgiHandler::getPipeIn() {return _pipe_in;}
+pid_t   CgiHandler::getPID() {return _pid;}
 
 
 
 bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
 {
+	(void)i;
 	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
 	if (client.getCgiCaller() == NULL)
 		return (false);
@@ -154,14 +164,14 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		//Test close pipe;
 		
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-		printf("IF I LOSE IT ALL\n");
+		printf("IF I LOSE IT ALL\n"); 		
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		printf("LOSE IT ALL\n");
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
-		waitpid(-1, 0, 0); // Collect the child process ressources;
+		// waitpid(-1, 0, 0); // Collect the child process ressources;
 		printf("WHEN THE GROUND IS SHAKING\n");
-		disconnectClient(fds, i, conf);
+		disconnectClient(fds, client, conf);
 		return true;
 		// wait;
 	}
@@ -175,8 +185,8 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
-		waitpid(-1, 0, 0);
-		disconnectClient(fds, i, conf);
+		// waitpid(-1, 0, 0);
+		disconnectClient(fds, client, conf);
 		return true;
 		// wait;
 	}

@@ -37,19 +37,26 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 }
 
 //Parametres -> la liste de fds et l'index du client a deconnect
-void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
-{
-	std::cout << "Client disconnected" << std::endl;
-	close(fds[i].fd);
-	conf.removeClient(fds[i].fd); //Remove the client from the map of conf
-	fds.erase(fds.begin() + i);   //Remove the client from the vector of pollfds;
-	--i;
-}
+// void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
+// {
+// 	std::cout << "Client disconnected" << std::endl;
+// 	close(fds[i].fd);
+// 	conf.removeClient(fds[i].fd); //Remove the client from the map of conf
+// 	fds.erase(fds.begin() + i);   //Remove the client from the vector of pollfds;
+// 	--i;
+// }
 
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
 	std::vector<struct pollfd>::iterator it = fds.begin();
+	if (client.getCgiCallee() != NULL)
+	{	
+		std::cout << std::endl << "I love killing pid :" << client.getCgiPID() << std::endl;
+		disconnectClient(fds, *client.getCgiCallee(), conf); //disconnecting the pipe of cgi if it exists;
+		kill(client.getCgiCallee()->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
+		waitpid(client.getCgiCallee()->getCgiPID(), 0, 0);	
+	}
 	for (; it != fds.end(); it++)
 	{
 		if (it->fd == client.getSocket())
@@ -64,7 +71,9 @@ void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& c
 //Parametres -> retour de recv, la liste de fds et l'index du client (pour deconnect sur fail)
 int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf)
 {
-
+	(void)i;
+	(void)fds;
+	(void)conf;
 	if (valread > 0)
 	{
 		// std::cout << "DEBUG:Received from client successfully" << std::endl;
@@ -73,13 +82,13 @@ int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Con
 	else if (valread == 0)
 	{
 		std::cout << "DEBUG:Recve detected no client, disconnecting" << std::endl;
-		disconnectClient(fds, i, conf);
+		// disconnectClient(fds, i, conf);
 		return (FAILURE); //In theory this should never trigger but leaving just in case
 	}
 	else
 	{
 		std::cerr << "Error reading from client" << std::endl;
-		disconnectClient(fds, i, conf);
+		// disconnectClient(fds, i, conf);
 		return (FAILURE);
 	}
 }
