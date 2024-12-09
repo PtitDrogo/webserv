@@ -9,6 +9,7 @@ Client::Client(const Client& other) : _socket(other._socket), _server(other._ser
 _uploadState(other._uploadState), _request(other._request), _contentLength(other._contentLength), 
 _totalRead(other._totalRead), _cgi_caller(other._cgi_caller), _time_start(other._time_start), _cgi_callee(other._cgi_callee), _pid(other._pid)
 {
+	_current_location = other._current_location;
 	// std::cout << "client copy constructor called" << std::endl;
 }
 
@@ -29,12 +30,13 @@ Client& Client::operator=(const Client& other) {
 		_cgi_caller = other._cgi_caller;
 		_cgi_callee = other._cgi_callee;
 		_pid = other._pid;
+		_current_location = other._current_location;
 	}
 	return *this;
 }
 
 Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _uploadState(), 
-_request(), _cgi_caller(NULL), _time_start(std::time(0)), _cgi_callee(NULL), _pid(-42)
+_request(),_current_location(NULL), _cgi_caller(NULL), _time_start(std::time(0)), _cgi_callee(NULL), _pid(-42)
 {
 	_contentLength = 0;
 	_totalRead = 0;
@@ -98,6 +100,7 @@ void Client::setCgiPipeFD(int fd) {_cgi_fd = fd;}
 void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
 void Client::setCgiCallee(Client *client_callee) {_cgi_callee = client_callee;}
 void Client::setCgiPID(pid_t pid) {_pid = pid;}
+void Client::setLocation(location *location) {_current_location = location;}
 
 std::string    Client::getRequest() const {return (_request);}
 size_t	Client::getContentLength() const {return (_contentLength);}
@@ -110,3 +113,4 @@ Client* Client::getCgiCaller() const { return _cgi_caller;}
 Client* Client::getCgiCallee() const { return _cgi_callee;}
 long long	Client::getTimeStart() const { return _time_start;}
 pid_t Client::getCgiPID() const { return _pid;}
+location *Client::getLocation() const {return _current_location;}

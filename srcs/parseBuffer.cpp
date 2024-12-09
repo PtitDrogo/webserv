@@ -15,15 +15,13 @@ bool isExtension(std::string path)
 	return (true);
 }
 
-void autoIndex(std::string path, Config &conf, Client& client, bool islocation)
+void autoIndex(std::string path, Config &conf, Client& client)
 {
 	std::string finalPath;
 	std::string reponse;
 	std::string file_content;
-	(void) conf;
 	Server &server = client.getServer();
 
-	(void) islocation;
 	if (conf.getIsLocation() == true)
 	{
 		std::cout << "haaaaaaaaaaaaaaaaaaaaaaaaaaaaa----d--d-d-d-d-d-d--d" << std::endl;
@@ -33,7 +31,7 @@ void autoIndex(std::string path, Config &conf, Client& client, bool islocation)
 		finalPath = "." + server.getRoot() + path;
 	std::cout << "---------------------------------------finalPath = |" << finalPath << "|" << std::endl;
 	std::vector<std::string> files = listDirectory(finalPath);
-	file_content = generateAutoIndexPage(conf, finalPath, files, conf.getIsLocation());
+	file_content = generateAutoIndexPage(finalPath, files, client);
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	std::cout << "reponse = |" << reponse << "|" << std::endl;
 	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
@@ -59,10 +57,9 @@ void printVectorrr(std::vector<std::string> vec)
 	}
 }
 
-std::string CheckLocation(const std::string& path, Config& conf, const std::vector<location>& locationPath, bool& locationMatched, HttpRequest &req)
+std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, location* exactLocation)
 {
-	(void) conf;
-	(void) req;
+
 	std::cout << "path = |" << path << "|" << std::endl;
 	std::string cleanedPath = trim(path);
 	std::cout << "cleanedPath = |" << cleanedPath << "|" << std::endl;
@@ -75,7 +72,7 @@ std::string CheckLocation(const std::string& path, Config& conf, const std::vect
 			std::cout << "locationStr = |" << locationStr << "|" << std::endl;
 			if (cleanedPath.size() <= locationStr.size())
 			{
-				locationMatched = true;
+				exactLocation = &locationPath[i];
 				return "." + locationPath[i].getRoot();
 			}
 			std::string relativePath = cleanedPath.substr(locationStr.size());
@@ -83,13 +80,13 @@ std::string CheckLocation(const std::string& path, Config& conf, const std::vect
 			{
 				if (!locationPath[i].getIndex().empty())
 				{
-					locationMatched = true;
+					exactLocation = &locationPath[i];
 					return "." + locationPath[i].getRoot() + locationPath[i].getIndex();
 				}
-				locationMatched = true;
+				exactLocation = &locationPath[i];
 				return "." + locationPath[i].getRoot();
 			}
-			locationMatched = true;
+			exactLocation = &locationPath[i];
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
 	}
@@ -150,20 +147,19 @@ void check_password_username()
 	std::cout << "je rentre dans le password --------------------------------------" << std::endl;
 }
 
-std::string parse_no_location(std::string path, Config &conf, Client &client, std::string finalPath, int client_socket, bool islocation)
+std::string parse_no_location(std::string path, Config &conf, Client &client, std::string finalPath, int client_socket)
 {
 	std::string reponse;
 	std::string file_content;
 	Server& server = client.getServer();
 
-	(void) islocation;
 	if (path == "/")
 	{
 		if (!server.getIndex().empty())
 			finalPath = "." + server.getRoot() + server.getIndex();
 		else if (server.getAutoIndex() == "on")
 		{
-			autoIndex(path, conf, client, conf.getIsLocation());
+			autoIndex(path, conf, client);
 			return "";
 		}
 		else
@@ -175,7 +171,7 @@ std::string parse_no_location(std::string path, Config &conf, Client &client, st
 		if (!isExtension(finalPath))
 		{
 			std::vector<std::string> files = listDirectory(finalPath);
-			file_content = generateAutoIndexPage(conf, finalPath, files, conf.getIsLocation());
+			file_content = generateAutoIndexPage(finalPath, files, client);
 		}
 		else if (isExtension(finalPath))
 			file_content = readFile(finalPath);
@@ -221,30 +217,28 @@ bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMe
 }
 
 
-std::string parse_with_location(Config &conf, Client &client, std::string finalPath, bool islocation, HttpRequest &req)
+std::string parse_with_location(Config &conf, Client &client, std::string finalPath, HttpRequest &req)
 {
 	std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-	printf("coucou\n\n\n\n\n");
-	Server& server = client.getServer();
-	std::cout << "allow method " << server.getLocation()[0].getAllowMethod() << std::endl;
-	islocation = true;
-	conf.setIsLocation(islocation);
+	if (client.getLocation() != NULL)
+		std::cout << "allow method " << client.getLocation()->getAllowMethod() << std::endl;
+	location location = *(client.getLocation());
 
 	std::cout << req.getMethod() << std::endl;
-	if (isMethodAllowed(server.getLocation()[0].getAllowMethod(), req.getMethod(), conf) == false)
+	if (isMethodAllowed(location.getAllowMethod(), req.getMethod(), conf) == false)
 		std::cout << "isMethodAllowed = false" << std::endl;
-	if (server.getLocation()[0].getAllowMethod().empty() == false)
-		std::cout << "server.getLocation()[0].getAllowMethod().empty() = false" << std::endl;
-	if (isMethodAllowed(server.getLocation()[0].getAllowMethod(), req.getMethod(), conf) == false && server.getLocation()[0].getAllowMethod().empty() == false)
+	if (location.getAllowMethod().empty() == false)
+		std::cout << "location.getAllowMethod().empty() = false" << std::endl;
+	if (isMethodAllowed(location.getAllowMethod(), req.getMethod(), conf) == false && location.getAllowMethod().empty() == false)
 	{
 		std::cout << "errrreeeeeur" << std::endl;
 		generate_html_page_error(client, "404");
 		return "";
 	}
-	if (server.getLocation()[0].getRedir().empty() == false)
+	if (location.getRedir().empty() == false)
 	{
 		std::cout << "je rentre la ------------------------------------------------------" << std::endl;
-		std::map<std::string, std::string> redirMap = server.getLocation()[0].getRedir();
+		std::map<std::string, std::string> redirMap = location.getRedir();
 		for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it)
 		{
 			std::string errorCode = it->first;
@@ -254,17 +248,17 @@ std::string parse_with_location(Config &conf, Client &client, std::string finalP
 			return "";
 		}
 	}
-	std::cout << "index =" << server.getLocation()[0].getIndex() << std::endl;
-	if (server.getLocation()[0].getIndex().empty() == false)
+	std::cout << "index =" << location.getIndex() << std::endl;
+	if (location.getIndex().empty() == false)
 	{
-		finalPath = "." + server.getLocation()[0].getRoot() + server.getLocation()[0].getIndex();
+		finalPath = "." + location.getRoot() + location.getIndex();
 		return finalPath;
 	}
-	else if (server.getLocation()[0].getAutoIndex() == "on")
+	else if (location.getAutoIndex() == "on")
 	{
-		if (server.getLocation()[0].getAutoIndex() == "on")
+		if (location.getAutoIndex() == "on")
 		{
-			autoIndex(finalPath, conf, client, conf.getIsLocation());
+			autoIndex(finalPath, conf, client);
 		}
 		else
 		{
@@ -314,19 +308,19 @@ void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpReq
 			bool locationMatched = false;
 			std::cout << "path = |" << path << "|" << std::endl;
 			std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
-			std::cout << "locationPath[0].getPath() = |" << locationPath[0].getPath() << "|" << std::endl;
+			// std::cout << "locationPath[0].getPath() = |" << locationPath[0].getPath() << "|" << std::endl;
 			std::cout << "location Matched = " << locationMatched << std::endl;
-			pathLoc = CheckLocation(path, conf, locationPath, locationMatched, req);
+			pathLoc = CheckLocation(path, locationPath, client.getLocation());
 			std::cout << "pathloc3 = |" << pathLoc << "|" << std::endl;
-			if (!locationMatched)	
+			if (client.getLocation() == NULL)	
 			{
 				std::cout << "je rentre ici 2 --------------------------------------" << std::endl;
-				finalPath = parse_no_location(path, conf, client, pathLoc, client_socket, conf.getIsLocation());
+				finalPath = parse_no_location(path, conf, client, pathLoc, client_socket);
 			}
 			else
 			{
 				std::cout << "je rentre ici 3 --------------------------------------" << std::endl;
-				finalPath = parse_with_location(conf, client, pathLoc,  conf.getIsLocation(), req);
+				finalPath = parse_with_location(conf, client, pathLoc, req);
 			}
 			if (finalPath.empty() || finalPath == pathLoc)
 			{
@@ -495,7 +489,7 @@ void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
 	std::string filename;
 	std::string username;
 	std::string password;
-	if (server.getLocation()[0].getAllowMethod().find("POST") == std::string::npos && server.getLocation()[0].getAllowMethod().empty() == false)
+	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
 	{
 		generate_html_page_error(client, "404");
 		return ;

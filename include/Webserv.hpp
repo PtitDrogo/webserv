@@ -105,7 +105,7 @@ void printVectorloc2(std::vector<location> loc);
 void printVectorServer2(std::vector<Server> serv);
 
 std::string handleAutoIndex(const std::string& path);
-std::string generateAutoIndexPage(Config &cong, const std::string& directory, const std::vector<std::string>& files, bool islocation);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client);
 std::vector<std::string> listDirectory(const std::string& directory);
 
 //-----------utils-----------//
