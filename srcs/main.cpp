@@ -74,6 +74,7 @@ int main(int argc, char **argv, char **envp)
 				else
 					generate_html_page_error(client, "404");
 				// std::cout << req << std::endl;
+				client.reset();
 			}
 		}
 	}

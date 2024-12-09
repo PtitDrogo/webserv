@@ -34,6 +34,7 @@ public:
 	void	extractFileName();
 	void	extractBody();
 	void	extractContentType();
+	void	reset();
 	// void disconnect();
 
 	// setters

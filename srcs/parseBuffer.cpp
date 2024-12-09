@@ -352,25 +352,25 @@ bool preparePostParse( Client& client, std::string buffer)
     boundary = numericBoundary;
 
 
-	// if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
+	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
 
-	// 	std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
+		std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
 
-	// 	client.extractFileName();
+		client.extractFileName();
 
-	// 	std::cout << MAGENTA << "fileName: \"" << client.getFileName() << "\"" << RESET << std::endl; // debug filename
+		std::cout << MAGENTA << "fileName: \"" << client.getFileName() << "\"" << RESET << std::endl; // debug filename
 		
-	// 	client.extractContentType();
+		client.extractContentType();
 
-	// 	std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl;
+		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl;
 
-	// 	// redirections vers la page home
-	// 	std::string path = "." + server.getRoot() + server.getIndex();
-	// 	std::string file_content = readFile(path);
-	// 	std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	// 	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
-	// }
-	// else
+		// redirections vers la page home
+		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string file_content = readFile(path);
+		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+	}
+	else
 		parse_buffer_post(client, body);
 	return true;
 }

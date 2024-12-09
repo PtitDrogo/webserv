@@ -131,7 +131,7 @@ void    Client::appendToRequest(char *chunk, int recvValue) {
 			// test = getRequest().substr(0, getHeadEnd() + 4);	// debug print header
 			// std::cout << GREEN << "header: " << test << RESET << std::endl;	// debug print header
 
-			setTotalRead(_totalRead - getHeadEnd() - 4);
+			setTotalRead(_totalRead - getHeadEnd() /* - 4 */);
 			std::cout << MAGENTA << "content_length: " << getContentLength() << RESET << std::endl;	// debug print content_length
 		}
 	}
@@ -168,13 +168,14 @@ size_t		Client::getHeadEnd() const { return (_headEnd); }
 
 
 void Client::extractBody() {
-	_body = _request.substr(0, getHeadEnd());
+	_body = _request.substr(getHeadEnd());
 }
 
 void Client::extractFileName() {
 	const std::string key = "filename=\"";
 
 	extractBody();
+	std::cout << "BODY: \n" << _body << std::endl;
 	size_t fileNamePos = getBody().find(key);
 
 	if (fileNamePos == std::string::npos) {
@@ -200,44 +201,54 @@ void Client::extractFileName() {
 	_fileName = fileName;
 }
 
-
 void Client::extractContentType() {
 	size_t contentTypePos = _body.find("Content-Type:", _body.find("--" + _boundary));
-		if (contentTypePos == std::string::npos) {
-			std::cerr << "Error: Content-Type not found." << std::endl;
-			return ; // try catch ???
-		}
+	if (contentTypePos == std::string::npos) {
+		std::cerr << "Error: Content-Type not found." << std::endl;
+		return ; // try catch ???
+	}
 
-		size_t contentTypeEnd = _body.find("\r\n", contentTypePos);
-		if (contentTypeEnd == std::string::npos) {
-			std::cerr << "Error: Malformed Content-Type header." << std::endl;
-			return ; // try catch ???
-		}
-		std::string contentType = _body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
+	size_t contentTypeEnd = _body.find("\r\n", contentTypePos);
+	if (contentTypeEnd == std::string::npos) {
+		std::cerr << "Error: Malformed Content-Type header." << std::endl;
+		return ; // try catch ???
+	}
+	std::string contentType = _body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
 
-		std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
+	std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
 
-		size_t contentStart = _body.find("\r\n\r\n", contentTypeEnd);
-		if (contentStart == std::string::npos) {
-			std::cerr << "Error: Content start not found." << std::endl;
-			return ; // try catch ???
-		}
-		contentStart += 4;
+	size_t contentStart = _body.find("\r\n\r\n", contentTypeEnd);
+	if (contentStart == std::string::npos) {
+		std::cerr << "Error: Content start not found." << std::endl;
+		return ; // try catch ???
+	}
+	contentStart += 4;
 
-		// Pour Firefox, on soustrait 30 pour gérer correctement la fin du contenu
-		size_t contentEnd = _body.find(_boundary + "--", contentStart); 
-		if (contentEnd == std::string::npos) {
-			std::cerr << "Error: Content end not found." << std::endl;
-			return ; // try catch ???
-		}
+	// Pour Firefox, on soustrait 30 pour gérer correctement la fin du contenu
+	size_t contentEnd = _body.find(_boundary + "--", contentStart); 
+	if (contentEnd == std::string::npos) {
+		std::cerr << "Error: Content end not found." << std::endl;
+		return ; // try catch ???
+	}
 
-		std::string fileContent = _body.substr(contentStart, contentEnd - contentStart);
+	std::string fileContent = _body.substr(contentStart, contentEnd - contentStart);
 
-		std::ofstream outFile(_fileName.c_str(), std::ios::binary);
-		if (!outFile) {
-			std::cerr << "Error: Unable to create file: " << _fileName << std::endl;
-			return ; // try catch ???
-		}
-		outFile.write(fileContent.data(), fileContent.size());
-		outFile.close();
+	std::ofstream outFile(_fileName.c_str(), std::ios::binary);
+	if (!outFile) {
+		std::cerr << "Error: Unable to create file: " << _fileName << std::endl;
+		return ; // try catch ???
+	}
+	outFile.write(fileContent.data(), fileContent.size());
+	outFile.close();
+}
+
+void	Client::reset() {
+	_request.clear();
+	_body.clear();
+	_fileName.clear();
+	_contentType.clear();
+	_boundary.clear();
+	_contentLength = 0;
+	_totalRead = 0;
+	_headEnd = 0;
 }
