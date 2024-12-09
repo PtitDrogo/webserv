@@ -61,21 +61,20 @@ void printVectorrr(std::vector<std::string> vec)
 std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
 {
 
-	std::cout << "path = |" << path << "|" << std::endl;
+	// std::cout << "path = |" << path << "|" << std::endl;
 	std::string cleanedPath = trim(path);
-	std::cout << "cleanedPath = |" << cleanedPath << "|" << std::endl;
-	std::cout << "Location vector size is " << locationPath.size() << std::endl;
+	// std::cout << "cleanedPath = |" << cleanedPath << "|" << std::endl;
+	// std::cout << "Location vector size is " << locationPath.size() << std::endl;
 	for (size_t i = 0; i < locationPath.size(); ++i)
 	{
 		std::string locationStr = locationPath[i].getPath();
 		locationStr = trim(locationStr);
-		std::cout << "IN STRING :" << cleanedPath << ", We are trying to find" << locationStr << std::endl;
-		if (cleanedPath.find(locationStr) == 0)
+		// std::cout << "IN STRING :" << cleanedPath << ", We are trying to find" << locationStr << std::endl;
+		if (cleanedPath == locationStr) //This used to be find, it caused some bugs, but maybe was useful for other reasons.
 		{
 			std::cout << "locationStr = |" << locationStr << "|" << std::endl;
 			if (cleanedPath.size() <= locationStr.size())
 			{
-				std::cout << std::endl << "LOCATION DEBUG 1" << std::endl;
 				client.setLocation(&locationPath[i]);
 				return "." + locationPath[i].getRoot();
 			}
@@ -84,15 +83,12 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 			{
 				if (!locationPath[i].getIndex().empty())
 				{
-					std::cout << std::endl << "LOCATION DEBUG 1" << std::endl;
 					client.setLocation(&locationPath[i]);
 					return "." + locationPath[i].getRoot() + locationPath[i].getIndex();
 				}
-				std::cout << std::endl << "LOCATION DEBUG 1" << std::endl;
 				client.setLocation(&locationPath[i]);
 				return "." + locationPath[i].getRoot();
 			}
-			std::cout << std::endl << "LOCATION DEBUG 1" << std::endl;
 			client.setLocation(&locationPath[i]);
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
