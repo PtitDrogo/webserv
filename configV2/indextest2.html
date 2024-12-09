@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>webserv</title>
+    <style>
+        /* Style pour le conteneur de la carte */
+        .card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 25vh;
+        }
+
+        /* Styles des boutons */
+        .card button {
+            font-size: 3vw;
+            padding: 20px;
+            margin: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* Effet hover pour les boutons */
+        .card button:hover{
+            background-color: #333;
+        }
+    </style>
+</head>
+<body style="background-color: rgb(54, 54, 54);">
+    <header>
+        <h1 style="text-align: center; color:rgb(243, 231, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 4vw;">LOCATION TEST 2</h1>
+    </header>
+    <div class="card">
+        <div style="text-align: center;">
+            <a href="/page/get.html"><button>Get</button></a>
+            <a href="/page/post.html"><button>Post</button></a>
+            <a href="/page/delete.html"><button>Delete</button></a>
+            <a href="/page/Upload.html"><button>Upload</button></a>
+            <a href="/page/Download.html"><button>Download</button></a>
+        </div>
+    </div>
+</body>
+</html>

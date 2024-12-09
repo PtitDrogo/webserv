@@ -79,7 +79,7 @@ int main(int argc, char **argv, char **envp)
 						break ;
 				}
 				else if (type_request == "GET")
-					parse_buffer_get(client.getRequest(), conf, client, req);
+					parse_buffer_get(client.getRequest(), client, req);
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
 				else if (type_request == "CGI")

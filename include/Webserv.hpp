@@ -60,7 +60,7 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpRequest &req);
+void	parse_buffer_get(std::string buffer, Client &client, HttpRequest &req);
 void	parse_buffer_post(const Client& client, std::string buffer, Cookies &cook);
 bool    preparePostParse(const Client& client, std::string buffer, Cookies &cook);
 
@@ -105,7 +105,7 @@ void printVectorloc2(std::vector<location> loc);
 void printVectorServer2(std::vector<Server> serv);
 
 std::string handleAutoIndex(const std::string& path);
-std::string generateAutoIndexPage(Config &cong, const std::string& directory, const std::vector<std::string>& files, bool islocation);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client);
 std::vector<std::string> listDirectory(const std::string& directory);
 
 //-----------utils-----------//

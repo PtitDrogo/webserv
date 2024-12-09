@@ -48,6 +48,7 @@ public:
 	void 	setCgiCaller(Client *client_caller);
 	void 	setCgiCallee(Client *client_caller);
 	void 	setCgiPID(pid_t pid);
+	void	setLocation(location *location);
 
 	// getters
 	Server&		getServer() const;
@@ -61,11 +62,12 @@ public:
 	Client* 	getCgiCallee() const;
 	long long	getTimeStart() const;
 	pid_t		getCgiPID() const;
+	location	*getLocation() const;
 
 
 private:
 	Client(); //We cannot make a client without its server
-	// attributs prives
+
 	int 			 	_socket;
 	Server&			 	_server;
 	ClientUploadState	_uploadState;
@@ -76,6 +78,11 @@ private:
 	size_t				_totalRead;
 	size_t				_headEnd;
 
+	
+	//this really should be in the request class but we are not using it, so now its here;
+	//SET THIS BACK TO NULL AFTER EACH RESPONSE OTHERWISE IT WILL ALWAYS THINK ITS IN LOCATION;
+	location			*_current_location;
+	
 	//CGI stuff
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
 	Client			  *_cgi_caller;

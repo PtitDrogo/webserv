@@ -1,7 +1,6 @@
 #include "config.hpp"
 
 Config::Config() {
-	this->islocation = false;
 }
 
 Config::~Config() {}
@@ -15,21 +14,10 @@ Config &Config::operator=(const Config &copy)
 {
 	if (this != &copy)
 	{
-		this->islocation = copy.islocation;
 		this->_servers = copy._servers;
 		this->_clients = copy._clients;
 	}
 	return *this;
-}
-
-bool Config::getIsLocation()
-{
-	return this->islocation;
-}
-
-void Config::setIsLocation(bool islocation)
-{
-	this->islocation = islocation;
 }
 
 void printVector(std::map<std::string, std::string> errorPage)
@@ -494,10 +482,10 @@ void Config::printConfig()
 		std::cout << line << std::endl;
 	}
 	std::cout << "--------------------------------" << std::endl;
-	printVector(serv[0].getErrorPage());
+	// printVector(serv[0].getErrorPage());
 	std::cout << "--------------------------------" << std::endl;	
 	printVectorServer(serv);
-	printVectorloc(serv[0].getLocation());
+	// printVectorloc(serv[0].getLocation());
 }
 
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
