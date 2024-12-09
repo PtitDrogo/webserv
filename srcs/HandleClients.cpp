@@ -36,6 +36,35 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 	return SUCCESS;
 }
 
+bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf, size_t &i)
+{
+	if (client.didClientTimeout() == true)
+	{
+		if (client.getCgiCallee() == NULL && client.getCgiCaller() == NULL)
+		{
+			generate_html_page_error(client, "504");
+			disconnectClient(fds, client, conf);
+			i--;
+			return true;
+		}
+		if (client.getCgiCallee() != NULL)
+		{
+			generate_html_page_error(client, "504");
+			disconnectClient(fds, client, conf);
+			i--;
+			return true;
+		}
+		if (client.getCgiCaller() != NULL)
+		{
+			generate_html_page_error(*client.getCgiCaller(), "504");
+			disconnectClient(fds, *client.getCgiCaller(), conf);
+			i--;
+			return true;
+		}
+	}
+	return false;
+}
+
 //Parametres -> la liste de fds et l'index du client a deconnect
 // void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
 // {

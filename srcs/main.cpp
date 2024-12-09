@@ -47,39 +47,8 @@ int main(int argc, char **argv, char **envp)
 				disconnectClient(fds, client, conf);
 				break;
 			}
-			if (client.didClientTimeout() == true)
-			{
-				if (client.getCgiCallee() == NULL && client.getCgiCaller() == NULL)
-				{
-					generate_html_page_error(client, "504");
-					disconnectClient(fds, client, conf);
-					continue;
-				}
-				if (client.getCgiCallee() != NULL)
-				{
-					// client.setSocket(client.getCgiCallee()->getSocket());
-					// pid_t cgi_pid = client.getCgiCallee()->getCgiPID();
-					
-					// kill(cgi_pid, SIGTERM);
-					// waitpid(cgi_pid, 0, 0);
-					generate_html_page_error(client, "504");
-					// disconnectClient(fds, *client.getCgiCallee(), conf); 
-					disconnectClient(fds, client, conf);
-					continue;
-				}
-				if (client.getCgiCaller() != NULL)
-				{
-					// pid_t cgi_pid = client.getCgiPID();
-					
-					// kill(cgi_pid, SIGTERM);
-					// waitpid(cgi_pid, 0, 0);
-					//This mean somehow we got to the pipe before caller of pipe;
-					generate_html_page_error(*client.getCgiCaller(), "504");
-					disconnectClient(fds, *client.getCgiCaller(), conf);
-					// disconnectClient(fds, client, conf);
-					continue;
-				}
-			}
+			if (handleTimeout(client, fds, conf, i) == true)
+				continue ;
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
@@ -118,6 +87,7 @@ int main(int argc, char **argv, char **envp)
 				else
 					generate_html_page_error(client, "404");
 				std::cout << req << std::endl;
+				//add code to clear the buffer request here;
 			}
 		}
 	}
