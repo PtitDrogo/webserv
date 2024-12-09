@@ -188,7 +188,7 @@ void parse_listen(std::string line, Server &serv)
 		size_t start = pos + 6;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of("\t;", start);
 		std::string port = line.substr(start, end - start);
 		if (port.size() > 4)
 		{
@@ -209,7 +209,7 @@ void parse_server_name(std::string line, Server &serv)
 		size_t start = pos + 11;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string server_name = line.substr(start, end - start);
 		if (server_name.empty() )
 		{
@@ -229,7 +229,7 @@ void parse_index(std::string line, Server &serv)
 		size_t start = pos + 5;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string index = line.substr(start, end - start);
 		serv.setIndex(index);
 	}
@@ -238,7 +238,7 @@ void parse_index(std::string line, Server &serv)
 void parse_root(std::string line, Server &serv)
 {
 	std::cout << "parse_root" << std::endl;
-	size_t pos = line.find_first_not_of(" \t");
+	size_t pos = line.find_first_not_of(" \t;");
 	if (pos != std::string::npos && line.find("root", pos) == pos)
 	{
 		size_t start = pos + 4;
@@ -253,7 +253,7 @@ void parse_root(std::string line, Server &serv)
 void parse_error_page(std::string line, Server &serv)
 {
 	std::cout << "parse_error_page" << std::endl;
-	size_t pos = line.find_first_not_of(" \t");
+	size_t pos = line.find_first_not_of(" \t;");
 	if (pos != std::string::npos && line.find("error_page", pos) == pos)
 	{
 		std::istringstream iss(line);
@@ -309,6 +309,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t indexPos = subLine.find("index");
 			if (indexPos != std::string::npos) {
 				size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
+				if (startIndex == std::string::npos)
+					return;
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
 				std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
@@ -317,6 +319,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t rootPos = subLine.find("root");
 			if (rootPos != std::string::npos) {
 				size_t startRoot = subLine.find_first_not_of(" \t", rootPos + 4);
+				if (startRoot == std::string::npos)
+					return;
 				size_t endRoot = subLine.find_first_of(" \t;", startRoot);
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
 				loc.setRoot(root);
@@ -324,6 +328,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {
 				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 5);
+				if (startAutoIndex == std::string::npos)
+					return;
 				size_t endAutoIndex = subLine.find_first_of(" \t;", startAutoIndex);
 				std::string autoIndex = subLine.substr(startAutoIndex, endAutoIndex - startAutoIndex);
 				if (autoIndex != "on" && autoIndex != "off") {
@@ -346,6 +352,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t cgiPathPos = subLine.find("cgi_path");
 			if (cgiPathPos != std::string::npos) {
 				size_t startCgiPath = subLine.find_first_not_of(" \t", cgiPathPos + 8);
+				if (startCgiPath == std::string::npos)
+					return;
 				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
 				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
 				loc.setCgiPath(cgiPath);
@@ -354,6 +362,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			if (redirPos != std::string::npos)
 			{
 				size_t startRedir = subLine.find_first_not_of(" \t", redirPos + 6);
+				if (startRedir == std::string::npos)
+					return;
 				size_t endRedir = subLine.find_first_of(" \t;", startRedir);
 				std::string error_code = subLine.substr(startRedir, endRedir - startRedir);
 				startRedir = endRedir;
@@ -491,7 +501,7 @@ void Config::printConfig()
 	std::string line;
 	while (std::getline(file, line))
 	{
-		std::cout << line << std::endl;
+		std::cout << BLUE << line << RESET << std::endl;
 	}
 	std::cout << "--------------------------------" << std::endl;
 	printVector(serv[0].getErrorPage());
