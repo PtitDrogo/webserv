@@ -84,7 +84,7 @@ void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& c
 		std::cout << std::endl << "I love killing pid :" << client.getCgiPID() << std::endl;
 		disconnectClient(fds, *client.getCgiCallee(), conf); //disconnecting the pipe of cgi if it exists;
 		kill(client.getCgiCallee()->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
-		waitpid(client.getCgiCallee()->getCgiPID(), 0, 0);	
+		waitpid(client.getCgiCallee()->getCgiPID(), 0, 0);
 	}
 	for (; it != fds.end(); it++)
 	{

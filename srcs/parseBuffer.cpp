@@ -634,8 +634,9 @@ bool preparePostParse(const Client& client, std::string buffer, Cookies &cook)
 		return false;
 	}
 
-	if (client.getContentLength() > (size_t)server.getMaxBodySize())
+	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize())
 	{
+		std::cout << "MAXBODYSIZE IS :" << server.getMaxBodySize() << std::endl;
 		generate_html_page_error(client, "413");
 		return false;
 	}

@@ -1,11 +1,13 @@
 #include "Webserv.hpp"
 
 #include <fcntl.h>
+#include <sys/stat.h>
 
 //GET /config/cgi-bin/sleep10.py HTTP/1.1
 //GET /config/cgi-bin/sleep20.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
+//GET /config/cgi-bin/helloworld.py?username=theo HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 
@@ -19,6 +21,10 @@ Step to do a CGI:
 - We execute the cgi.
 - We read cgi_tmp/webserv_cgi_stdout and send the content back to the client
 */
+
+
+static bool is_executable(const char *path);
+static bool file_exists(const char *path);
 
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
@@ -39,7 +45,16 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
-    _path = "." + request.getPath();
+	_path = "." + request.getPath();
+
+	if (file_exists(_path.c_str()) == false)
+	{
+		// generate_html_page_error(client, "404");
+	}
+	if (is_executable(_path.c_str()) == false)
+	{
+		// generate_html_page_error(client, "404");
+	}
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
     pid_t cgi_pid = executeCGI();
@@ -49,6 +64,30 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
         return false;
     return true;
 
+}
+
+static bool file_exists(const char *path)
+{
+	struct stat st;
+    
+    if (stat(path, &st) != 0)
+		return false;
+	return true;
+}
+
+static bool is_executable(const char *path) 
+{
+	struct stat st;
+    
+    // Is it a file
+    if (!S_ISREG(st.st_mode))
+        return false;
+    //is it exe
+    if (access(path, X_OK) != 0) 
+	{
+        return false;
+    }
+    return true;
 }
 
 pid_t    CgiHandler::executeCGI()
@@ -87,7 +126,7 @@ pid_t    CgiHandler::executeCGI()
 		close(_pipe_out[1]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
 		execve(_path.c_str(), _argv, _envp);
-        std::cerr << "failed to execve, path was : " << _path << std::endl;
+        std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
@@ -101,28 +140,13 @@ pid_t    CgiHandler::executeCGI()
     return (pid);
 }
 
-// pid_t    CgiHandler::executeTimeOut() const
-// {
-//     pid_t pidTimeOut = fork();
-// 	if (pidTimeOut == -1) 
-//     {
-// 		std::cout << "Fork failed" << std::endl; //oh no !
-// 		return pidTimeOut;
-// 	}
-// 	else if (pidTimeOut == 0) 
-//     {
-// 	    usleep(TIME_OUT_CGI_MS);
-// 		std::exit(EXIT_SUCCESS);
-// 	}
-// 	return (pidTimeOut);
-// }
-
 //ADD client there later;
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds)
 {
     CgiHandler cgi(envp, client);
     // std::string response;
 
+	std::cout << std::endl << "WE ARE IN CGI PROTOCOL" << std::endl;
     if (cgi.HandleCgiRequest(request) == false)
     {
         // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
@@ -185,10 +209,8 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
-		// waitpid(-1, 0, 0);
 		disconnectClient(fds, client, conf);
 		return true;
-		// wait;
 	}
 	printf("exiting iscgistuff\n");
 	return false;
