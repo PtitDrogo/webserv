@@ -31,46 +31,24 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
+			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
 			std::cout << "number of servers is : " << number_of_servers << std::endl;
 			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
 			std::cout << "fds.size() is : " << fds.size() << std::endl;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
-				disconnectClient(fds, i, conf);
+				disconnectClient(fds, client, conf);
 				break;
 			}
 			if (fds[i].revents & POLLERR)
 			{
 				printf("error with this client, were killing it, disconnected client %i\n", fds[i].fd);
-				disconnectClient(fds, i, conf);
+				disconnectClient(fds, client, conf);
 				break;
 			}
-			Client &client = conf.getClientObject(fds[i].fd); //I need client first to know if it timeouted;
-			if (client.didClientTimeout() == true)
-			{
-				if (client.getCgiCallee() == NULL && client.getCgiCaller() == NULL)
-				{
-					generate_html_page_error(client, "504");
-					disconnectClient(fds, i, conf);
-					continue;
-				}
-				if (client.getCgiCallee() != NULL)
-				{
-					// client.setSocket(client.getCgiCallee()->getSocket());
-					generate_html_page_error(client, "504");
-					disconnectClient(fds, *client.getCgiCallee(), conf); //Disconnect Pipe //this crashes stuff
-					disconnectClient(fds, client, conf); //Disconnect this first, I think timeout = disconnect is good;
-				}
-				if (client.getCgiCaller() != NULL)
-				{
-					//This mean somehow we got to the pipe before caller of pipe;
-					generate_html_page_error(*client.getCgiCaller(), "504");
-					disconnectClient(fds, *client.getCgiCaller(), conf);
-					disconnectClient(fds, client, conf);
-					
-				}
-			}
+			if (handleTimeout(client, fds, conf, i) == true)
+				continue ;
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
@@ -80,8 +58,10 @@ int main(int argc, char **argv, char **envp)
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
+			{	
+				disconnectClient(fds, client, conf);
 				break ;
-			
+			}
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
@@ -107,6 +87,7 @@ int main(int argc, char **argv, char **envp)
 				else
 					generate_html_page_error(client, "404");
 				std::cout << req << std::endl;
+				//add code to clear the buffer request here;
 			}
 		}
 	}

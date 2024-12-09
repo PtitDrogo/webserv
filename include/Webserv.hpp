@@ -73,8 +73,9 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
 int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
-void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
+// void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
 void    disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf);
+bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf, size_t &i);
 
 
 
