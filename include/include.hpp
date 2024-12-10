@@ -17,12 +17,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
 #include <ctime>
+#include <sstream>
+#include "sys/stat.h"
 
 
 //-----------InternalLibraries-----------//

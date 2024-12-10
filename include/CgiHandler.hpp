@@ -21,15 +21,15 @@ private:
     int             _pipe_in[2];
     int             _pipe_out[2];
     Client&         _client; //client calling the cgi;
+    std::map<std::string, std::string> _params;
     CgiHandler(); //have to build with request
 
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp, Client& client);
     pid_t    executeCGI();
-    pid_t    executeTimeOut() const;
     bool     HandleCgiRequest(const HttpRequest &request); 
-    //Request should contain all the info i would hope
+    void	processCgiPath();
 
     //getters
     int     *getPipeOut();

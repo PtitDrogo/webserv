@@ -7,7 +7,7 @@
 //GET /config/cgi-bin/sleep20.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
-//GET /config/cgi-bin/helloworld.py?username=theo HTTP/1.1
+//GET /config/cgi-bin/helloworld.py?username=theo&date=birthday HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 
@@ -45,15 +45,19 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
-	_path = "." + request.getPath();
-
+	_path = "." + request.getPath(); //Adding a dot for no real reason need to figure this out;
+	std::cout << RED << "PRE PROCESS in Handle cgi path is " << _path << RESET << std::endl;
+	// processCgiPath();
+	std::cout << RED << "POST PROCESS in Handle cgi path is " << _path << RESET << std::endl;
 	if (file_exists(_path.c_str()) == false)
 	{
-		// generate_html_page_error(client, "404");
-	}
+		generate_html_page_error(_client, "404");
+		return false;
+	}	
 	if (is_executable(_path.c_str()) == false)
 	{
-		// generate_html_page_error(client, "404");
+		generate_html_page_error(_client, "403");
+		return false;
 	}
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
@@ -65,6 +69,45 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
     return true;
 
 }
+
+//This gets the real path of the cgi and extract all parameters into a map;
+void	CgiHandler::processCgiPath()
+{
+	std::string tmp_path;
+	std::string current_key;
+	std::string current_value;
+	size_t start;
+	size_t end;
+	size_t sep_pos;
+
+	start = _path.find('?');
+	if (start == std::string::npos)
+		return ; //This means theres no parameters, we fuck off;
+	tmp_path = _path.substr(start + 1);
+	if (tmp_path.empty())
+		return ; //to be safe
+	
+	_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+	while (tmp_path.empty() == false)
+	{
+		end = tmp_path.find('&');
+		if (end == std::string::npos)	
+			end = tmp_path.size(); //well do -1 later;
+		
+		tmp_path = tmp_path.substr(0, end); //Get a string like name=theo&
+		sep_pos = tmp_path.find('='); //Get position of =
+		if (sep_pos == std::string::npos) //if no = we dip
+			break ;
+		current_key = tmp_path.substr(0, sep_pos); //get "name"
+		current_value = tmp_path.substr(sep_pos + 1, end); // get "theo", skipping the =, not including the &
+		_params[current_key] = current_value;
+		//Move start;
+		// std::cout << RED << "tmp path is : " << tmp_path << "its size is : " << tmp_path.size() << RESET << std::endl;
+		tmp_path = _path.substr(end + 1);
+	}
+	return ;
+}
+// theo=loulou& -> 11
 
 static bool file_exists(const char *path)
 {
@@ -80,7 +123,8 @@ static bool is_executable(const char *path)
 	struct stat st;
     
     // Is it a file
-    if (!S_ISREG(st.st_mode))
+	stat(path, &st);
+    if (!S_ISREG(st.st_mode)) 
         return false;
     //is it exe
     if (access(path, X_OK) != 0) 

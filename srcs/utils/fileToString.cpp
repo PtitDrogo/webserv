@@ -1,5 +1,4 @@
 #include "Webserv.hpp"
-#include <sstream>
 
 // magic code here, do not touch
 std::string fileToString(const char *filePath)
@@ -52,4 +51,13 @@ std::string readFromPipeFd(int pipefd)
     // std::cerr << "je suis sorti" << std::endl;
     // printf("Je suis sorti\n");
     return result;   
+}
+
+bool isRegularFile(const std::string& path) 
+{
+    struct stat buffer;
+
+    if (stat(path.c_str(), &buffer) != 0)
+        return false;
+    return S_ISREG(buffer.st_mode);
 }
