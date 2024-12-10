@@ -239,7 +239,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
 		// waitpid(-1, 0, 0); // Collect the child process ressources;
 		printf("WHEN THE GROUND IS SHAKING\n");
-		disconnectClient(fds, client, conf);
+		disconnectClient(fds, *client.getCgiCaller(), conf);
 		return true;
 		// wait;
 	}
@@ -253,7 +253,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
-		disconnectClient(fds, client, conf);
+		disconnectClient(fds, *client.getCgiCaller(), conf);
 		return true;
 	}
 	printf("exiting iscgistuff\n");

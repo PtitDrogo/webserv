@@ -78,14 +78,15 @@ bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
-	std::vector<struct pollfd>::iterator it = fds.begin();
+	std::cout << RED << "client.getCgiCallee() :" << client.getCgiCallee() << RESET << std::endl;
 	if (client.getCgiCallee() != NULL)
-	{	
-		std::cout << std::endl << "I love killing pid :" << client.getCgiPID() << std::endl;
-		disconnectClient(fds, *client.getCgiCallee(), conf); //disconnecting the pipe of cgi if it exists;
+	{
+		// std::cout << std::endl << "I love killing pid :" << client.getCgiPID() << std::endl;
 		kill(client.getCgiCallee()->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
 		waitpid(client.getCgiCallee()->getCgiPID(), 0, 0);
+		disconnectClient(fds, *client.getCgiCallee(), conf); //disconnecting the pipe of cgi if it exists;
 	}
+	std::vector<struct pollfd>::iterator it = fds.begin();
 	for (; it != fds.end(); it++)
 	{
 		if (it->fd == client.getSocket())
