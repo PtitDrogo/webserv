@@ -46,9 +46,9 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
 	_path = "." + request.getPath(); //Adding a dot for no real reason need to figure this out;
-	std::cout << RED << "PRE PROCESS in Handle cgi path is " << _path << RESET << std::endl;
-	// processCgiPath();
-	std::cout << RED << "POST PROCESS in Handle cgi path is " << _path << RESET << std::endl;
+	// std::cout << RED << "PRE PROCESS in Handle cgi path is " << _path << RESET << std::endl;
+	processCgiPath();
+	// std::cout << RED << "POST PROCESS in Handle cgi path is " << _path << RESET << std::endl;
 	if (file_exists(_path.c_str()) == false)
 	{
 		generate_html_page_error(_client, "404");
@@ -134,6 +134,56 @@ static bool is_executable(const char *path)
     return true;
 }
 
+
+char **CgiHandler::updateEnv()
+{
+	//We will want to malloc a new envp array, 
+	size_t env_count = 0;
+	size_t param_count = _params.size();
+	size_t i;
+
+    while(_envp[env_count] != NULL) env_count++;
+    
+    char** updated_envp = (char**)calloc((env_count + param_count), sizeof(char*));
+	if (updated_envp == NULL)
+		return NULL;
+    for(i = 0; i < env_count; i++) 
+	{
+        updated_envp[i] = _envp[i];
+    }
+	
+	for (std::map<std::string, std::string>::iterator it = _params.begin(); it != _params.end(); it++)
+	{
+		std::string new_var;
+
+		new_var = it->first + "=" + it->second;
+		updated_envp[i] = strdup(new_var.c_str());
+		if (updated_envp[i] == NULL)
+		{
+			for(i = 0; i < env_count + param_count; i++) 
+			{
+				free(updated_envp[i]); // With the power of calloc this ok actualy memory safe;
+			}
+		}
+		i++;
+	}
+	updated_envp[i] = NULL;
+	return (updated_envp);
+}
+
+void CgiHandler::freeUpdatedEnv(char **tofree)
+{
+	size_t env_count = 0;
+	size_t new_max_count = 0;
+	while(_envp[env_count] != NULL) env_count++;
+	while(tofree[new_max_count] != NULL) new_max_count++;
+	
+	for(int i = env_count; i < new_max_count; i++) 
+		free(tofree[i]);
+	free(tofree);
+	return ;
+}
+
 pid_t    CgiHandler::executeCGI()
 {
     // if (pipe(_pipe_in) < 0)
@@ -141,6 +191,7 @@ pid_t    CgiHandler::executeCGI()
     //     std::cerr << "Pipe failed, error 500 !" << std::endl;
 	// 	return -1;
 	// }
+	
 	if (pipe(_pipe_out) < 0)
 	{
         std::cerr << "Pipe failed, error 500 !" << std::endl;
@@ -158,7 +209,8 @@ pid_t    CgiHandler::executeCGI()
     }
     else if (pid == 0)
     {
-        int null_fd = open("/dev/null", O_WRONLY);
+        char **updated_env = updateEnv();
+		int null_fd = open("/dev/null", O_WRONLY);
 		// dup2(_pipe_in[0], STDIN_FILENO);
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(null_fd, STDERR_FILENO);
@@ -169,8 +221,9 @@ pid_t    CgiHandler::executeCGI()
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
-		execve(_path.c_str(), _argv, _envp);
+		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
+		freeUpdatedEnv();
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
