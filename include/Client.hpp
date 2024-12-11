@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "ClientUploadState.hpp"
 #include "Webserv.hpp"
 
 // #include "HttpRequestParser.hpp"
@@ -32,7 +31,10 @@ public:
 	bool	isValidSocket() const;
 	void	appendToRequest(char *chunk, int recvValue);
 	size_t	findContentLength();
-	bool	extractFileName();
+	void	extractFileName();
+	void	extractBody();
+	void	extractContentType();
+	void	reset();
 	// void disconnect();
 	bool	didClientTimeout() const;
 
@@ -44,6 +46,8 @@ public:
 	void	setTotalRead(size_t totalRead);
 	void	setHeadEnd(size_t heanEnd);
 	void	setBody(std::string body);
+	void	setBoundary(std::string boundary);
+	void	setbodyEnd(size_t bodyEnd);
 	void 	setCgiPipeFD(int fd);
 	void 	setCgiCaller(Client *client_caller);
 	void 	setCgiCallee(Client *client_caller);
@@ -54,10 +58,14 @@ public:
 	Server&		getServer() const;
 	int			getSocket() const;
 	std::string	getRequest() const;
+	std::string getBody() const;
+	std::string	getFileName() const;
+	std::string getContentType() const;
+	std::string getBoundary() const;
 	size_t		getContentLength() const;
 	size_t		getTotalRead() const;
 	size_t		getHeadEnd() const;
-	std::string getBody() const;
+	size_t		getBodyEnd() const;
 	Client* 	getCgiCaller() const;
 	Client* 	getCgiCallee() const;
 	long long	getTimeStart() const;
@@ -70,13 +78,16 @@ private:
 
 	int 			 	_socket;
 	Server&			 	_server;
-	ClientUploadState	_uploadState;
 
 	std::string			_request;
 	std::string			_body;
+	std::string			_fileName;
+	std::string			_contentType;
+	std::string			_boundary;
 	size_t				_contentLength;
 	size_t				_totalRead;
 	size_t				_headEnd;
+	size_t				_bodyEnd;
 
 	
 	//this really should be in the request class but we are not using it, so now its here;
@@ -89,10 +100,6 @@ private:
 	long long	  	  _time_start;
 	Client			  *_cgi_callee;
 	pid_t			  _pid;
-	// methodes privees internes
-	// void _processNewRequest(const std::string& buffer);
-	// bool _receiveData();
-	// void _sendResponse(const std::string& response);
 };
 
 #endif

@@ -279,11 +279,11 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 
 
 
-void	parse_buffer_get(std::string buffer, Client &client, HttpRequest &req)
+void	parse_buffer_get(Client &client, HttpRequest &req)
 {
 	Server& 	server = client.getServer();
 	int 		client_socket = client.getSocket();
-	std::istringstream stream(buffer);
+	std::istringstream stream(client.getRequest());
 	std::string line;
 	std::string method;
 	std::string path;
@@ -473,9 +473,9 @@ std::string handle_deconnexion(Cookies &cook)
 }
 
 
-void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
+void parse_buffer_post(Client& client, Cookies &cook)
 {
-	std::istringstream stream(buffer);
+	std::istringstream stream(client.getRequest());
 	std::string line;
 	Server& 	server = client.getServer();
 
@@ -624,7 +624,7 @@ void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
 
 
 
-bool preparePostParse(const Client& client, std::string buffer, Cookies &cook)
+bool preparePostParse(Client& client, Cookies &cook)
 {
 	const Server& 	server = client.getServer();
 
@@ -641,102 +641,133 @@ bool preparePostParse(const Client& client, std::string buffer, Cookies &cook)
 		return false;
 	}
 
-	// Extraire le corps après la ligne vide qui suit les en-têtes
-	std::string body = buffer.substr(buffer.find("\r\n\r\n") + 4);
-
-	// Extraire la boundary
-	std::string boundary = body.substr(0, body.find("\r\n"));
-	std::string numericBoundary;
-    for (size_t i = 0; i < boundary.size(); ++i) {
-        if (std::isdigit(boundary[i])) {
-            numericBoundary += boundary[i];
-        }
-    }
-    boundary = numericBoundary;
 
 	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
+
+
+		// foutre tout sa dans une fonction de la class client/////////////////////////////////
+
+		size_t boundaryPos = client.getRequest().find("boundary=");
+		if (boundaryPos != std::string::npos) {
+			// extraire tout ce qui vient apres "boundary="
+			std::string boundary = client.getRequest().substr(boundaryPos + 9); // 9 = longueur de "boundary="
+			
+			// trouver la premiere position ou les tirets s'arretent
+			std::size_t nonDashPos = boundary.find_first_not_of('-');
+			if (nonDashPos != std::string::npos) {
+				// extraire tout ce qui vient apres les tirets
+				std::string result = boundary.substr(nonDashPos, boundary.find("\r\n", nonDashPos) - nonDashPos);
+				client.setBoundary(result);
+			}
+			else {
+				std::cout << "Aucun contenu après les tirets." << std::endl;
+				//generate a html page error !!!
+				// return ;
+			}
+		}
+		else {
+			std::cout << "La clé 'boundary=' est introuvable." << std::endl;
+			//generate a html page error !!!
+			// return ;
+		}
+
+		//vas chercher de lq dernier boundary de la requete
+		size_t lastBoundaryPos = client.getRequest().find("--" + client.getBoundary() + "--");
+		lastBoundaryPos += 6 + client.getBoundary().size(); // 6 = "--" + "--" + "\r\n"
+		// lastBoundaryPos -= client.getHeadEnd();
+
+		std::cout << "lastBoundaryPos = " << lastBoundaryPos << std::endl;
+		client.setbodyEnd(lastBoundaryPos);
+
+		////////////////////////////////////////////////////////////////////////////////////////
+
+
 		std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
 
+		client.extractFileName();
 
+		std::cout << MAGENTA << "fileName: \"" << client.getFileName() << "\"" << RESET << std::endl; // debug filename
 		
-		std::string body = client.getRequest().substr(client.getHeadEnd());
+		client.extractContentType();
 
-		const std::string key = "filename=\"";
-		size_t fileNamePos = body.find(key);
+		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl; // debug extra content type
 
-		if (fileNamePos == std::string::npos) {
-			std::cerr << "Error: Filename not found." << std::endl;
-			return false;
-		}
-
-		size_t endPos = body.find("\"\r\n", fileNamePos);
-		if (endPos == std::string::npos) {
-			std::cerr << "Error: Invalid filename format." << std::endl;
-			return false;
-		}
-
-		std::string fileName = body.substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
-
-		// // Validation du nom de fichier pour éviter les chemins traversants
-		// if (fileName.find("/") != std::string::npos || fileName.find("..") != std::string::npos) {
-		// 	std::cerr << "Error: Invalid filename." << std::endl;
-		// 	return false;
-		// }
-
-		std::cout << MAGENTA << "fileName: \"" << fileName << "\"" << RESET << std::endl;
-
-		size_t contentTypePos = body.find("Content-Type:", body.find("--" + boundary));
-		if (contentTypePos == std::string::npos) {
-			std::cerr << "Error: Content-Type not found." << std::endl;
-			return false;
-		}
-
-		size_t contentTypeEnd = body.find("\r\n", contentTypePos);
-		if (contentTypeEnd == std::string::npos) {
-			std::cerr << "Error: Malformed Content-Type header." << std::endl;
-			return false;
-		}
-
-		std::string contentType = body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
-
-		std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
-
-		size_t contentStart = body.find("\r\n\r\n", contentTypeEnd);
-		if (contentStart == std::string::npos) {
-			std::cerr << "Error: Content start not found." << std::endl;
-			return false;
-		}
-		contentStart += 4;
-
-		// Pour Firefox, on soustrait 30 pour gérer correctement la fin du contenu
-		size_t contentEnd = body.find("--" + boundary, contentStart) - 30; 
-		if (contentEnd == std::string::npos) {
-			std::cerr << "Error: Content end not found." << std::endl;
-			return false;
-		}
-
-		std::string fileContent = body.substr(contentStart, contentEnd - contentStart);
-
-		// std::cout << fileContent << std::endl;
-
-		fileName = "./config/base_donnees/" + fileName;
-
-		std::ofstream outFile(fileName.c_str(), std::ios::binary);
-		if (!outFile) {
-			std::cerr << "Error: Unable to create file: " << fileName << std::endl;
-			return false;
-		}
-		outFile.write(fileContent.data(), fileContent.size());
-		outFile.close();
-
-		std::cout << MAGENTA << "File saved successfully: " << fileName << RESET << std::endl;
-
+		// redirections vers la page home
 		std::string path = "." + server.getRoot() + server.getIndex();
 		std::string file_content = readFile(path);
-		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client.getSocket(), response.c_str(), response.size(), 0);
 	}
 	else
-		parse_buffer_post(client, body, cook);
+		parse_buffer_post(client, cook);
+	return true;
+}
+
+
+static bool file_exists_parsebuffer(const char *path)
+{
+	struct stat st;
+    
+    if (stat(path, &st) != 0)
+		return false;
+	if (!S_ISREG(st.st_mode)) 
+        return false;
+	return true;
+}
+
+bool prepareGetParse(Client& client, HttpRequest &req) {
+
+	// const Server& 	server = client.getServer();
+
+	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
+	{
+		// Extraire le nom du fichier depuis l'URL de la requête
+        std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
+
+        if (filename.find("?fileName=") != std::string::npos) {
+            filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
+        }
+		// else
+        //     filename = filename.substr(filename.find("/config/base_donnees/"));
+
+        std::string filePath = "./config/base_donnees/" + filename;
+		if (file_exists_parsebuffer(filePath.c_str()) == false)
+		{
+			generate_html_page_error(client, "404");
+			return false;
+		}
+		std::cout << MAGENTA << "filePath: \"" << filePath << "\"" << RESET << std::endl; // debug filename
+
+
+        std::string fileContent = readFile(filePath);
+		std::cout << "fileContent = " << fileContent << std::endl;
+
+        if (fileContent.empty()) {
+            // Si le fichier n'est pas trouvé, envoyer une réponse d'erreur 404
+            std::string response = "HTTP/1.1 404 Not Found\r\n";
+            response += "Content-Type: text/plain\r\n\r\n";
+            response += "File not found.\r\n";
+            send(client.getSocket(), response.c_str(), response.size(), 0);
+            return false;
+        }
+
+        // Préparer la réponse HTTP avec les en-têtes appropriés pour un téléchargement de fichier
+        std::stringstream rep;
+        rep << "HTTP/1.1 200 OK\r\n";
+        rep << "Content-Type: application/octet-stream\r\n";
+		rep << "content-length: " << fileContent.size() << "\r\n";
+        rep << "Content-Disposition: attachment; filename=\"" << filename << "\"\r\n";
+		rep << "Connection: close\r\n";
+		rep << "\r\n";
+		rep << fileContent;
+
+
+		std::cout << "rep = " << rep.str() << std::endl;
+
+        // Envoyer les en-têtes HTTP
+        send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
+	}
+	else
+		parse_buffer_get(client, req);
 	return true;
 }
