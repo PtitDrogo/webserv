@@ -30,7 +30,7 @@
 
 std::string readFile(std::string &path)
 {
-    std::cout << "DEBUG: path = " << path << std::endl;
+    // std::cout << "DEBUG: path = " << path << std::endl;
 
     // if (!isRegularFile(path))
     // {
@@ -80,7 +80,6 @@ void generate_default_error_page(std::string error_code, int client_socket)
 
 void generate_html_page_error(const Client& client, std::string error_code)
 {
-    std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
     const Server& server = client.getServer();
 
     // On récupère la map de l'erreur pour l'utiliser ensuite
@@ -103,12 +102,6 @@ void generate_html_page_error(const Client& client, std::string error_code)
     std::string file_content = readFile(path);
 
     std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
-
-    // Envoi de la réponse
-    //DEBUG POUR LE BRO BASTIEN
-    // reponse = display_meme(reponse);
-    // reponse += "AAAAAAH LET ME IN LET ME IN LET ME IN";
-    // std::cout << RED << reponse << RESET << std::endl;
-    std::cout << RED << reponse.c_str() << RESET << std::endl;
+    std::cout << GREEN << reponse.c_str() << RESET << std::endl;
     send(client.getSocket(), reponse.c_str(), reponse.size(), 0); //TODO CHECK ALL SEND
 }

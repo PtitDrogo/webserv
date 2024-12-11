@@ -31,7 +31,6 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
     if (isCgiRequest(req) == true)
     {    
         req.setMethod("CGI");
-        std::cout << "This shit is a CGI nocap nocap" << std::endl;
         return ("CGI");
     }
     return (type);
@@ -64,24 +63,16 @@ bool isCgiRequest(const HttpRequest &req)
     unsigned int i;
 
     std::cout << RED << "In isCgiReQuest" << RESET << std::endl;
-    // std::cout << "|" << path << "|" << std::endl;
-    
-    
     for (i = 0; i < path.size(); i++)
     {
-        // std::cout << path[i] << std::endl;
         if (isCgiDelim(path[i]) == true)
             break ;
     }
     //Smallest programm possible is x.py
     if (i < 4)
         return false;
-    // size_t pos_of_questionmark = path.find("?");
     std::string check_3 = path.substr(i - 3, 3);
     std::string check_4 = path.substr(i - 4, 4);
-
-    std::cout << "i is : " << i << " ,check 3 and check 4 are : " << check_3 << ", " << check_4 << std::endl;
-
     for (unsigned int j = 0; j < cgis_list_len; j++)
     {
         if (check_3 == valid_cgis[j] || check_4 == valid_cgis[j])

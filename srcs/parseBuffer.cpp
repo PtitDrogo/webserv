@@ -72,7 +72,7 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 		// std::cout << "IN STRING :" << cleanedPath << ", We are trying to find" << locationStr << std::endl;
 		if (cleanedPath == locationStr) //This used to be find, it caused some bugs, but maybe was useful for other reasons.
 		{
-			std::cout << "locationStr = |" << locationStr << "|" << std::endl;
+			// std::cout << "locationStr = |" << locationStr << "|" << std::endl;
 			if (cleanedPath.size() <= locationStr.size())
 			{
 				client.setLocation(&locationPath[i]);
@@ -93,7 +93,7 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
 	}
-	std::cout << std::endl << "NO LOCATION ASSIGNED" << std::endl;
+	// std::cout << std::endl << "NO LOCATION ASSIGNED" << std::endl;
 	return "";
 }
 
@@ -108,7 +108,7 @@ bool check_host(std::string line, const Server& Server)
 		host = host.substr(0, host.find_first_of("\r\n"));
 		host.erase(std::remove_if(host.begin(), host.end(), ::isspace), host.end());
 
-		std::cout << "-------------host = |" << host << "|" << std::endl;
+		// std::cout << "-------------host = |" << host << "|" << std::endl;
 		std::string my_host;
 		if (Server.getHost().empty())
 		{
@@ -116,7 +116,7 @@ bool check_host(std::string line, const Server& Server)
 		}
 		else
 			my_host = Server.getHost();
-		std::cout << "-------------my_host = |" << my_host << "|" << std::endl;
+		// std::cout << "-------------my_host = |" << my_host << "|" << std::endl;
 		if (host != my_host)
 		{
 			std::cout << "host.conf = |" << my_host << "|" << std::endl;
@@ -138,7 +138,7 @@ void sendRedirection(int client_socket, const std::string& path)
 				<< "Connection: close\r\n"
 				<< "\r\n";
 	std::string response = responseStream.str();
-	std::cout << RED "response = |" << response << "|" << RESET << std::endl;
+	std::cout << GREEN "response = |" << response << "|" << RESET << std::endl;
 	send(client_socket, response.c_str(), response.size(), 0);
 	// close(client_socket); //Derriere il est tj dans la liste de pollfd de poll !, Il va toujours etre dans ma map de clients;
 }
@@ -294,7 +294,6 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
 
-	std::cout << "setttttttttttttttttttttttttttttttttttttlocation == " << client.getLocation() << std::endl;
 	if (client.getLocation() != NULL)
 		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
@@ -308,31 +307,27 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 		size_t pos2 = line.find("HTTP");
 		if (pos1 != std::string::npos && pos2 != std::string::npos)
 		{
-			std::cout << "je rentre ici 1 --------------------------------------" << std::endl;
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
-			std::cout << "path = |" << path << "|" << std::endl;
-			std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
+			// std::cout << "path = |" << path << "|" << std::endl;
+			// std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
 			// std::cout << "locationPath[0].getPath() = |" << locationPath[0].getPath() << "|" << std::endl;
 			pathLoc = CheckLocation(path, locationPath, client);
-			std::cout << "pathloc3 = |" << pathLoc << "|" << std::endl;
+			// std::cout << "pathloc3 = |" << pathLoc << "|" << std::endl;
 			if (client.getLocation() == NULL)	
 			{
-				std::cout << "je rentre ici 2 --------------------------------------" << std::endl;
 				finalPath = parse_no_location(path, client, pathLoc, client_socket);
 			}
 			else
 			{
-				std::cout << "je rentre ici 3 --------------------------------------" << std::endl;
 				finalPath = parse_with_location(client, pathLoc, req);
 			}
 			if (finalPath.empty() || finalPath == pathLoc)
 			{
-				std::cout << "je rentre ici 4 --------------------------------------" << std::endl;
 				return ;
 			}
-			std::cout << "finalPathhhhhhhhhhh = |" << finalPath << "|" << std::endl;
+			// std::cout << "finalPathhhhhhhhhhh = |" << finalPath << "|" << std::endl;
 		}
 		if (check_host(line, server) == false)
 		{
