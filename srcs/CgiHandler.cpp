@@ -12,6 +12,8 @@
 //GET /hello-world.py would be a cgi request;
 //GET /config/cgi-bin/basicparam.py?name=theo&age=29 HTTP/1.1
 
+//GET ./config/cgi-bin/helloworld.py HTTP/1.1
+
 /*
 Step to do a CGI:
 - Recognize that the end of the request is a CGI worthy file (.py, .php)
@@ -41,7 +43,8 @@ CgiHandler::~CgiHandler() {}
 
 bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
-	_path = "." + request.getPath(); //Adding a dot for no real reason need to figure this out;
+	_path = "." + request.getPath(); //Sometime Ill need a dot, sometime not, exciting !
+	// std::cout << "Path is : " << _path << std::endl;
 	processCgiPath();
 	if (file_exists(_path.c_str()) == false)
 	{

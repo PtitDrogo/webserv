@@ -10,7 +10,6 @@ int main(int argc, char **argv, char **envp)
 	HttpRequest req;
 	Cookies cook;
 	std::vector<struct pollfd> fds;
-	(void) envp;
 
 	if (argc != 2)
 	{
@@ -63,10 +62,13 @@ int main(int argc, char **argv, char **envp)
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
+			
+
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
 				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
 				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << "DEBUG , path in main is : " << client.
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
