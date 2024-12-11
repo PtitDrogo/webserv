@@ -53,7 +53,7 @@ int main(int argc, char **argv, char **envp)
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
 				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
-			std::cout << "ALLO" << std::endl;
+			std::cout << "ALLO" << std	::endl;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);

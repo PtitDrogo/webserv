@@ -4,13 +4,29 @@
 #include <fstream>
 #include "sys/stat.h"
 
-bool isRegularFile(const std::string& path) {
-    struct stat buffer;
+// std::string display_meme(std::string response)
+// {
+//     std::string html;
+//     if(1)
+//     {
+//         if(1)
+//         {
+//             std::cout << "AAAAAAAAAAAAAAH" << std::endl;
+//             html =
+//                 "HELP ME HELP ME"
+//                 "\t<div class='user-info'>\n"
+//                 "\t\t<h2>User Connection Details</h2>\n"
+//                 "\t\t<p><strong>Email:</strong> " "Wesh la team" " </p>\n"
+//                 "\t\t<p><strong>Password:</strong> " "Wesh la team" " </p>\n"
+//                 "\t</div>\n"
+//                 "</body>\n</html>";
 
-    if (stat(path.c_str(), &buffer) != 0)
-        return false;
-    return S_ISREG(buffer.st_mode);
-}
+//                 response += html;
+//         }
+//     }
+//     return (response);
+// }
+
 
 std::string readFile(std::string &path)
 {
@@ -89,5 +105,10 @@ void generate_html_page_error(const Client& client, std::string error_code)
     std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
 
     // Envoi de la réponse
+    //DEBUG POUR LE BRO BASTIEN
+    // reponse = display_meme(reponse);
+    // reponse += "AAAAAAH LET ME IN LET ME IN LET ME IN";
+    // std::cout << RED << reponse << RESET << std::endl;
+    std::cout << RED << reponse.c_str() << RESET << std::endl;
     send(client.getSocket(), reponse.c_str(), reponse.size(), 0); //TODO CHECK ALL SEND
 }

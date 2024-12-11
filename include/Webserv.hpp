@@ -98,6 +98,7 @@ bool    isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds
 std::string fileToString(const char *filePath);
 std::string intToString(int value);
 std::string readFromPipeFd(int pipefd);
+bool        isRegularFile(const std::string& path);
 
 
 //-----------DEBUG-PRINTS-----------//
