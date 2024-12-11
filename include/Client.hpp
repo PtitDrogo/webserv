@@ -36,6 +36,8 @@ public:
 	void	extractContentType();
 	void	reset();
 	// void disconnect();
+	bool	didClientTimeout() const;
+
 
 	// setters
 	void	setSocket(int socket);
@@ -45,9 +47,12 @@ public:
 	void	setHeadEnd(size_t heanEnd);
 	void	setBody(std::string body);
 	void	setBoundary(std::string boundary);
-	void	stebodyEnd(size_t bodyEnd);
-	void setCgiPipeFD(int fd);
-	void setCgiCaller(Client *client_caller);
+	void	setbodyEnd(size_t bodyEnd);
+	void 	setCgiPipeFD(int fd);
+	void 	setCgiCaller(Client *client_caller);
+	void 	setCgiCallee(Client *client_caller);
+	void 	setCgiPID(pid_t pid);
+	void	setLocation(location *location);
 
 	// getters
 	Server&		getServer() const;
@@ -61,12 +66,16 @@ public:
 	size_t		getTotalRead() const;
 	size_t		getHeadEnd() const;
 	size_t		getBodyEnd() const;
-	Client* getCgiCaller() const;
+	Client* 	getCgiCaller() const;
+	Client* 	getCgiCallee() const;
+	long long	getTimeStart() const;
+	pid_t		getCgiPID() const;
+	location	*getLocation() const;
 
 
 private:
 	Client(); //We cannot make a client without its server
-	// attributs prives
+
 	int 			 	_socket;
 	Server&			 	_server;
 
@@ -79,16 +88,18 @@ private:
 	size_t				_totalRead;
 	size_t				_headEnd;
 	size_t				_bodyEnd;
-	// bool			  _isCGIPipe;
+
+	
+	//this really should be in the request class but we are not using it, so now its here;
+	//SET THIS BACK TO NULL AFTER EACH RESPONSE OTHERWISE IT WILL ALWAYS THINK ITS IN LOCATION;
+	location			*_current_location;
+	
 	//CGI stuff
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
 	Client			  *_cgi_caller;
-	// long long	  _timeStart; // init at -1;
-	
-	// methodes privees internes
-	// void _processNewRequest(const std::string& buffer);
-	// bool _receiveData();
-	// void _sendResponse(const std::string& response);
+	long long	  	  _time_start;
+	Client			  *_cgi_callee;
+	pid_t			  _pid;
 };
 
 #endif

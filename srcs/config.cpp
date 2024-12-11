@@ -1,6 +1,7 @@
 #include "config.hpp"
 
-Config::Config() {}
+Config::Config() {
+}
 
 Config::~Config() {}
 
@@ -70,7 +71,9 @@ Server &Config::getServerOfClient(int client_fd)
 Client &Config::getClientObject(int client_fd)
 {
 	std::map<int, Client>::iterator it = _clients.find(client_fd);
-    if (it != _clients.end()) {
+    std::cout << "size of map is : " << _clients.size() << std::endl;
+	std::cout << "looking for client fd" << client_fd << std::endl;
+	if (it != _clients.end()) {
         return it->second;
     }
 	throw std::out_of_range("Somehow, your socket isnt linked to a client object");
@@ -120,6 +123,14 @@ int Config::SetupServerSocket(int i)
 	return server_socket;
 }
 
+void printMapRedirect(std::map<std::string, std::string> redirect)
+{
+	for (std::map<std::string, std::string>::iterator it = redirect.begin(); it != redirect.end(); ++it)
+	{
+		std::cout << "	Redirect: " << it->first << " => " << it->second << std::endl;
+	}
+}
+
 void printVectorloc(std::vector<location> loc)
 {
 	for (size_t i = 0; i < loc.size(); i++)
@@ -131,6 +142,7 @@ void printVectorloc(std::vector<location> loc)
 		std::cout << "	Auto Index: " << loc[i].getAutoIndex() << std::endl;
 		std::cout << "	Allow Method: " << loc[i].getAllowMethod() << std::endl;
 		std::cout << "	Cgi Path: " << loc[i].getCgiPath() << std::endl;
+		printMapRedirect(loc[i].getRedir());
 		std::cout << "}" << std::endl;
 	}
 }
@@ -141,13 +153,16 @@ void printVectorServer(std::vector<Server> serv)
 	{
 		std::cout << "server { " << std::endl;
 		std::cout << "	Port: " << serv[i].getPort() << std::endl;
+		std::cout << "	my host: " << serv[i].getHost() << std::endl;
 		std::cout << "	Server Name: " << serv[i].getServerName() << std::endl;
 		std::cout << "	Root: " << serv[i].getRoot() << std::endl;
 		std::cout << "	Index: " << serv[i].getIndex() << std::endl;
 		std::cout << "	Max Body Size: " << serv[i].getMaxBodySize() << std::endl;
 		std::cout << "	Auto Index: " << serv[i].getAutoIndex() << std::endl;
+
 		printVector(serv[i].getErrorPage());
 		printVectorloc(serv[i].getLocation());
+
 		std::cout << "}" << std::endl;
 	}
 }
@@ -163,11 +178,12 @@ void parse_listen(std::string line, Server &serv)
 			start++;
 		size_t end = line.find_first_of(" \t", start);
 		std::string port = line.substr(start, end - start);
-		if (!isdigit(port) || port.length() != 4)
+		if (port.size() > 4)
 		{
-			std::cout << "Error: Invalid port number" << std::endl;
-			return;
+			serv.setHost(port);
+			port = port.substr(port.find(':') + 1);
 		}
+		std::cout << "port------------- = " << port << std::endl;
 		serv.setPort(port);
 	}
 }
@@ -222,8 +238,6 @@ void parse_root(std::string line, Server &serv)
 	}
 }
 
-
-
 void parse_error_page(std::string line, Server &serv)
 {
 	std::cout << "parse_error_page" << std::endl;
@@ -243,7 +257,6 @@ void parse_error_page(std::string line, Server &serv)
 	}
 }
 
-
 void parse_location(std::string line, Server &serv, std::ifstream &file)
 {
 	std::cout << "parse_location" << std::endl;	
@@ -257,6 +270,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 		}
 		size_t end = line.find_first_of(" {", start);
 		std::string path = line.substr(start, end - start) + ' ';
+		std::cout << "path = " << path << std::endl;
 		loc.setPath(path);
 
 		size_t braceOpenPos = line.find('{', end);
@@ -285,6 +299,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
+				std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
 				loc.setIndex(index);
 			}
 			size_t rootPos = subLine.find("root");
@@ -294,9 +309,9 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
 				loc.setRoot(root);
 			}
-			size_t autoIndexPos = subLine.find("auto_index");
+			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {
-				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 10);
+				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 5);
 				size_t endAutoIndex = subLine.find_first_of(" \t;", startAutoIndex);
 				std::string autoIndex = subLine.substr(startAutoIndex, endAutoIndex - startAutoIndex);
 				if (autoIndex != "on" && autoIndex != "off") {
@@ -307,7 +322,11 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			}
 			size_t allowMethodPos = subLine.find("allow_method");
 			if (allowMethodPos != std::string::npos) {
-				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 12); // 12 = length of "allow_method"
+				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 13); // 12 = length of "allow_method"
+				if (startAllowMethod == std::string::npos) {
+					std::cerr << "Error: invalid value for allow_method" << std::endl;
+					return;
+				}
 				size_t endAllowMethod = subLine.find_first_of("\n", startAllowMethod); 
 				std::string allowMethod = subLine.substr(startAllowMethod, endAllowMethod - startAllowMethod);
 				loc.setAllowMethod(allowMethod);
@@ -318,6 +337,20 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
 				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
 				loc.setCgiPath(cgiPath);
+			}
+			size_t redirPos = subLine.find("return");
+			if (redirPos != std::string::npos)
+			{
+				size_t startRedir = subLine.find_first_not_of(" \t", redirPos + 6);
+				size_t endRedir = subLine.find_first_of(" \t;", startRedir);
+				std::string error_code = subLine.substr(startRedir, endRedir - startRedir);
+				startRedir = endRedir;
+				while (startRedir < subLine.size() && std::isspace(subLine[startRedir]))
+					startRedir++;
+				endRedir = subLine.find_first_of(" \t;", startRedir);
+				std::string path = subLine.substr(startRedir, endRedir - startRedir);
+				loc.setRedir(error_code, path);
+				printMapRedirect(loc.getRedir());
 			}
 		}
 		serv.setLocation(loc);
@@ -449,10 +482,10 @@ void Config::printConfig()
 		std::cout << line << std::endl;
 	}
 	std::cout << "--------------------------------" << std::endl;
-	printVector(serv[0].getErrorPage());
+	// printVector(serv[0].getErrorPage());
 	std::cout << "--------------------------------" << std::endl;	
 	printVectorServer(serv);
-	printVectorloc(serv[0].getLocation());
+	// printVectorloc(serv[0].getLocation());
 }
 
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)

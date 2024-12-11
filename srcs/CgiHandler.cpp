@@ -1,10 +1,13 @@
 #include "Webserv.hpp"
 
-#define TIME_OUT_CGI_MS 500000
+#include <fcntl.h>
+#include <sys/stat.h>
 
 //GET /config/cgi-bin/sleep10.py HTTP/1.1
+//GET /config/cgi-bin/sleep20.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
+//GET /config/cgi-bin/helloworld.py?username=theo&date=birthday HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 
@@ -19,12 +22,16 @@ Step to do a CGI:
 - We read cgi_tmp/webserv_cgi_stdout and send the content back to the client
 */
 
+
+static bool is_executable(const char *path);
+static bool file_exists(const char *path);
+
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
 _argv(NULL),
 _exit_status(-1),
 _path(""),
-_pid(-1),
+_pid(-42),
 _client(client)
 {}
 
@@ -34,32 +41,162 @@ CgiHandler::~CgiHandler() {}
 bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
     // int   status;
+    // (void)request;
 
     //A LOT OF PARSING WILL HAPPEN HERE TO SPLIT PATH INTO EXE AND PARAMETERS
     //Does path have to take into account what root is defined as ?
-    _path = "." + request.getPath();
+	_path = "." + request.getPath(); //Adding a dot for no real reason need to figure this out;
+	// std::cout << RED << "PRE PROCESS in Handle cgi path is " << _path << RESET << std::endl;
+	processCgiPath();
+	// std::cout << RED << "POST PROCESS in Handle cgi path is " << _path << RESET << std::endl;
+	if (file_exists(_path.c_str()) == false)
+	{
+		generate_html_page_error(_client, "404");
+		return false;
+	}	
+	if (is_executable(_path.c_str()) == false)
+	{
+		generate_html_page_error(_client, "403");
+		return false;
+	}
     std::cout << "hi whats up cgi handler here path is |" << _path << "|" << std::endl;
 
-    //Execute the fucking cgi;
     pid_t cgi_pid = executeCGI();
+	std::cout << std::endl << std::endl << "CGI PID IS :" << cgi_pid << std::endl << std::endl;
+	_pid = cgi_pid;
     if (cgi_pid == -1)
-        return false; //for now this will do;
+        return false;
     return true;
 
 }
 
+//This gets the real path of the cgi and extract all parameters into a map;
+void	CgiHandler::processCgiPath()
+{
+	std::string tmp_path;
+	std::string current_key;
+	std::string current_value;
+	size_t start;
+	size_t end;
+	size_t sep_pos;
+
+	start = _path.find('?');
+	if (start == std::string::npos)
+		return ; //This means theres no parameters, we fuck off;
+	tmp_path = _path.substr(start + 1);
+	if (tmp_path.empty())
+		return ; //to be safe
+	
+	_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+	while (tmp_path.empty() == false)
+	{
+		end = tmp_path.find('&');
+		if (end == std::string::npos)	
+			end = tmp_path.size(); //well do -1 later;
+		
+		tmp_path = tmp_path.substr(0, end); //Get a string like name=theo&
+		sep_pos = tmp_path.find('='); //Get position of =
+		if (sep_pos == std::string::npos) //if no = we dip
+			break ;
+		current_key = tmp_path.substr(0, sep_pos); //get "name"
+		current_value = tmp_path.substr(sep_pos + 1, end); // get "theo", skipping the =, not including the &
+		_params[current_key] = current_value;
+		//Move start;
+		// std::cout << RED << "tmp path is : " << tmp_path << "its size is : " << tmp_path.size() << RESET << std::endl;
+		tmp_path = _path.substr(end + 1);
+	}
+	return ;
+}
+// theo=loulou& -> 11
+
+static bool file_exists(const char *path)
+{
+	struct stat st;
+    
+    if (stat(path, &st) != 0)
+		return false;
+	return true;
+}
+
+static bool is_executable(const char *path) 
+{
+	struct stat st;
+    
+    // Is it a file
+	stat(path, &st);
+    if (!S_ISREG(st.st_mode)) 
+        return false;
+    //is it exe
+    if (access(path, X_OK) != 0) 
+	{
+        return false;
+    }
+    return true;
+}
+
+//Returns an updated env equal to envp + parameters of the cgi request
+char **CgiHandler::updateEnv()
+{
+	//We will want to malloc a new envp array, 
+	size_t env_count = 0;
+	size_t param_count = _params.size();
+	size_t i;
+
+    while(_envp[env_count] != NULL) env_count++;
+    
+    char** updated_envp = (char**)calloc((env_count + param_count), sizeof(char*));
+	if (updated_envp == NULL)
+		return NULL;
+    for(i = 0; i < env_count; i++) 
+	{
+        updated_envp[i] = _envp[i];
+    }
+	
+	for (std::map<std::string, std::string>::iterator it = _params.begin(); it != _params.end(); it++)
+	{
+		std::string new_var;
+
+		new_var = it->first + "=" + it->second;
+		updated_envp[i] = strdup(new_var.c_str());
+		if (updated_envp[i] == NULL)
+		{
+			for(i = 0; i < env_count + param_count; i++) 
+			{
+				free(updated_envp[i]); // With the power of calloc this ok actualy memory safe;
+			}
+		}
+		i++;
+	}
+	updated_envp[i] = NULL;
+	return (updated_envp);
+}
+
+// void CgiHandler::freeUpdatedEnv(char **tofree)
+// {
+// 	size_t env_count = 0;
+// 	size_t new_max_count = 0;
+// 	while(_envp[env_count] != NULL) env_count++;
+// 	while(tofree[new_max_count] != NULL) new_max_count++;
+	
+// 	for(size_t i = env_count; i < new_max_count; i++) 
+// 		free(tofree[i]);
+// 	free(tofree);
+// 	return ;
+// }
+
 pid_t    CgiHandler::executeCGI()
 {
-    if (pipe(_pipe_in) < 0)
-	{
-        std::cerr << "Pipe failed, error 500 !" << std::endl;
-		return -1;
-	}
+    // if (pipe(_pipe_in) < 0)
+	// {
+    //     std::cerr << "Pipe failed, error 500 !" << std::endl;
+	// 	return -1;
+	// }
+	
 	if (pipe(_pipe_out) < 0)
 	{
         std::cerr << "Pipe failed, error 500 !" << std::endl;
-		close(_pipe_in[0]);
-		close(_pipe_in[1]);
+		// close(_pipe_in[0]);
+		// close(_pipe_in[1]);
 		return -1;
 	}
 
@@ -72,76 +209,108 @@ pid_t    CgiHandler::executeCGI()
     }
     else if (pid == 0)
     {
-        dup2(_pipe_in[0], STDIN_FILENO);
+        // char **updated_env = updateEnv();
+		int null_fd = open("/dev/null", O_WRONLY);
+		// dup2(_pipe_in[0], STDIN_FILENO);
 		dup2(_pipe_out[1], STDOUT_FILENO);
-		close(_pipe_in[0]);
-		close(_pipe_in[1]);
+		dup2(null_fd, STDERR_FILENO);
+
+		// close(_pipe_in[0]);
+		// close(_pipe_in[1]);
+		close(null_fd);
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
-		execve(_path.c_str(), _argv, _envp);
-        std::cerr << "failed to execve, path was : " << _path << std::endl;
+        std::cerr << "about to execve" << _path.c_str() << std::endl;
+		execve(_path.c_str(), _argv, _envp); //updated_env soon
+        std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
+		// freeUpdatedEnv(_envp);
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
+    else
+    {
+        // close(_pipe_in[0]);
+		// close(_pipe_in[1]);
+		// close(_pipe_out[0]);
+		close(_pipe_out[1]);
+    }
     return (pid);
-}
-
-pid_t    CgiHandler::executeTimeOut() const
-{
-    pid_t pidTimeOut = fork();
-	if (pidTimeOut == -1) 
-    {
-		std::cout << "Fork failed" << std::endl; //oh no !
-		return pidTimeOut;
-	}
-	else if (pidTimeOut == 0) 
-    {
-	    usleep(TIME_OUT_CGI_MS);
-		std::exit(EXIT_SUCCESS);
-	}
-	return (pidTimeOut);
 }
 
 //ADD client there later;
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds)
 {
     CgiHandler cgi(envp, client);
-    std::string response;
+    // std::string response;
 
-    //So im gonna need to add the pipe of the cgi to the fucking poll fd list, SAD.
+	std::cout << std::endl << "WE ARE IN CGI PROTOCOL" << std::endl;
     if (cgi.HandleCgiRequest(request) == false)
     {
-        response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
-        // std::cout << "GOT response : " << response << std::endl;
+        // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
+        std::cout << "Error executing CGI"<< std::endl;
     }
     else
     {
-        //We add the pipe as a client to the client MAP and we add its FD to pollfd;
-        //Now when we check for POLLIN if current client is a pipe we skip, we only count the stuff where its hanging up;
-        //when the signal is POLLDHUP we will access the client of the caller of the cgi and send
-        //the content of pipeout[0] of client pipe to the socket fd of the cgicaller client;
-        //we then destroy pipe client, removing it both from pollfds vector AND the map;
-
-        //1. Add it to vector pollfds and map (I dont actually need the pipe to be a websocket)
 		int pipe_fd = cgi.getPipeOut()[0];
         
+		client.setCgiPID(cgi.getPID());
+		std::cout << "After setting, client PID is :" << client.getCgiPID() << std::endl;
         addPollFD(pipe_fd, fds); //add to fds
         conf.addClient(pipe_fd, client.getServer()); //add to map;
         conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
-
-        std::string cgi_output = fileToString(PATH_CGI_OUT);
-        response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-    }
-    //I wont directly send an answer to the server;
-
-    // send(client.getSocket(), response.c_str(), response.size(), 0);
-    // std::cout << "sending response : " << response << std::endl;
+		client.setCgiCallee(&conf.getClientObject(pipe_fd)); //Adding the pipe as callee of the initial client;
+	}
     return ;
 
 }
 
 int     *CgiHandler::getPipeOut() {return _pipe_out;}
 int     *CgiHandler::getPipeIn() {return _pipe_in;}
+pid_t   CgiHandler::getPID() {return _pid;}
 
+
+
+bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
+{
+	(void)i;
+	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
+	if (client.getCgiCaller() == NULL)
+		return (false);
+	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
+	{
+		printf("Pipe disconnected1\n");
+		//I want my client caller to send the content from the cgi pipe to its websocket;
+		//then we disconnect client of Pipe and all is well;
+
+		//Test close pipe;
+		
+		std::string cgi_output = readFromPipeFd(fds[i].fd);
+		printf("IF I LOSE IT ALL\n"); 		
+		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+		printf("LOSE IT ALL\n");
+		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
+			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+		// waitpid(-1, 0, 0); // Collect the child process ressources;
+		printf("WHEN THE GROUND IS SHAKING\n");
+		disconnectClient(fds, client, conf);
+		return true;
+		// wait;
+	}
+	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
+	{
+		printf("Pipe disconnected2\n");
+		//I want my client caller to send the content from the cgi pipe to its websocket;
+		//then we disconnect client of Pipe and all is well;
+
+		std::string cgi_output = readFromPipeFd(fds[i].fd);
+		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
+		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
+			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+		disconnectClient(fds, client, conf);
+		return true;
+	}
+	printf("exiting iscgistuff\n");
+	return false;
+}
 
 

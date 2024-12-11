@@ -33,28 +33,6 @@
     </style>
 </head>
 <body style="background-color: rgb(54, 54, 54);">
-    <h1>Session Token</h1>
-    <p id="token-display">Loading...</p>
-
-    <script>
-        // Function to extract a specific cookie by name
-        function getCookie(name) {
-        const cookies = document.cookie.split('; ');
-        for (const cookie of cookies) {
-            const [key, value] = cookie.split('=');
-            if (key === name) {
-            return value;
-            }
-        }
-        return null; // Return null if not found
-        }
-
-        // Get the session token and display it
-        const sessionToken = getCookie('session_token');
-        document.getElementById('token-display').textContent = sessionToken
-        ? `Session Token: ${sessionToken}`
-        : 'Session token not found.';
-    </script>
     <header>
         <h1 style="text-align: center; color:rgb(243, 0, 0); text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); font-size: 4vw;">Webserver</h1>
     </header>
@@ -65,7 +43,6 @@
             <a href="/page/delete.html"><button>Delete</button></a>
             <a href="/page/Upload.html"><button>Upload</button></a>
             <a href="/page/Download.html"><button>Download</button></a>
-            <a href="/page/Cooki.html"><button>Connexion</button></a>
         </div>
     </div>
 </body>

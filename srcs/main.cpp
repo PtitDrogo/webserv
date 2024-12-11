@@ -1,13 +1,14 @@
 #include "Webserv.hpp"
+#include "Cookies.hpp"
 
 bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
 
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
 	HttpRequest req;
+	Cookies cook;
 	std::vector<struct pollfd> fds;
 	(void) envp;
 
@@ -30,41 +31,55 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			if (fds[i].revents & POLLRDHUP)
+			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
+			std::cout << "number of servers is : " << number_of_servers << std::endl;
+			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
+			std::cout << "fds.size() is : " << fds.size() << std::endl;
+			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
-				printf("disconnect client of main loop\n");
-				disconnectClient(fds, i, conf);
-				continue;
+				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
+				disconnectClient(fds, client, conf);
+				break;
 			}
-			Client &client = conf.getClientObject(fds[i].fd);
-			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
-			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
-			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
+			if (fds[i].revents & POLLERR)
+			{
+				printf("error with this client, were killing it, disconnected client %i\n", fds[i].fd);
+				disconnectClient(fds, client, conf);
+				break;
+			}
+			if (handleTimeout(client, fds, conf, i) == true)
+				continue ;
+			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
+			if (isCgiStuff(client, conf, fds, i) == true)
+				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
+			std::cout << "ALLO" << std	::endl;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
+			{	
+				disconnectClient(fds, client, conf);
 				break ;
-			
+			}
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
-				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
+				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client) == false)
+					if (preparePostParse(client, cook) == false)
 						break ;
 				}
 				else if (type_request == "GET") 
 				{
-					if (prepareGetParse(client, req) == false)  //LLITOT j'ai passer la fonction dans prepareparse comme pour post et j'ai enlever client.getRequest() car on a l'info dans client
+					if (prepareGetParse(client, req) == false) 
 						break ;
 				}
 				else if (type_request == "DELETE")
@@ -73,8 +88,9 @@ int main(int argc, char **argv, char **envp)
 					cgiProtocol(envp, req, client, conf, fds);
 				else
 					generate_html_page_error(client, "404");
-				// std::cout << req << std::endl;
 				client.reset();
+				// std::cout << req << std::endl;
+				//add code to clear the buffer request here;
 			}
 		}
 	}
@@ -90,37 +106,4 @@ static void handleSignal(int signum) {
 }
 
 
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
-// {
-// 	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
-// 	{
-// 		printf("Pipe disconnected1\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
-// 	{
-// 		printf("Pipe disconnected2\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	return true;
-// }
 

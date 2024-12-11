@@ -19,6 +19,7 @@ location &location::operator=(const location &copy)
 		this->_auto_index = copy._auto_index;
 		this->_allow_method = copy._allow_method;
 		this->_cgi_path = copy._cgi_path;
+		this->_redir = copy._redir;
 	}
 	return *this;
 }
@@ -53,6 +54,11 @@ std::string location::getCgiPath() const
 	return (this->_cgi_path);
 }
 
+std::map<std::string, std::string> location::getRedir() const
+{
+	return (this->_redir);
+}
+
 void location::setRoot(std::string root)
 {
 	this->_root = root;
@@ -83,3 +89,7 @@ void location::setCgiPath(std::string cgi_path)
 	this->_cgi_path = cgi_path;
 }
 
+void location::setRedir(std::string& error_code, std::string& path)
+{
+	this->_redir[error_code] = path;
+}

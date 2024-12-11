@@ -8,7 +8,6 @@ class Config
 	private :
 		std::vector<Server>        _servers;
 		std::map<int, Client>      _clients; //Link fd to their Client class associated (the server of the client will be inside that class)
-		
 	public:
 		Config();
 		~Config();

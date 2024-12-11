@@ -16,6 +16,7 @@ class Server
 		std::vector<location> _location;
 		int _max_body_size;
 		std::string _auto_index;
+		std::string _host;
 		int			_server_socket;
 	public :
 		Server();
@@ -36,6 +37,7 @@ class Server
 		std::string getAutoIndex() const;
 		int getServerSocket() const;
 		// std::string getLocation() const;
+		std::string getHost() const;
 
 		//setter//
 
@@ -48,6 +50,7 @@ class Server
 		void setLocation(location &loc);
 		void setMaxBodySize(int max_body_size);
 		void setAutoIndex(std::string auto_index);
+		void setHost(std::string host);
 		void setServerSocket(int server_socket);
 };
 

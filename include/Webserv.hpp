@@ -14,7 +14,7 @@ class Server;
 class Client;
 class HttpRequestParser;
 class ClientUploadState;
-
+class Cookies;
 
 //*********************************************************//
 //************************INCLUDES*************************//
@@ -24,6 +24,7 @@ class ClientUploadState;
 #include "server.hpp"
 #include "config.hpp"
 #include "httpRequest.hpp"
+#include "Cookies.hpp"
 
 //*********************************************************//
 //*************************DEFINES*************************//
@@ -31,7 +32,8 @@ class ClientUploadState;
 
 # define SUCCESS 0
 # define FAILURE 1
-# define POLL_TIMEOUT 5000
+# define POLL_TIMEOUT_MILISECONDS 5000
+# define CGI_TIMEOUT_SECONDS 12
 
 
 //*********************************************************//
@@ -58,10 +60,11 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req);
-void	parse_buffer_post(const Client& client, std::string buffer);
-bool    preparePostParse(Client& client);
+void	parse_buffer_get(Client &client, HttpRequest &req);
+void	parse_buffer_post(Client& client, Cookies &cook);
+bool    preparePostParse(Client& client, Cookies &cook);
 bool    prepareGetParse(Client& client, HttpRequest &req);
+
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
@@ -72,7 +75,9 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
 int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
-void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
+// void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
+void    disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf);
+bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf, size_t &i);
 
 
 
@@ -89,12 +94,13 @@ void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);
-
+bool    isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
 std::string intToString(int value);
 std::string readFromPipeFd(int pipefd);
+bool        isRegularFile(const std::string& path);
 
 
 //-----------DEBUG-PRINTS-----------//
@@ -102,7 +108,7 @@ void printVectorloc2(std::vector<location> loc);
 void printVectorServer2(std::vector<Server> serv);
 
 std::string handleAutoIndex(const std::string& path);
-std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client);
 std::vector<std::string> listDirectory(const std::string& directory);
 
 //-----------utils-----------//

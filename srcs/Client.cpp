@@ -1,19 +1,16 @@
 #include "Client.hpp"
 
-// Client::Client() 
-// {}
-// //: _socket(-1), _server() 
-
 Client::~Client() 
 {
 	// std::cout << "Im destroying a client ! make sure this happens when you expect !" << std::endl;
 }
 
 Client::Client(const Client& other) : _socket(other._socket), _server(other._server), 
- _request(other._request), _body(other._body), _fileName(other._fileName),
- _contentType(other._contentType), _boundary(other._boundary), 
- _contentLength(other._contentLength), _totalRead(other._totalRead), _bodyEnd(other._bodyEnd), _cgi_caller(other._cgi_caller)
+ _request(other._request), _body(other._body), _fileName(other._fileName), _contentType(other._contentType), _boundary(other._boundary), 
+ _contentLength(other._contentLength), _totalRead(other._totalRead), _bodyEnd(other._bodyEnd), _cgi_caller(other._cgi_caller),
+ _time_start(other._time_start), _cgi_callee(other._cgi_callee), _pid(other._pid)
 {
+	_current_location = other._current_location;
 	// std::cout << "client copy constructor called" << std::endl;
 }
 
@@ -34,90 +31,34 @@ Client& Client::operator=(const Client& other) {
 		_contentLength = other._contentLength;
 		_totalRead = other._totalRead;
 		_bodyEnd = other._bodyEnd;
+		_time_start = other._time_start;
 		_cgi_caller = other._cgi_caller;
-
+		_cgi_callee = other._cgi_callee;
+		_pid = other._pid;
+		_current_location = other._current_location;
 	}
 	return *this;
 }
 
-Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _request(),
- _body(), _fileName(), _contentType(), _boundary(), _contentLength(0), _totalRead(0), _bodyEnd(0), _cgi_caller(NULL)
+Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _contentLength(0), _totalRead(0), 
+_bodyEnd(0), _current_location(NULL), _cgi_caller(NULL), _time_start(std::time(0)), _cgi_callee(NULL), _pid(-42)
 {
 	// std::cout << "Defaultish constructor called" << std::endl
 	//There used to be stuff here, i think there should be nothing.
 	// we shouldnt call recve when creating a child socket.
 }
 
-//TFREYDIE NOTE : these methods call methods that dont exist, im assuming they exist somewhere else
-
-// void Client::_processNewRequest(const std::string& buffer) {
-//     std::string type_request = HttpRequestParser::getRequestType(buffer);
-
-//     if (type_request == "GET") {
-//         HttpRequestParser::parseGetRequest(buffer, _server, _socket);
-//     } else if (type_request == "POST") {
-//         // initialiser l'état du client pour POST
-//         _uploadState.appendToBuffer(buffer.c_str(), buffer.length());
-//         _uploadState.setBytesReceived(buffer.length());
-		
-//         handleClientData(_server);
-//     } else {
-//         std::cout << RED << "Error: Generation d'une page d'erreur pour les requetes non supportees" << RESET << std::endl;
-//         // generate_html_page_error(*_server, _socket, "404");
-//     }
-// }
-
-// void Client::handleClientData(Server& serv) {
-//     char chunk[1024];
-//     int bytesRead = recv(_socket, chunk, sizeof(chunk) - 1, 0);
-
-//     if (bytesRead <= 0) {
-//         disconnect();
-//         return;
-//     }
-
-//     chunk[bytesRead] = '\0';
-//     _uploadState.appendToBuffer(chunk, bytesRead);
-//     _uploadState.setBytesReceived(_uploadState.getBytesReceived() + bytesRead);
-
-//     // logique de parsing des en-tetes et du contenu
-//     if (!_uploadState.areHeadersParsed()) {
-//         size_t headerEnd = _uploadState.getBuffer().find("\r\n\r\n");
-//         if (headerEnd == std::string::npos) {
-//             return; // en-tetes pas encore complets
-//         }
-
-//         _uploadState.setHeadersParsed(true);
-//     }
-
-//     // verifier si toutes les donnees ont ete reçues
-//     if (_uploadState.getBytesReceived() >= _uploadState.getContentLength()) {
-//         HttpRequestParser::parsePostRequest(_uploadState.getBuffer(), _socket, serv);
-//         disconnect();
-//     }
-// }
-
-//presumably disconnect would need to also take itself away from the client MAP
-// void Client::disconnect() {
-//     if (_socket != -1) {
-//         close(_socket);
-//         _socket = -1;
-//     }
-// }
-
 bool Client::isValidSocket() const {return _socket != -1;}
 
-void Client::setSocket(int socket) {_socket = socket;}
-void Client::setServer(Server& server) {_server = server;}
-void Client::setCgiPipeFD(int fd) {_cgi_fd = fd;}
-void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
+
+bool	Client::didClientTimeout() const
+{
+	if ((std::time(0) - _time_start) > CGI_TIMEOUT_SECONDS )
+		return true;
+	return false;
+}
 
 
-int Client::getSocket() const {return _socket;}
-Server& Client::getServer() const { return _server;}
-Client* Client::getCgiCaller() const { return _cgi_caller;}
-
-// t_cgi_tmp_file&	Client::getCgiFilesFds() {return _cgi_fds;}
 
 void    Client::appendToRequest(char *chunk, int recvValue) {
 	_request.append(chunk, recvValue);
@@ -153,22 +94,7 @@ size_t Client::findContentLength() {
 	return (_contentLength);
 }
 
-void	Client::setContentLength(size_t contentLength) { _contentLength = contentLength; }
-void	Client::setTotalRead(size_t totalRead) { _totalRead = totalRead; }
-void	Client::setHeadEnd(size_t headEnd) { _headEnd = headEnd; }
-void	Client::setBody(std::string body) { _body = body; }
-void	Client::setBoundary(std::string boundary) { _boundary = boundary; }
-void	Client::stebodyEnd(size_t bodyEnd) { _bodyEnd = bodyEnd; }
 
-std::string	Client::getRequest() const { return (_request); }
-std::string	Client::getBody() const{ return (_body); }
-std::string	Client::getFileName() const { return (_fileName); }
-std::string	Client::getContentType() const { return (_contentType); }
-std::string	Client::getBoundary() const { return (_boundary); }
-size_t		Client::getContentLength() const { return (_contentLength); }
-size_t		Client::getTotalRead() const { return (_totalRead); }
-size_t		Client::getHeadEnd() const { return (_headEnd); }
-size_t		Client::getBodyEnd() const { return (_bodyEnd); }
 
 
 void Client::extractBody() {
@@ -243,3 +169,33 @@ void	Client::reset() {
 	_totalRead = 0;
 	_headEnd = 0;
 }
+void Client::setContentLength(size_t contentLength) {_contentLength = contentLength;}
+void Client::setTotalRead(size_t totalRead) {_totalRead = totalRead;}
+void Client::setHeadEnd(size_t headEnd) {_headEnd = headEnd;}
+void Client::setBody(std::string body) {_body = body;}
+void Client::setSocket(int socket) {_socket = socket;}
+void Client::setServer(Server& server) {_server = server;}
+void Client::setCgiPipeFD(int fd) {_cgi_fd = fd;}
+void Client::setCgiCaller(Client *client_caller) {_cgi_caller = client_caller;}
+void Client::setCgiCallee(Client *client_callee) {_cgi_callee = client_callee;}
+void Client::setCgiPID(pid_t pid) {_pid = pid;}
+void Client::setLocation(location *location) {_current_location = location;}
+void	Client::setBoundary(std::string boundary) { _boundary = boundary; }
+void	Client::setbodyEnd(size_t bodyEnd) { _bodyEnd = bodyEnd; }
+
+std::string    Client::getRequest() const {return (_request);}
+size_t	Client::getContentLength() const {return (_contentLength);}
+size_t Client::getHeadEnd() const{return (_headEnd);}
+size_t Client::getTotalRead() const {return (_totalRead);}
+std::string Client::getBody() const{return (_body);}
+int Client::getSocket() const {return _socket;}
+Server& Client::getServer() const { return _server;}
+Client* Client::getCgiCaller() const { return _cgi_caller;}
+Client* Client::getCgiCallee() const { return _cgi_callee;}
+long long	Client::getTimeStart() const { return _time_start;}
+pid_t Client::getCgiPID() const { return _pid;}
+location *Client::getLocation() const {return _current_location;}
+std::string	Client::getFileName() const { return (_fileName); }
+std::string	Client::getContentType() const { return (_contentType); }
+std::string	Client::getBoundary() const { return (_boundary); }
+size_t		Client::getBodyEnd() const { return (_bodyEnd); }
