@@ -209,7 +209,7 @@ pid_t    CgiHandler::executeCGI()
     }
     else if (pid == 0)
     {
-        char **updated_env = updateEnv();
+        // char **updated_env = updateEnv();
 		int null_fd = open("/dev/null", O_WRONLY);
 		// dup2(_pipe_in[0], STDIN_FILENO);
 		dup2(_pipe_out[1], STDOUT_FILENO);
@@ -221,7 +221,7 @@ pid_t    CgiHandler::executeCGI()
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
-		execve(_path.c_str(), _argv, updated_env);
+		execve(_path.c_str(), _argv, _envp); //updated_env soon
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		// freeUpdatedEnv(_envp);
         perror("execve");
@@ -292,7 +292,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
 		// waitpid(-1, 0, 0); // Collect the child process ressources;
 		printf("WHEN THE GROUND IS SHAKING\n");
-		disconnectClient(fds, *client.getCgiCaller(), conf);
+		disconnectClient(fds, client, conf);
 		return true;
 		// wait;
 	}
@@ -306,7 +306,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
-		disconnectClient(fds, *client.getCgiCaller(), conf);
+		disconnectClient(fds, client, conf);
 		return true;
 	}
 	printf("exiting iscgistuff\n");
