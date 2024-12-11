@@ -134,7 +134,7 @@ static bool is_executable(const char *path)
     return true;
 }
 
-
+//Returns an updated env equal to envp + parameters of the cgi request
 char **CgiHandler::updateEnv()
 {
 	//We will want to malloc a new envp array, 
@@ -171,18 +171,18 @@ char **CgiHandler::updateEnv()
 	return (updated_envp);
 }
 
-void CgiHandler::freeUpdatedEnv(char **tofree)
-{
-	size_t env_count = 0;
-	size_t new_max_count = 0;
-	while(_envp[env_count] != NULL) env_count++;
-	while(tofree[new_max_count] != NULL) new_max_count++;
+// void CgiHandler::freeUpdatedEnv(char **tofree)
+// {
+// 	size_t env_count = 0;
+// 	size_t new_max_count = 0;
+// 	while(_envp[env_count] != NULL) env_count++;
+// 	while(tofree[new_max_count] != NULL) new_max_count++;
 	
-	for(int i = env_count; i < new_max_count; i++) 
-		free(tofree[i]);
-	free(tofree);
-	return ;
-}
+// 	for(size_t i = env_count; i < new_max_count; i++) 
+// 		free(tofree[i]);
+// 	free(tofree);
+// 	return ;
+// }
 
 pid_t    CgiHandler::executeCGI()
 {
@@ -223,7 +223,7 @@ pid_t    CgiHandler::executeCGI()
         std::cerr << "about to execve" << _path.c_str() << std::endl;
 		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
-		freeUpdatedEnv();
+		// freeUpdatedEnv(_envp);
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
