@@ -1,4 +1,0 @@
-name : testfile
-email : leny%40gmail.com
-content : je+suis+le+test
---------------------------------------

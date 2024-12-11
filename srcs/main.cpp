@@ -53,16 +53,16 @@ int main(int argc, char **argv, char **envp)
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
 				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
-				client.extractBody();													// debug Body only
-				std::cout << GREEN << client.getBody() << RESET << std::endl;			// debug Body only
+				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// client.extractBody();													// debug Body only
+				// std::cout << GREEN << client.getBody() << RESET << std::endl;			// debug Body only
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
 				
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client, client.getRequest()) == false)
+					if (preparePostParse(client) == false)
 						break ;
 				}
 				else if (type_request == "GET")

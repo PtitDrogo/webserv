@@ -315,14 +315,14 @@ void parse_buffer_post(const Client& client, std::string buffer)
 		}
 	}
 	else
-		std::cout << "Unable to open file" << std::endl;
+	std::cout << "Unable to open file" << std::endl;
 	filename.clear();
 	name.clear();
 	email.clear();
 	message.clear();
 }
 
-bool preparePostParse( Client& client, std::string buffer)
+bool preparePostParse( Client& client)
 {
 	const Server& 	server = client.getServer();
 
@@ -338,21 +338,47 @@ bool preparePostParse( Client& client, std::string buffer)
 		return false;
 	}
 
-	// Extraire le corps après la ligne vide qui suit les en-têtes
-	std::string body = buffer.substr(buffer.find("\r\n\r\n") + 4);
-
-	// Extraire la boundary
-	std::string boundary = body.substr(0, body.find("\r\n"));
-	std::string numericBoundary;
-    for (size_t i = 0; i < boundary.size(); ++i) {
-        if (std::isdigit(boundary[i])) {
-            numericBoundary += boundary[i];
-        }
-    }
-    boundary = numericBoundary;
-
 
 	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
+
+
+
+		// foutre tout sa dans une fonction de la class client/////////////////////////////////
+		
+		size_t boundaryPos = client.getRequest().find("boundary=");
+		if (boundaryPos != std::string::npos) {
+			// extraire tout ce qui vient apres "boundary="
+			std::string boundary = client.getRequest().substr(boundaryPos + 9); // 9 = longueur de "boundary="
+			
+			// trouver la premiere position ou les tirets s'arretent
+			std::size_t nonDashPos = boundary.find_first_not_of('-');
+			if (nonDashPos != std::string::npos) {
+				// extraire tout ce qui vient apres les tirets
+				std::string result = boundary.substr(nonDashPos, boundary.find("\r\n", nonDashPos) - nonDashPos);
+				client.setBoundary(result);
+			}
+			else {
+				std::cout << "Aucun contenu après les tirets." << std::endl;
+				//generate a html page error !!!
+				// return ;
+			}
+		}
+		else {
+			std::cout << "La clé 'boundary=' est introuvable." << std::endl;
+			//generate a html page error !!!
+			// return ;
+		}
+
+		//vas chercher de lq dernier boundary de la requete
+		size_t lastBoundaryPos = client.getRequest().find("--" + client.getBoundary() + "--");
+		lastBoundaryPos += 6 + client.getBoundary().size(); // 6 = "--" + "--" + "\r\n"
+		// lastBoundaryPos -= client.getHeadEnd();
+
+		std::cout << "lastBoundaryPos = " << lastBoundaryPos << std::endl;
+		client.stebodyEnd(lastBoundaryPos);
+
+		////////////////////////////////////////////////////////////////////////////////////////
+
 
 		std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
 
@@ -362,7 +388,7 @@ bool preparePostParse( Client& client, std::string buffer)
 		
 		client.extractContentType();
 
-		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl;
+		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl; // debug extra content type
 
 		// redirections vers la page home
 		std::string path = "." + server.getRoot() + server.getIndex();
@@ -371,6 +397,6 @@ bool preparePostParse( Client& client, std::string buffer)
 		send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 	}
 	else
-		parse_buffer_post(client, body);
+		parse_buffer_post(client, client.getBody()); // MODIF DE LLITOT j'envoie _body avec la classe client je ne sais pas si c'est bon ?? au lieu de body tout cours qui etqit calculer dans la fonction parse_buffer_post
 	return true;
 }

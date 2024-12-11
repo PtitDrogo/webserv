@@ -44,6 +44,8 @@ public:
 	void	setTotalRead(size_t totalRead);
 	void	setHeadEnd(size_t heanEnd);
 	void	setBody(std::string body);
+	void	setBoundary(std::string boundary);
+	void	stebodyEnd(size_t bodyEnd);
 	void setCgiPipeFD(int fd);
 	void setCgiCaller(Client *client_caller);
 
@@ -58,6 +60,7 @@ public:
 	size_t		getContentLength() const;
 	size_t		getTotalRead() const;
 	size_t		getHeadEnd() const;
+	size_t		getBodyEnd() const;
 	Client* getCgiCaller() const;
 
 
@@ -75,6 +78,7 @@ private:
 	size_t				_contentLength;
 	size_t				_totalRead;
 	size_t				_headEnd;
+	size_t				_bodyEnd;
 	// bool			  _isCGIPipe;
 	//CGI stuff
 	int				  _cgi_fd; //where i can read the output of the cgi, later there should be more of these ??!
