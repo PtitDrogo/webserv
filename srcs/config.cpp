@@ -53,10 +53,7 @@ size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 
 void	Config::addClient(int client_fd, Server &serv)
 {
-	// On fait comme ca parce que la methode simple essaye de creer un client sans serveur et ca marche pas;
-	std::cout << "Hello start of insert" << std::endl;
 	_clients.insert(std::map<int, Client>::value_type(client_fd, Client(client_fd, serv)));
-	std::cout << "Hello end of insert" << std::endl;
 }
 
 Server &Config::getServerOfClient(int client_fd)
@@ -71,8 +68,6 @@ Server &Config::getServerOfClient(int client_fd)
 Client &Config::getClientObject(int client_fd)
 {
 	std::map<int, Client>::iterator it = _clients.find(client_fd);
-    std::cout << "size of map is : " << _clients.size() << std::endl;
-	std::cout << "looking for client fd" << client_fd << std::endl;
 	if (it != _clients.end()) {
         return it->second;
     }
@@ -169,7 +164,7 @@ void printVectorServer(std::vector<Server> serv)
 
 void parse_listen(std::string line, Server &serv)
 {
-	std::cout << "parse_listen" << std::endl;
+	// std::cout << "parse_listen" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("listen", pos) == pos)
 	{
@@ -183,14 +178,14 @@ void parse_listen(std::string line, Server &serv)
 			serv.setHost(port);
 			port = port.substr(port.find(':') + 1);
 		}
-		std::cout << "port------------- = " << port << std::endl;
+		// std::cout << "port------------- = " << port << std::endl;
 		serv.setPort(port);
 	}
 }
 
 void parse_server_name(std::string line, Server &serv)
 {
-	std::cout << "parse_server_name" << std::endl;	
+	// std::cout << "parse_server_name" << std::endl;	
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("server_name", pos) == pos)
 	{
@@ -201,7 +196,7 @@ void parse_server_name(std::string line, Server &serv)
 		std::string server_name = line.substr(start, end - start);
 		if (server_name.empty() )
 		{
-			std::cout << "Error: Invalid server name" << std::endl;
+			std::cout << RED << "Error: Invalid server name" << RESET << std::endl;
 			return;
 		}
 		serv.setServerName(server_name);
@@ -210,7 +205,7 @@ void parse_server_name(std::string line, Server &serv)
 
 void parse_index(std::string line, Server &serv)
 {
-	std::cout << "parse_index" << std::endl;
+	// std::cout << "parse_index" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("index", pos) == pos)
 	{
@@ -225,7 +220,7 @@ void parse_index(std::string line, Server &serv)
 
 void parse_root(std::string line, Server &serv)
 {
-	std::cout << "parse_root" << std::endl;
+	// std::cout << "parse_root" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("root", pos) == pos)
 	{
@@ -240,7 +235,7 @@ void parse_root(std::string line, Server &serv)
 
 void parse_error_page(std::string line, Server &serv)
 {
-	std::cout << "parse_error_page" << std::endl;
+	// std::cout << "parse_error_page" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("error_page", pos) == pos)
 	{
@@ -252,14 +247,13 @@ void parse_error_page(std::string line, Server &serv)
 		std::string error_file;
 		iss >> error_file;
 		serv.setErrorPage(error_code, error_file);
-		std::cout << "SETTING UP A SERVER WITH THIS ERROR PAGE" << std::endl;
-		printVector(serv.getErrorPage());
+		// printVector(serv.getErrorPage());
 	}
 }
 
 void parse_location(std::string line, Server &serv, std::ifstream &file)
 {
-	std::cout << "parse_location" << std::endl;	
+	// std::cout << "parse_location" << std::endl;	
 	size_t pos5 = line.find_first_not_of(" \t");
 	if (pos5 != std::string::npos && line.find("location", pos5) == pos5)
 	{
@@ -270,7 +264,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 		}
 		size_t end = line.find_first_of(" {", start);
 		std::string path = line.substr(start, end - start) + ' ';
-		std::cout << "path = " << path << std::endl;
+		// std::cout << "path = " << path << std::endl;
 		loc.setPath(path);
 
 		size_t braceOpenPos = line.find('{', end);
@@ -299,7 +293,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
-				std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
+				// std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
 				loc.setIndex(index);
 			}
 			size_t rootPos = subLine.find("root");
@@ -390,7 +384,7 @@ int convertToBytes(const std::string &size_str)
 
 void parse_max_body_size(const std::string &line, Server &serv)
 {
-	std::cout << "parse_max_body_size" << std::endl;
+	// std::cout << "parse_max_body_size" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	
 	if (pos != std::string::npos && line.find("max_body_size", pos) == pos)
@@ -402,13 +396,13 @@ void parse_max_body_size(const std::string &line, Server &serv)
 		std::string max_body_size_str = line.substr(start, end - start);
 		int max_body_size = convertToBytes(max_body_size_str);
 		serv.setMaxBodySize(max_body_size);
-		std::cout << "Max Body Size: " << serv.getMaxBodySize() << " bytes" << std::endl;
+		// std::cout << "Max Body Size: " << serv.getMaxBodySize() << " bytes" << std::endl;
 	}
 }
 
 void parse_auto_index(std::string line, Server &serv)
 {
-	std::cout << "parse_auto_index" << std::endl;
+	// std::cout << "parse_auto_index" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("auto_index", pos) == pos)
 	{
@@ -442,7 +436,7 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
 
-	std::cout << "createServerr" << std::endl;
+	// std::cout << "createServerr" << std::endl;
 	while(std::getline(file, line))
 	{
 		if (isCommentLine(line) == true)
@@ -490,7 +484,7 @@ void Config::printConfig()
 
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 {
-	std::cout << "check_same_server_name" << std::endl;
+	// std::cout << "check_same_server_name" << std::endl;
 	if (serv[i].getServerName() == serv[j].getServerName())
 	{
 		std::cerr << "Error: same server name" << std::endl;
@@ -501,15 +495,15 @@ bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 
 bool check_same_port(std::vector<Server> serv)
 {
-	std::cout << "check_same_port" << std::endl;
+	// std::cout << "check_same_port" << std::endl;
 	for (size_t i = 0; i < serv.size(); i++)
 	{
 		for (size_t j = i + 1; j < serv.size(); j++)
 		{
-			std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
+			// std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
 			if (serv[i].getPort() == serv[j].getPort())
 			{
-				std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
+				// std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
 				if (check_same_server_name(serv, j , i) == false)
 					return false;
 			}
@@ -526,19 +520,18 @@ bool Config::parse_config_file(std::string filename)
 		std::cerr << "Error: could not open file" << std::endl;
 		return false;
 	}
-	if (file.is_open())
-		std::cout << "File opened successfully" << std::endl;
+	// if (file.is_open())
+	// 	std::cout << "File opened successfully" << std::endl;
 	std::string line;
 	while (std::getline(file, line))
 	{
 		if (line.find("server") != std::string::npos)
 		{
-			std::cout << "CREATING SERVER" << std::endl;
 			Server serv;
 			createServerr(file, serv);
 		}
 	}
-	this->printConfig();
+	// this->printConfig();
 	if (!check_same_port(this->getServer()))
 		return false;
 	return (true);

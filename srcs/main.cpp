@@ -20,7 +20,6 @@ int main(int argc, char **argv, char **envp)
 	if (conf.parse_config_file(argv[1]) == false)
 		std::cout << "Webserv : [WARNING] conflicting server name" << std::endl;
 	size_t number_of_servers = conf.addAllServers(fds);
-	std::cout << "Did I add 3 servers, current server count : " << number_of_servers << std::endl;
 
 	while (server_running)
 	{
@@ -32,12 +31,12 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
-			std::cout << "number of servers is : " << number_of_servers << std::endl;
-			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
-			std::cout << "fds.size() is : " << fds.size() << std::endl;
+			// std::cout << "number of servers is : " << number_of_servers << std::endl;
+			// std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
+			// std::cout << "fds.size() is : " << fds.size() << std::endl;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
-				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
+				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, client, conf);
 				break;
 			}
@@ -52,8 +51,7 @@ int main(int argc, char **argv, char **envp)
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
-				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
-			std::cout << "ALLO" << std	::endl;
+				continue ;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);

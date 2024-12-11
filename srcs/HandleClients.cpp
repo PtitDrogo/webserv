@@ -11,12 +11,8 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 		{
 			int client_socket = SetupClientAddress(fds[i].fd);
 			addPollFD(client_socket, fds);
-			printf("DEBUG: GONNA Add client to the list\n");
 			conf.addClient(client_socket, conf.getServer()[i]);
-			//Ici je le rajoute a la liste des fd;
-			printf("DEBUG: Added client to the list\n");
-			//Technically cleaner with "continue ;" here, but it doesnt work somehow
-			// if we do that and its not necessary
+			//continue ; maybe ? Idk
 		}
 	}
 }
