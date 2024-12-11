@@ -69,7 +69,7 @@ bool isCgiRequest(const HttpRequest &req)
     
     for (i = 0; i < path.size(); i++)
     {
-        std::cout << path[i] << std::endl;
+        // std::cout << path[i] << std::endl;
         if (isCgiDelim(path[i]) == true)
             break ;
     }

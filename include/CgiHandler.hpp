@@ -20,7 +20,7 @@ private:
     char **  updateEnv();
     pid_t    executeCGI();
     void	 processCgiPath();
-    // void     freeUpdatedEnv(char * const *tofree);
+    void     freeUpdatedEnv(char **tofree);
 
 public:
     ~CgiHandler();

@@ -7,9 +7,10 @@
 //GET /config/cgi-bin/sleep20.py HTTP/1.1
 //GET /config/cgi-bin/time.py HTTP/1.1
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
-//GET /config/cgi-bin/helloworld.py?username=theo&date=birthday HTTP/1.1
+//GET /config/cgi-bin/helloworld.py?name=theo&age=29 HTTP/1.1
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
+//GET /config/cgi-bin/basicparam.py?name=theo&age=29 HTTP/1.1
 
 /*
 Step to do a CGI:
@@ -74,11 +75,7 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 void	CgiHandler::processCgiPath()
 {
 	std::string tmp_path;
-	std::string current_key;
-	std::string current_value;
 	size_t start;
-	size_t end;
-	size_t sep_pos;
 
 	start = _path.find('?');
 	if (start == std::string::npos)
@@ -86,28 +83,30 @@ void	CgiHandler::processCgiPath()
 	tmp_path = _path.substr(start + 1);
 	if (tmp_path.empty())
 		return ; //to be safe
-	
 	_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+	
+
 	while (tmp_path.empty() == false)
 	{
-		end = tmp_path.find('&');
+		size_t end = tmp_path.find('&');
 		if (end == std::string::npos)	
-			end = tmp_path.size(); //well do -1 later;
-		
-		tmp_path = tmp_path.substr(0, end); //Get a string like name=theo&
-		sep_pos = tmp_path.find('='); //Get position of =
+			end = tmp_path.size();
+		std::string current_param = tmp_path.substr(0, end); //Get a string like name=theo&
+		if (current_param.empty())
+			break ;	
+		size_t sep_pos = current_param.find('='); //Get position of =
 		if (sep_pos == std::string::npos) //if no = we dip
-			break ;
-		current_key = tmp_path.substr(0, sep_pos); //get "name"
-		current_value = tmp_path.substr(sep_pos + 1, end); // get "theo", skipping the =, not including the &
+			break ; //maybe return that the shit is invalid idk;
+		std::string current_key = current_param.substr(0, sep_pos); //get "name"
+		std::string current_value = current_param.substr(sep_pos + 1, end); // get "theo", skipping the =, not including the &
 		_params[current_key] = current_value;
-		//Move start;
-		// std::cout << RED << "tmp path is : " << tmp_path << "its size is : " << tmp_path.size() << RESET << std::endl;
-		tmp_path = _path.substr(end + 1);
+		std::cout << tmp_path << " : thats the current tmp path" << std::endl;
+		if (tmp_path.size() <= end)
+			break;
+		tmp_path = tmp_path.substr(end + 1);
 	}
 	return ;
 }
-// theo=loulou& -> 11
 
 static bool file_exists(const char *path)
 {
@@ -144,7 +143,7 @@ char **CgiHandler::updateEnv()
 
     while(_envp[env_count] != NULL) env_count++;
     
-    char** updated_envp = (char**)calloc((env_count + param_count), sizeof(char*));
+    char** updated_envp = (char**)calloc((env_count + param_count) + 1, sizeof(char*));
 	if (updated_envp == NULL)
 		return NULL;
     for(i = 0; i < env_count; i++) 
@@ -158,6 +157,7 @@ char **CgiHandler::updateEnv()
 
 		new_var = it->first + "=" + it->second;
 		updated_envp[i] = strdup(new_var.c_str());
+		std::cout << "Added : " << updated_envp[i] << ", to the envp " << std::endl;
 		if (updated_envp[i] == NULL)
 		{
 			for(i = 0; i < env_count + param_count; i++) 
@@ -171,18 +171,18 @@ char **CgiHandler::updateEnv()
 	return (updated_envp);
 }
 
-// void CgiHandler::freeUpdatedEnv(char **tofree)
-// {
-// 	size_t env_count = 0;
-// 	size_t new_max_count = 0;
-// 	while(_envp[env_count] != NULL) env_count++;
-// 	while(tofree[new_max_count] != NULL) new_max_count++;
+void CgiHandler::freeUpdatedEnv(char **tofree)
+{
+	size_t env_count = 0;
+	size_t new_max_count = 0;
+	while(_envp[env_count] != NULL) env_count++;
+	while(tofree[new_max_count] != NULL) new_max_count++;
 	
-// 	for(size_t i = env_count; i < new_max_count; i++) 
-// 		free(tofree[i]);
-// 	free(tofree);
-// 	return ;
-// }
+	for(size_t i = env_count; i < new_max_count; i++) 
+		free(tofree[i]);
+	free(tofree);
+	return ;
+}
 
 pid_t    CgiHandler::executeCGI()
 {
@@ -209,29 +209,22 @@ pid_t    CgiHandler::executeCGI()
     }
     else if (pid == 0)
     {
-        // char **updated_env = updateEnv();
-		int null_fd = open("/dev/null", O_WRONLY);
-		// dup2(_pipe_in[0], STDIN_FILENO);
+        char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
-		dup2(null_fd, STDERR_FILENO);
-
-		// close(_pipe_in[0]);
-		// close(_pipe_in[1]);
-		close(null_fd);
+		// int null_fd = open("/dev/null", O_WRONLY);
+		// dup2(null_fd, STDERR_FILENO);
+		// close(null_fd);
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
-		execve(_path.c_str(), _argv, _envp); //updated_env soon
+		execve(_path.c_str(), _argv, updated_env); //updated_env soon
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
-		// freeUpdatedEnv(_envp);
+		freeUpdatedEnv(updated_env);
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
     else
     {
-        // close(_pipe_in[0]);
-		// close(_pipe_in[1]);
-		// close(_pipe_out[0]);
 		close(_pipe_out[1]);
     }
     return (pid);
@@ -284,10 +277,8 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 
 		//Test close pipe;
 		
-		std::string cgi_output = readFromPipeFd(fds[i].fd);
-		printf("IF I LOSE IT ALL\n"); 		
+		std::string cgi_output = readFromPipeFd(fds[i].fd);		
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-		printf("LOSE IT ALL\n");
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
 		// waitpid(-1, 0, 0); // Collect the child process ressources;
@@ -309,7 +300,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		disconnectClient(fds, client, conf);
 		return true;
 	}
-	printf("exiting iscgistuff\n");
+	printf("exiting iscgistuff\n");	
 	return false;
 }
 
