@@ -67,26 +67,29 @@ int main(int argc, char **argv, char **envp)
 
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
-				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
+				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
-				
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client, client.getRequest(), cook) == false)
+					if (preparePostParse(client, cook) == false)
 						break ;
 				}
-				else if (type_request == "GET")
-					parse_buffer_get(client.getRequest(), client, req);
+				else if (type_request == "GET") 
+				{
+					if (prepareGetParse(client, req) == false) 
+						break ;
+				}
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
 				else if (type_request == "CGI")
 					cgiProtocol(envp, req, client, conf, fds);
 				else
 					generate_html_page_error(client, "404");
-				std::cout << req << std::endl;
+				client.reset();
+				// std::cout << req << std::endl;
 				//add code to clear the buffer request here;
 			}
 		}

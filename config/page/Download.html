@@ -18,10 +18,18 @@
 
 		/* Style du titre principal */
 		h1 {
-			color: rgb(243, 0, 0);
+			color: #0d6efd;
 			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
 			font-size: 3vw;
 			margin-top: 10vh;
+		}
+
+		/* Style pour le titre de sous-section */
+		h3 {
+			color: aliceblue;
+			font-size: 2vw;
+			margin-top: 5vh;
+			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 		}
 
 		/* Style du bouton de téléchargement */
@@ -30,23 +38,37 @@
 			padding: 15px 30px;
 			border: none;
 			border-radius: 5px;
-			background-color: rgb(243, 0, 0);
+			background-color: #0d6efd;
 			color: white;
 			cursor: pointer;
-			text-decoration: none;
 			transition: background-color 0.3s ease;
+			text-transform: uppercase;
 		}
 
 		/* Effet de survol du bouton */
 		.download-button:hover {
-			background-color: #c10000;
+			background-color: #0a58ca;
+		}
+
+		/* Style de l'input */
+		#fileName {
+			padding: 10px;
+			font-size: 1.2vw;
+			margin-top: 2vh;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			width: 50%;
 		}
 	</style>
 </head>
 <body>
-	<h1>Download</h1>
-	<a href="../../assets/images/img2.gif" target="_blank" download="img2.gif">
-		<button class="download-button" type="button">Download a file</button>
-	</a>
+	<h1>DOWNLOAD</h1>
+	<div>
+		<h3>Télécharger une ressource</h3>
+		<form action="/config/base_donnees/" method="GET">
+			<input type="text" name="fileName" placeholder="Entrez le nom du fichier à télécharger">
+			<button type="submit" class="download-button">Télécharger la ressource</button>
+		</form>
+	</div>
 </body>
 </html>
