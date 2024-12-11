@@ -61,6 +61,7 @@ bool isCgiRequest(const HttpRequest &req);
 void	parse_buffer_get(Client& client, std::string buffer, HttpRequest &req);
 void	parse_buffer_post(const Client& client, std::string buffer);
 bool    preparePostParse(Client& client);
+bool    prepareGetParse(Client& client, HttpRequest &req);
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);

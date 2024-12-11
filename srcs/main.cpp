@@ -54,19 +54,19 @@ int main(int argc, char **argv, char **envp)
 			if (client.getTotalRead() >= client.getContentLength()) {
 				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
 				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
-				// client.extractBody();													// debug Body only
-				// std::cout << GREEN << client.getBody() << RESET << std::endl;			// debug Body only
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
-				
 				if (type_request == "POST")
 				{
 					if (preparePostParse(client) == false)
 						break ;
 				}
-				else if (type_request == "GET")
-					parse_buffer_get(client, client.getRequest(),req);
+				else if (type_request == "GET") 
+				{
+					if (prepareGetParse(client, req) == false)  //LLITOT j'ai passer la fonction dans prepareparse comme pour post et j'ai enlever client.getRequest() car on a l'info dans client
+						break ;
+				}
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
 				else if (type_request == "CGI")
