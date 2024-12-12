@@ -22,7 +22,6 @@ std::string intToString(int value) {
     return oss.str();
 }
 
-
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;

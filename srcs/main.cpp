@@ -84,7 +84,7 @@ int main(int argc, char **argv, char **envp)
 				}
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
-				else if (type_request == "CGI")
+				else if (type_request == "CGI-GET" || type_request == "CGI-POST")
 					cgiProtocol(envp, req, client, conf, fds);
 				else
 					generate_html_page_error(client, "404");

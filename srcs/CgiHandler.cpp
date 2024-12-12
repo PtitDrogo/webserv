@@ -12,7 +12,9 @@
 //GET /hello-world.py would be a cgi request;
 //GET /config/cgi-bin/basicparam.py?name=theo&age=29 HTTP/1.1
 
-//GET ./config/cgi-bin/helloworld.py HTTP/1.1
+//GET /config/cgi-bin/helloworld.py HTTP/1.1
+
+//GET /config/cgi-bin/printquerystring.py?name=theo&age=29 HTTP/1.1
 
 /*
 Step to do a CGI:
@@ -28,6 +30,7 @@ Step to do a CGI:
 
 static bool is_executable(const char *path);
 static bool file_exists(const char *path);
+static std::string getActualBody(std::string& fullbody) ;
 
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
@@ -45,7 +48,7 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 {
 	_path = "." + request.getPath(); //Sometime Ill need a dot, sometime not, exciting !
 	// std::cout << "Path is : " << _path << std::endl;
-	processCgiPath();
+	processCgiPath(request);
 	if (file_exists(_path.c_str()) == false)
 	{
 		generate_html_page_error(_client, "404");
@@ -56,7 +59,7 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 		generate_html_page_error(_client, "403");
 		return false;
 	}
-    pid_t cgi_pid = executeCGI();
+    pid_t cgi_pid = executeCGI(request);
 	// std::cout << std::endl << std::endl << "CGI PID IS :" << cgi_pid << std::endl << std::endl;
 	_pid = cgi_pid;
     if (cgi_pid == -1)
@@ -66,40 +69,64 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 }
 
 //This gets the real path of the cgi and extract all parameters into a map;
-void	CgiHandler::processCgiPath()
+void	CgiHandler::processCgiPath(const HttpRequest &request)
 {
 	std::string tmp_path;
 	size_t start;
 
-	start = _path.find('?');
-	if (start == std::string::npos)
-		return ; //This means theres no parameters, we fuck off;
-	tmp_path = _path.substr(start + 1);
-	if (tmp_path.empty())
-		return ; //to be safe
-	_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
-	
-
-	while (tmp_path.empty() == false)
+	if (request.getMethod() == "CGI-GET")
 	{
-		size_t end = tmp_path.find('&');
-		if (end == std::string::npos)	
-			end = tmp_path.size();
-		std::string current_param = tmp_path.substr(0, end); //Get a string like name=theo&
-		if (current_param.empty())
-			break ;	
-		size_t sep_pos = current_param.find('='); //Get position of =
-		if (sep_pos == std::string::npos) //if no = we dip
-			break ; //maybe return that the shit is invalid idk;
-		std::string current_key = current_param.substr(0, sep_pos); //get "name"
-		std::string current_value = current_param.substr(sep_pos + 1, end); // get "theo", skipping the =, not including the &
-		_params[current_key] = current_value;
-		if (tmp_path.size() <= end)
-			break;
-		tmp_path = tmp_path.substr(end + 1);
+		start = _path.find('?');
+		if (start == std::string::npos)
+			return ; //This means theres no parameters, we fuck off;
+		tmp_path = _path.substr(start + 1);
+		if (tmp_path.empty())
+			return ; //to be safe
+		_params["QUERY_STRING"] = tmp_path;
+		_params["REQUEST_METHOD"] = "GET";
+		_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+	}
+	else if (request.getMethod() == "CGI-POST")
+	{	
+		std::string full_body = request.getBody();
+		_body_post = getActualBody(full_body);
+		_params["REQUEST_METHOD"] = "POST";
+		_params["CONTENT_LENGTH"] = intToString(_body_post.size());
+		// std::cout << GREEN << "ACTUAL VARIABLE = " << getActualBody(full_body) << std::endl;
+		// std::cout << GREEN << "BODY LENGTH = " << _client.getContentLength() << std::endl;
+		if (tmp_path.empty())
+			return ;
+		
+		start = 0;
 	}
 	return ;
 }
+
+static std::string getActualBody(std::string& fullbody) 
+{
+    std::string line;
+    std::istringstream stream(fullbody);
+    std::string body;
+    bool found_empty_line = false;
+
+    while (std::getline(stream, line)) 
+	{
+        if (!line.empty() && line[line.size() - 1] == '\r') 
+            line = line.substr(0, line.size() - 1);
+
+        if (line.empty() && !found_empty_line)
+		{
+            found_empty_line = true;
+            continue;
+		}
+        if (found_empty_line)
+            body += line + "\n";
+    }
+    if (!body.empty() && body[body.size() - 1] == '\n') 
+        body = body.substr(0, body.size() - 1);
+    return body;
+}
+
 
 static bool file_exists(const char *path)
 {
@@ -176,17 +203,19 @@ void CgiHandler::freeUpdatedEnv(char **tofree)
 	return ;
 }
 
-pid_t    CgiHandler::executeCGI()
+pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 {
-    // if (pipe(_pipe_in) < 0)
-	// {
-    //     std::cerr << "Pipe failed, error 500 !" << std::endl;
-	// 	return -1;
-	// }
+    if (pipe(_pipe_in) < 0)
+	{
+        std::cerr << "Pipe failed, error 500 !" << std::endl;
+		return -1;
+	}
 	
 	if (pipe(_pipe_out) < 0)
 	{
-        std::cerr << "Pipe failed, error 500 !" << std::endl;
+        std::cerr << "Pipe failed, sending back error 500 !" << std::endl;
+		close (_pipe_in[0]);
+		close (_pipe_in[1]);
 		return -1;
 	}
 
@@ -194,28 +223,49 @@ pid_t    CgiHandler::executeCGI()
     if (pid < 0)
     {
         std::cout << "Fork failed" << std::endl; //oh no !
-        return pid;
+        close (_pipe_in[0]);
+		close (_pipe_in[1]);
+		close (_pipe_out[0]);
+		close (_pipe_out[1]);
+		return pid;
         //this will be an error 500 !
     }
     else if (pid == 0)
     {
         char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
+		dup2(_pipe_in[0], STDIN_FILENO);
 		int null_fd = open("/dev/null", O_WRONLY);
 		dup2(null_fd, STDERR_FILENO);
 		close(null_fd);
+		if (request.getMethod() == "CGI-POST")
+		{
+			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
+			{
+				freeUpdatedEnv(updated_env);
+				close (_pipe_in[0]);
+				close (_pipe_in[1]);
+				close (_pipe_out[0]);
+				close (_pipe_out[1]);
+				std::exit(EXIT_FAILURE);
+			}
+		}	
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
+		close(_pipe_in[0]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
-		execve(_path.c_str(), _argv, updated_env); //updated_env soon
+		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env);
+		close (_pipe_in[1]);
         perror("execve");
         std::exit(EXIT_FAILURE);
     }
     else
     {
-		close(_pipe_out[1]);
+		close (_pipe_in[0]);
+		close (_pipe_in[1]);
+		close (_pipe_out[1]);
     }
     return (pid);
 }
@@ -260,10 +310,11 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 	{
 		std::cout << GREEN << "Pipe POLLIN triggered" << RESET << std::endl;
 
-		std::string cgi_output = readFromPipeFd(fds[i].fd);		
+		std::string cgi_output = readFromPipeFd(fds[i].fd);
+		//Check process status here, and if its bad, send a error 500.	
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
-			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+			std::cerr << "Couldnt send data of CGI to client, error 500" << std::endl;
 		disconnectClient(fds, client, conf);
 		return true;
 	}

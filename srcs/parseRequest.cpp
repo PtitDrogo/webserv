@@ -28,10 +28,11 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
     }
     req.setBody(body);
     //Added the check for cgi here
-    if (isCgiRequest(req) == true)
-    {    
-        req.setMethod("CGI");
-        return ("CGI");
+    if (isCgiRequest(req) == true && type != "DELETE")
+    {
+        std::string cgi_type = "CGI-" + type;
+        req.setMethod(cgi_type);
+        return (cgi_type);
     }
     return (type);
 }
