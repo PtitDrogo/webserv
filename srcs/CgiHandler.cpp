@@ -30,7 +30,8 @@ Step to do a CGI:
 
 static bool is_executable(const char *path);
 static bool file_exists(const char *path);
-static std::string getActualBody(std::string& fullbody) ;
+static std::string getActualBody(std::string& fullbody);
+static std::string get_directory_path(const std::string& full_path); 
 
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
@@ -71,20 +72,18 @@ bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
 //This gets the real path of the cgi and extract all parameters into a map;
 void	CgiHandler::processCgiPath(const HttpRequest &request)
 {
-	std::string tmp_path;
-	size_t start;
-
 	if (request.getMethod() == "CGI-GET")
 	{
-		start = _path.find('?');
+		size_t start = _path.find('?');
 		if (start == std::string::npos)
 			return ; //This means theres no parameters, we fuck off;
-		tmp_path = _path.substr(start + 1);
+		std::string tmp_path = _path.substr(start + 1);
 		if (tmp_path.empty())
 			return ; //to be safe
 		_params["QUERY_STRING"] = tmp_path;
 		_params["REQUEST_METHOD"] = "GET";
 		_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+		_params["PATH_INFO"] = _path;
 	}
 	else if (request.getMethod() == "CGI-POST")
 	{	
@@ -92,16 +91,23 @@ void	CgiHandler::processCgiPath(const HttpRequest &request)
 		_body_post = getActualBody(full_body);
 		_params["REQUEST_METHOD"] = "POST";
 		_params["CONTENT_LENGTH"] = intToString(_body_post.size());
+		_params["PATH_INFO"] = _path;
 		// std::cout << GREEN << "ACTUAL VARIABLE = " << getActualBody(full_body) << std::endl;
 		// std::cout << GREEN << "BODY LENGTH = " << _client.getContentLength() << std::endl;
-		if (tmp_path.empty())
-			return ;
-		
-		start = 0;
 	}
 	return ;
 }
 
+// for ./config/cgi-bin/hello.py, this will get ./config/cgi-bin/, so we can them move into that directory
+static std::string get_directory_path(const std::string& full_path) 
+{
+    size_t last_slash = full_path.find_last_of('/');
+    if (last_slash == std::string::npos) 
+        return ".";  
+    return full_path.substr(0, last_slash);
+}
+
+//As it stands in the code, "body" is just the entire request, so this gets what i actually care about
 static std::string getActualBody(std::string& fullbody) 
 {
     std::string line;
@@ -254,6 +260,15 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		close(_pipe_out[1]);
 		close(_pipe_in[0]);
         std::cerr << "about to execve" << _path.c_str() << std::endl;
+		std::string script_dir = get_directory_path(_path);
+    
+		if (chdir(script_dir.c_str()) == -1) 
+		{
+			freeUpdatedEnv(updated_env);
+			close (_pipe_in[1]);
+			perror("chdir");
+			std::exit(EXIT_FAILURE);
+		}
 		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env);
