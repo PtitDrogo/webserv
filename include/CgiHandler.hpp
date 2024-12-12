@@ -34,6 +34,7 @@ public:
     //getters
     int     *getPipeOut();
     int     *getPipeIn();
+    pid_t   getPID();
 };
 
 #endif

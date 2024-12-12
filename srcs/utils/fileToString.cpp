@@ -27,11 +27,13 @@ std::string intToString(int value) {
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;
-    char buffer[4096];  // Buffer for reading
+    char buffer[4096];  //Buffer for reading -- Idee de genie de Lchapard, un buffer de 65 000;
     ssize_t bytesRead;
+
 
     while (true) 
 	{
+        bzero(&buffer, sizeof(buffer));
         bytesRead = read(pipefd, buffer, sizeof(buffer));
         if (bytesRead < 0) 
 		{
@@ -40,8 +42,14 @@ std::string readFromPipeFd(int pipefd)
         }
         if (bytesRead == 0)
             break;
+        // std::cout << "result is : |" << result << "|" << std::endl;
         result.append(buffer, bytesRead);
+        // std::cout << "AFTER result is : |" << result << "|" << std::endl;
+        // printf("Je suis la\n");
+        // break ; //Plus rien a foutre
     }
 
-    return result;
+    // std::cerr << "je suis sorti" << std::endl;
+    // printf("Je suis sorti\n");
+    return result;   
 }

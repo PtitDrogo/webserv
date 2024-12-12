@@ -41,7 +41,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"Content-Type: " + contentType + "\r\n"
 			"Content-Length: " + to_string(content.size()) + "\r\n"
 			"Connection: close\r\n"
-			"\r\n" + content);
+			"\r\n" + content); //IT REALLY SHOULD BE CLOSE OR KEEP ALIVE DEPENDING ON CONTEXT;
 }
 
 void generate_default_error_page(std::string error_code, int client_socket)
@@ -67,11 +67,8 @@ void generate_html_page_error(const Client& client, std::string error_code)
     std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
     const Server& server = client.getServer();
 
-    // On récupère la map de l'erreur pour l'utiliser ensuite
     std::map<std::string, std::string> errorPageMap = server.getErrorPage();
-    //conf.getServer()[server_index].getRoot()
 
-    // Recherche de l'erreur dans la map
     std::map<std::string, std::string>::iterator it = errorPageMap.find(error_code);
     std::string path;
     if (it != errorPageMap.end())
@@ -82,12 +79,12 @@ void generate_html_page_error(const Client& client, std::string error_code)
     {
         std::cerr << "Error page for code " << error_code << " not found." << std::endl;
         generate_default_error_page(error_code, client.getSocket());
+        return;
     }
-
     std::string file_content = readFile(path);
+    std::string response = httpHeaderResponse(error_code, "text/html", file_content);
 
-    std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
-
-    // Envoi de la réponse
-    send(client.getSocket(), reponse.c_str(), reponse.size(), 0); //TODO CHECK ALL SEND
+    send(client.getSocket(), response.c_str(), response.size(), 0); //TODO CHECK ALL SEND
 }
+
+

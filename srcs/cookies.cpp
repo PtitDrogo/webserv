@@ -47,12 +47,15 @@ void Cookies::setIsConnect(bool isConnect)
 
 void Cookies::deleteCookie(const std::string &name)
 {
-	std::map<std::string, std::string>::iterator it = _cookies.find(name);  // Spécifie le type de l'itérateur
+	std::map<std::string, std::string>::iterator it = _cookies.find(name);
 
-	if (it != _cookies.end()) {  // Vérifie si l'itérateur n'est pas à la fin
-		_cookies.erase(it);      // Supprime l'élément de la map
+	if (it != _cookies.end())
+	{
+		_cookies.erase(it);
 		std::cout << "Cookie " << name << " supprimé avec succès." << std::endl;
-	} else {
+	}
+	else
+	{
 		std::cout << "Cookie " << name << " non trouvé." << std::endl;
 	}
 }

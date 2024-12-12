@@ -3,7 +3,6 @@
 
 bool server_running = true; //we can hide this variable in a class statically somewhere
 static void handleSignal(int signum);
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
 
 int main(int argc, char **argv, char **envp)
 {
@@ -19,7 +18,9 @@ int main(int argc, char **argv, char **envp)
 		return 0;
 	}
 	if (conf.parse_config_file(argv[1]) == false)
-		std::cout << "Webserv : [WARNING] conflicting server name" << std::endl;
+	{
+		return 0;
+	}
 	size_t number_of_servers = conf.addAllServers(fds);
 	std::cout << "Did I add 3 servers, current server count : " << number_of_servers << std::endl;
 
@@ -32,24 +33,37 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			std::cout << "In client index" << i << "revents is : " << fds[i].revents << std::endl;
+			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
+			std::cout << "number of servers is : " << number_of_servers << std::endl;
+			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
 			std::cout << "fds.size() is : " << fds.size() << std::endl;
-			if (fds[i].revents & POLLRDHUP)
+			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
-				disconnectClient(fds, i, conf);
+				disconnectClient(fds, client, conf);
 				break;
 			}
-			Client &client = conf.getClientObject(fds[i].fd);
-			// isNOTCgiStuff(req, client, conf, fds, i); //TFREYDIE CGI STUFF WORK IN PROGRESS
-			if (!(fds[i].revents & POLLIN) || client.getCgiCaller() != NULL) //that means its a pipe
+			if (fds[i].revents & POLLERR)
+			{
+				printf("error with this client, were killing it, disconnected client %i\n", fds[i].fd);
+				disconnectClient(fds, client, conf);
+				break;
+			}
+			if (handleTimeout(client, fds, conf, i) == true)
+				continue ;
+			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
+			if (isCgiStuff(client, conf, fds, i) == true)
+				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
+			std::cout << "ALLO" << std::endl;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
+			{	
+				disconnectClient(fds, client, conf);
 				break ;
-			
+			}
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
@@ -90,37 +104,4 @@ static void handleSignal(int signum) {
 }
 
 
-// static bool isNOTCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
-// {
-// 	printf("Caller of current client is : %p, fds[i].revents is %i\n", client.getCgiCaller(), fds[i].revents);
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
-// 	{
-// 		printf("Pipe disconnected1\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
-// 	{
-// 		printf("Pipe disconnected2\n");
-// 		//I want my client caller to send the content from the cgi pipe to its websocket;
-// 		//then we disconnect client of Pipe and all is well;
-
-// 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-// 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-// 		send(client.getSocket(), response.c_str(), response.size(), 0);
-// 		waitpid(-1, 0, 0); // Collect the child process ressources;
-// 		disconnectClient(fds, i, conf);
-// 		return false;
-// 		// wait;
-// 	}
-// 	return true;
-// }
 

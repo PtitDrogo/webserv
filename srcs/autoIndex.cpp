@@ -90,7 +90,6 @@ std::string create_page(std::string html, std::string directory)
 
 std::string generateAutoIndexPage(Config &conf, const std::string& directory, const std::vector<std::string>& files, bool islocation)
 {
-	std::cout << "directory-------------------------------------- = " << directory << std::endl;
 	std::string html;
 	html = create_page(html, directory);
 	for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
@@ -101,7 +100,7 @@ std::string generateAutoIndexPage(Config &conf, const std::string& directory, co
 
 
         (void) islocation;
-        if (conf.getIsLocation() == true)
+        if (conf.getIsLocation() == true) //kinda weird que conf soit celui qui se souvienne de ca.
         {
             std::string rootLoc = conf.getServer()[0].getLocation()[0].getRoot();
             std::cout << "relativePath: " << relativePath << std::endl;

@@ -32,7 +32,8 @@ class Cookies;
 
 # define SUCCESS 0
 # define FAILURE 1
-# define POLL_TIMEOUT 5000
+# define POLL_TIMEOUT_MILISECONDS 5000
+# define CGI_TIMEOUT_SECONDS 12
 
 
 //*********************************************************//
@@ -72,7 +73,9 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 int     safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers);
 int     handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf);
 void    addPollFD(int client_socket, std::vector<struct pollfd> &fds);
-void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
+// void    disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf);
+void    disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf);
+bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf, size_t &i);
 
 
 
@@ -89,7 +92,7 @@ void parse_buffer_delete(std::string buffer, Client& client);
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);
-
+bool    isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i);
 
 //-----------Utils-----------//
 std::string fileToString(const char *filePath);
