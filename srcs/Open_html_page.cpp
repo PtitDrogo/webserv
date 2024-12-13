@@ -16,11 +16,11 @@ std::string readFile(std::string &path)
 {
     std::cout << "DEBUG: path = " << path << std::endl;
 
-    // if (!isRegularFile(path))
-    // {
-    //     std::cerr << "Error: " << path << " is not a regular file." << std::endl;
-    //     return "";
-    // }
+    if (!isRegularFile(path))
+    {
+        std::cerr << "Error: " << path << " is not a regular file." << std::endl;
+        return "";
+    }
 
     std::ifstream file(path.c_str(), std::ios::binary);
     if (!file.is_open())

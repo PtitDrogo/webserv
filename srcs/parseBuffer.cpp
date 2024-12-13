@@ -329,7 +329,6 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
 	return response;
 }
 
-
 std::string handle_connexion(std::string username, std::string password, Cookies &cook)
 {
 	std::map<std::string, std::string> users;
@@ -340,7 +339,8 @@ std::string handle_connexion(std::string username, std::string password, Cookies
 	std::map<std::string, std::string> cookies = cook.getCookies();
 	if (cookies.find("session_token") != cookies.end())
 	{
-		std::cout << "Utilisateur déjà connecté" << std::endl;
+
+		std::cout << "------------------------------------Utilisateur déjà connecté" << std::endl;
 		std::string path = "./config/page/dejaConnecter.html";
 		std::string file_content = readFile(path);
 		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook);
@@ -360,6 +360,7 @@ std::string handle_connexion(std::string username, std::string password, Cookies
 			std::string session_token = "token_" + username;
 			cook.setCookies("session_token", session_token);
 
+			std::cout << "session_token = |" << session_token << "|" << std::endl;
 			std::string file_content = readFile(path);
 			response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook);
 		}
@@ -382,27 +383,32 @@ std::string handle_connexion(std::string username, std::string password, Cookies
 
 std::string handle_deconnexion(Cookies &cook)
 {
-	std::map<std::string, std::string> cookies = cook.getCookies();
-	
-	if (cookies.find("session_token") != cookies.end())
-	{
-		std::cout << "Déconnexion réussie" << std::endl;
-		std::string path = "./config/page/isDeconnected.html";
-		cook.deleteCookie("session_token");
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << "response = |" << response << "|" << std::endl;
-		return response;
-	}
-	else
-	{
-		std::string path = "./config/page/PasConnecter.html";
-		std::cout << "Aucun utilisateur connecté" << std::endl;
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << "response = |" << response << "|" << std::endl;
-		return response;
-	}
+    std::map<std::string, std::string> cookies = cook.getCookies();
+    
+    if (cookies.find("session_token") != cookies.end())
+    {
+        std::cout << "Déconnexion réussie" << std::endl;
+        
+        // Supprimer le cookie côté serveur (dans la map)
+        cook.deleteCookie("session_token");
+
+        // Créer une réponse pour informer le client de la déconnexion
+        std::string path = "./config/page/isDeconnected.html";
+        std::string file_content = readFile(path);
+        
+        // Ajouter un en-tête Set-Cookie pour supprimer le cookie côté client
+        std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
+        response += "Set-Cookie: session_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; HttpOnly; Secure\r\n";
+        return response;
+    }
+    else
+    {
+        std::string path = "./config/page/PasConnecter.html";
+        std::cout << "Aucun utilisateur connecté" << std::endl;
+        std::string file_content = readFile(path);
+        std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
+        return response;
+    }
 }
 
 
@@ -466,6 +472,7 @@ void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
 		}
 
 	}
+	// (void) cook;
 	if (password.empty() == false && username.empty() == false)
 	{
 		std::string response;
@@ -473,7 +480,7 @@ void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
 		send(client.getSocket(), response.c_str(), response.size(), 0);
 		return ;
 	}
-	if (cook.getIsConnect() == true)
+	if (cook.getIsConnect() == true || cook.getIsConnect() == false)
 	{
 		std::string response2 = handle_deconnexion(cook);
 		send(client.getSocket(), response2.c_str(), response2.size(), 0);
@@ -481,12 +488,13 @@ void parse_buffer_post(const Client& client, std::string buffer, Cookies &cook)
 	}
 	if (!filename.empty())
 	{
-		filename = "./config/base_donnees/" + filename + ".txt";
+		filename = "." + client.getServer().getRoot() + "base_donnees/" + filename + ".txt";
+		std::cout << "filename -------------------------------------------------= |" << filename << "|" << std::endl;	
 		
 		std::ifstream infile(filename.c_str());
 		if (infile.is_open())
 		{
-			path = "./config/page/error_page_exist.html";
+			path = "." + client.getServer().getRoot() + "page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
@@ -614,7 +622,7 @@ bool preparePostParse(const Client& client, std::string buffer, Cookies &cook)
 
 		// std::cout << fileContent << std::endl;
 
-		fileName = "./config/base_donnees/" + fileName;
+		fileName = "." + client.getServer().getRoot() + "base_donnees/" + fileName;
 
 		std::ofstream outFile(fileName.c_str(), std::ios::binary);
 		if (!outFile) {
