@@ -62,8 +62,8 @@ bool isCgiRequest(const HttpRequest &req);
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
 void	parse_buffer_get(Client &client, HttpRequest &req);
-void	parse_buffer_post(Client& client, Cookies &cook);
-bool    preparePostParse(Client& client, Cookies &cook);
+void	parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req);
+bool    preparePostParse(Client& client, Cookies &cook, HttpRequest &req);
 bool    prepareGetParse(Client& client, HttpRequest &req);
 
 

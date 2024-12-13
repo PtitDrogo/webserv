@@ -76,7 +76,7 @@ int main(int argc, char **argv, char **envp)
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client, cook) == false)
+					if (preparePostParse(client, cook, req) == false)
 						break ;
 				}
 				else if (type_request == "GET") 
@@ -89,7 +89,7 @@ int main(int argc, char **argv, char **envp)
 				else if (type_request == "CGI-GET" || type_request == "CGI-POST")
 					cgiProtocol(envp, req, client, conf, fds);
 				else
-					generate_html_page_error(client, "404");
+					generate_html_page_error(client, "400");
 				client.reset();
 				std::cout << req << std::endl;
 			}

@@ -53,6 +53,7 @@ public:
 	void 	setCgiCallee(Client *client_caller);
 	void 	setCgiPID(pid_t pid);
 	void	setLocation(location *location);
+	void	setToken(std::string token);
 
 	// getters
 	Server&		getServer() const;
@@ -71,6 +72,7 @@ public:
 	long long	getTimeStart() const;
 	pid_t		getCgiPID() const;
 	location	*getLocation() const;
+	std::string	getToken() const;
 
 
 private:
@@ -88,6 +90,7 @@ private:
 	size_t				_totalRead;
 	size_t				_headEnd;
 	size_t				_bodyEnd;
+	std::string			_token;
 
 	
 	//this really should be in the request class but we are not using it, so now its here;
