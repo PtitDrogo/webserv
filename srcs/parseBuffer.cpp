@@ -347,7 +347,7 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 
 
 
-std::string httpHeaderResponseForCookies(std::string code, std::string contentType, std::string content, Cookies &cook)
+std::string httpHeaderResponseForCookies(std::string code, std::string contentType, std::string content, Cookies &cook, bool isConnect)
 {
     std::string response = "HTTP/1.1 " + code + "\r\n";
     response += "Content-Type: " + contentType + "\r\n";
@@ -359,11 +359,18 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
     
     response += "Connection: close\r\n";
 
-    std::map<std::string, std::string> cookies = cook.getCookies();
-    for (std::map<std::string, std::string>::iterator it = cookies.begin(); it != cookies.end(); ++it)
-    {
-        response += "Set-Cookie: " + it->first + "=" + it->second + "; Path=/; HttpOnly; Secure\r\n";
-    }
+	if (isConnect == false)
+	{	
+		response += "Set-Cookie: session_token=; sessionID=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly; Secure\r\n";
+	}
+	else
+	{
+		std::map<std::string, std::string> cookies = cook.getCookies();
+		for (std::map<std::string, std::string>::iterator it = cookies.begin(); it != cookies.end(); ++it) //why are we for looping ?! Its ONE cookie !
+		{
+			response += "Set-Cookie: " + it->first + "=" + it->second + "; Path=/; HttpOnly; Secure\r\n";
+		}
+	}
 
     response += "\r\n" + content;
 
@@ -390,7 +397,6 @@ std::string handle_connexion(std::string username, std::string password, Cookies
     std::map<std::string, std::string> users;
     users[username] = password;
 	bool isConnect = false;
-
     // Vérifie si le cookie "session_token" existe, ce qui signifie que l'utilisateur est déjà connecté
     std::map<std::string, std::string> cookies = cook.getCookies();
     if (cookies.find("session_token") != cookies.end())
@@ -399,7 +405,7 @@ std::string handle_connexion(std::string username, std::string password, Cookies
         // Répond avec un message indiquant que l'utilisateur est déjà connecté
 		std::string path = "./config/page/dejaConnecter.html";
 		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook);
+		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook, isConnect);
 		return response;
     }
 
@@ -418,7 +424,7 @@ std::string handle_connexion(std::string username, std::string password, Cookies
             cook.setCookies("session_token", session_token);  // Set the session token cookie
 
             std::string file_content = readFile(path);
-            response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook);
+            response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook, isConnect);
         }
         else
         {
@@ -450,7 +456,7 @@ std::string handle_deconnexion(Cookies &cook)
 
 		// Redirige vers la page d'accueil ou affiche un message de déconnexion
 		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
+		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, cook, false);
 		std::cout << "response = |" << response << "|" << std::endl;
 		return response;
 	}

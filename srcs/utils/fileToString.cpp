@@ -22,11 +22,10 @@ std::string intToString(int value) {
     return oss.str();
 }
 
-
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;
-    char buffer[4096];  //Buffer for reading -- Idee de genie de Lchapard, un buffer de 65 000;
+    char buffer[65535];
     ssize_t bytesRead;
 
 
@@ -44,7 +43,6 @@ std::string readFromPipeFd(int pipefd)
         // std::cout << "result is : |" << result << "|" << std::endl;
         result.append(buffer, bytesRead);
         // std::cout << "AFTER result is : |" << result << "|" << std::endl;
-        // printf("Je suis la\n");
         // break ; //Plus rien a foutre
     }
 
