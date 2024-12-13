@@ -3,11 +3,6 @@
 
 #include "Webserv.hpp"
 
-# define PATH_CGI_OUT "./cgi_tmp/webserv_cgi_stdout"
-# define PATH_CGI_ERR "./cgi_tmp/webserv_cgi_stderr"
-# define PATH_CGI_IN "./cgi_tmp/webserv_cgi_stdin"
-
-
 
 class CgiHandler
 {
@@ -21,15 +16,19 @@ private:
     int             _pipe_in[2];
     int             _pipe_out[2];
     Client&         _client; //client calling the cgi;
+    std::map<std::string, std::string> _params;
+    std::string     _body_post;
+
     CgiHandler(); //have to build with request
+    char **  updateEnv();
+    pid_t    executeCGI(const HttpRequest &request);
+    void	 processCgiPath(const HttpRequest &request);
+    void     freeUpdatedEnv(char **tofree);
 
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp, Client& client);
-    pid_t    executeCGI();
-    pid_t    executeTimeOut() const;
     bool     HandleCgiRequest(const HttpRequest &request); 
-    //Request should contain all the info i would hope
 
     //getters
     int     *getPipeOut();

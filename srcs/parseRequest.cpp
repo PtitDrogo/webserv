@@ -28,11 +28,11 @@ std::string parse_request(std::string type, std::string buffer, HttpRequest &req
     }
     req.setBody(body);
     //Added the check for cgi here
-    if (isCgiRequest(req) == true)
-    {    
-        req.setMethod("CGI");
-        std::cout << "This shit is a CGI nocap nocap" << std::endl;
-        return ("CGI");
+    if (isCgiRequest(req) == true && type != "DELETE")
+    {
+        std::string cgi_type = "CGI-" + type;
+        req.setMethod(cgi_type);
+        return (cgi_type);
     }
     return (type);
 }
@@ -63,10 +63,7 @@ bool isCgiRequest(const HttpRequest &req)
     std::string path = req.getPath();
     unsigned int i;
 
-    std::cout << "In isCgiReQuest" << std::endl;
-    std::cout << "|" << path << "|" << std::endl;
-    
-    
+    std::cout << RED << "In isCgiReQuest" << RESET << std::endl;
     for (i = 0; i < path.size(); i++)
     {
         if (isCgiDelim(path[i]) == true)
@@ -75,9 +72,8 @@ bool isCgiRequest(const HttpRequest &req)
     //Smallest programm possible is x.py
     if (i < 4)
         return false;
-    std::string check_3 = path.substr(i - 3, i);
-    std::string check_4 = path.substr(i - 4, i);
-
+    std::string check_3 = path.substr(i - 3, 3);
+    std::string check_4 = path.substr(i - 4, 4);
     for (unsigned int j = 0; j < cgis_list_len; j++)
     {
         if (check_3 == valid_cgis[j] || check_4 == valid_cgis[j])

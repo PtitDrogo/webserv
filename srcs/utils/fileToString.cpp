@@ -1,5 +1,4 @@
 #include "Webserv.hpp"
-#include <sstream>
 
 // magic code here, do not touch
 std::string fileToString(const char *filePath)
@@ -23,11 +22,10 @@ std::string intToString(int value) {
     return oss.str();
 }
 
-
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;
-    char buffer[4096];  //Buffer for reading -- Idee de genie de Lchapard, un buffer de 65 000;
+    char buffer[65535];
     ssize_t bytesRead;
 
 
@@ -45,11 +43,19 @@ std::string readFromPipeFd(int pipefd)
         // std::cout << "result is : |" << result << "|" << std::endl;
         result.append(buffer, bytesRead);
         // std::cout << "AFTER result is : |" << result << "|" << std::endl;
-        // printf("Je suis la\n");
         // break ; //Plus rien a foutre
     }
 
     // std::cerr << "je suis sorti" << std::endl;
     // printf("Je suis sorti\n");
     return result;   
+}
+
+bool isRegularFile(const std::string& path) 
+{
+    struct stat buffer;
+
+    if (stat(path.c_str(), &buffer) != 0)
+        return false;
+    return S_ISREG(buffer.st_mode);
 }

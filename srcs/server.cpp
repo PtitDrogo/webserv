@@ -2,6 +2,7 @@
 
 Server::Server() 
 {
+	_max_body_size = -1;
 	// this->_index = "";
 	// this->_port = "";
 	// this->_root = "";

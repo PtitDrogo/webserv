@@ -34,6 +34,7 @@ class Cookies;
 # define FAILURE 1
 # define POLL_TIMEOUT_MILISECONDS 5000
 # define CGI_TIMEOUT_SECONDS 12
+# define PIPE_BUFFER 65535
 
 
 //*********************************************************//
@@ -60,9 +61,11 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void	parse_buffer_get(std::string buffer, Config &conf , Client &client, HttpRequest &req);
-void	parse_buffer_post(const Client& client, std::string buffer, Cookies &cook);
-bool    preparePostParse(const Client& client, std::string buffer, Cookies &cook);
+void	parse_buffer_get(Client &client, HttpRequest &req);
+void	parse_buffer_post(Client& client, Cookies &cook);
+bool    preparePostParse(Client& client, Cookies &cook);
+bool    prepareGetParse(Client& client, HttpRequest &req);
+
 
 //-----------SetUpSocket-----------//
 int SetupClientAddress(int server_socket);
@@ -98,6 +101,7 @@ bool    isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds
 std::string fileToString(const char *filePath);
 std::string intToString(int value);
 std::string readFromPipeFd(int pipefd);
+bool        isRegularFile(const std::string& path);
 
 
 //-----------DEBUG-PRINTS-----------//
@@ -105,7 +109,7 @@ void printVectorloc2(std::vector<location> loc);
 void printVectorServer2(std::vector<Server> serv);
 
 std::string handleAutoIndex(const std::string& path);
-std::string generateAutoIndexPage(Config &cong, const std::string& directory, const std::vector<std::string>& files, bool islocation);
+std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client);
 std::vector<std::string> listDirectory(const std::string& directory);
 
 //-----------utils-----------//

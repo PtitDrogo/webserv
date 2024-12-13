@@ -10,7 +10,6 @@ int main(int argc, char **argv, char **envp)
 	HttpRequest req;
 	Cookies cook;
 	std::vector<struct pollfd> fds;
-	(void) envp;
 
 	if (argc != 2)
 	{
@@ -22,7 +21,6 @@ int main(int argc, char **argv, char **envp)
 		return 0;
 	}
 	size_t number_of_servers = conf.addAllServers(fds);
-	std::cout << "Did I add 3 servers, current server count : " << number_of_servers << std::endl;
 
 	while (server_running)
 	{
@@ -34,12 +32,12 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
-			std::cout << "number of servers is : " << number_of_servers << std::endl;
-			std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
-			std::cout << "fds.size() is : " << fds.size() << std::endl;
+			// std::cout << "number of servers is : " << number_of_servers << std::endl;
+			// std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
+			// std::cout << "fds.size() is : " << fds.size() << std::endl;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
-				printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
+				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, client, conf);
 				break;
 			}
@@ -54,8 +52,7 @@ int main(int argc, char **argv, char **envp)
 			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
-				continue ; //TFREYDIE CGI STUFF WORK IN PROGRESS
-			std::cout << "ALLO" << std::endl;
+				continue ;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
@@ -67,27 +64,33 @@ int main(int argc, char **argv, char **envp)
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
+			
+
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
-				std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
+				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				// std::cout << "DEBUG , path in main is : " << client.
 
 				std::string type_request = get_type_request(client.getRequest(), req);
 				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
-				
 				if (type_request == "POST")
 				{
-					if (preparePostParse(client, client.getRequest(), cook) == false)
+					if (preparePostParse(client, cook) == false)
 						break ;
 				}
-				else if (type_request == "GET")
-					parse_buffer_get(client.getRequest(), conf, client, req);
+				else if (type_request == "GET") 
+				{
+					if (prepareGetParse(client, req) == false) 
+						break ;
+				}
 				else if (type_request == "DELETE")
 					parse_buffer_delete(client.getRequest(), client);
-				else if (type_request == "CGI")
+				else if (type_request == "CGI-GET" || type_request == "CGI-POST")
 					cgiProtocol(envp, req, client, conf, fds);
 				else
 					generate_html_page_error(client, "404");
+				client.reset();
 				std::cout << req << std::endl;
 			}
 		}

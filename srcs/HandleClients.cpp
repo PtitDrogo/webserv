@@ -1,5 +1,6 @@
 #include "Webserv.hpp"
 
+static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config& conf);
 
 //Check if a new client wants to connect to our server
 void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf)
@@ -10,12 +11,8 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 		{
 			int client_socket = SetupClientAddress(fds[i].fd);
 			addPollFD(client_socket, fds);
-			printf("DEBUG: GONNA Add client to the list\n");
 			conf.addClient(client_socket, conf.getServer()[i]);
-			//Ici je le rajoute a la liste des fd;
-			printf("DEBUG: Added client to the list\n");
-			//Technically cleaner with "continue ;" here, but it doesnt work somehow
-			// if we do that and its not necessary
+			//continue ; maybe ? Idk
 		}
 	}
 }
@@ -65,27 +62,35 @@ bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf
 	return false;
 }
 
-//Parametres -> la liste de fds et l'index du client a deconnect
-// void disconnectClient(std::vector<struct pollfd> &fds, size_t &i, Config& conf)
-// {
-// 	std::cout << "Client disconnected" << std::endl;
-// 	close(fds[i].fd);
-// 	conf.removeClient(fds[i].fd); //Remove the client from the map of conf
-// 	fds.erase(fds.begin() + i);   //Remove the client from the vector of pollfds;
-// 	--i;
-// }
-
+//Handle a bunch of logic regarding Pipes of Cgis before calling the disconnect of one (or two !) clients.
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
 	std::cout << "Client disconnected" << std::endl;
-	std::vector<struct pollfd>::iterator it = fds.begin();
 	if (client.getCgiCallee() != NULL)
-	{	
-		std::cout << std::endl << "I love killing pid :" << client.getCgiPID() << std::endl;
-		disconnectClient(fds, *client.getCgiCallee(), conf); //disconnecting the pipe of cgi if it exists;
-		kill(client.getCgiCallee()->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
-		waitpid(client.getCgiCallee()->getCgiPID(), 0, 0);	
+	{
+		Client *cgi_client = client.getCgiCallee();
+		kill(cgi_client->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
+		waitpid(cgi_client->getCgiPID(), 0, 0);
+		eraseClient(fds, *cgi_client, conf); //killing cgi client
+		eraseClient(fds, client, conf); //killing current client
 	}
+	else if (client.getCgiCaller() != NULL)
+	{
+		Client *caller_client = client.getCgiCaller();
+		kill(client.getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
+		waitpid(client.getCgiPID(), 0, 0);
+		eraseClient(fds, client, conf); //killing current client
+		eraseClient(fds, *caller_client, conf); //killing cgi client
+	}
+	else
+	{
+		eraseClient(fds, client, conf);
+	}
+}
+
+static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
+{
+	std::vector<struct pollfd>::iterator it = fds.begin();
 	for (; it != fds.end(); it++)
 	{
 		if (it->fd == client.getSocket())

@@ -1,7 +1,6 @@
 #include "config.hpp"
 
 Config::Config() {
-	this->islocation = false;
 }
 
 Config::~Config() {}
@@ -15,21 +14,10 @@ Config &Config::operator=(const Config &copy)
 {
 	if (this != &copy)
 	{
-		this->islocation = copy.islocation;
 		this->_servers = copy._servers;
 		this->_clients = copy._clients;
 	}
 	return *this;
-}
-
-bool Config::getIsLocation()
-{
-	return this->islocation;
-}
-
-void Config::setIsLocation(bool islocation)
-{
-	this->islocation = islocation;
 }
 
 void printVector(std::map<std::string, std::string> errorPage)
@@ -235,6 +223,7 @@ bool parse_listen(std::string line, Server &serv)
 
 bool parse_server_name(std::string line, Server &serv)
 {
+	// std::cout << "parse_server_name" << std::endl;	
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("server_name", pos) == pos)
 	{
@@ -254,6 +243,7 @@ bool parse_server_name(std::string line, Server &serv)
 
 void parse_index(std::string line, Server &serv)
 {
+	// std::cout << "parse_index" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("index", pos) == pos)
 	{

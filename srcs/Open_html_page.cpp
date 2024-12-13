@@ -4,17 +4,33 @@
 #include <fstream>
 #include "sys/stat.h"
 
-bool isRegularFile(const std::string& path) {
-    struct stat buffer;
+// std::string display_meme(std::string response)
+// {
+//     std::string html;
+//     if(1)
+//     {
+//         if(1)
+//         {
+//             std::cout << "AAAAAAAAAAAAAAH" << std::endl;
+//             html =
+//                 "HELP ME HELP ME"
+//                 "\t<div class='user-info'>\n"
+//                 "\t\t<h2>User Connection Details</h2>\n"
+//                 "\t\t<p><strong>Email:</strong> " "Wesh la team" " </p>\n"
+//                 "\t\t<p><strong>Password:</strong> " "Wesh la team" " </p>\n"
+//                 "\t</div>\n"
+//                 "</body>\n</html>";
 
-    if (stat(path.c_str(), &buffer) != 0)
-        return false;
-    return S_ISREG(buffer.st_mode);
-}
+//                 response += html;
+//         }
+//     }
+//     return (response);
+// }
+
 
 std::string readFile(std::string &path)
 {
-    std::cout << "DEBUG: path = " << path << std::endl;
+    // std::cout << "DEBUG: path = " << path << std::endl;
 
     if (!isRegularFile(path))
     {
@@ -64,7 +80,6 @@ void generate_default_error_page(std::string error_code, int client_socket)
 
 void generate_html_page_error(const Client& client, std::string error_code)
 {
-    std::cout << "DEBUG: JE SUIS DEDANS" << std::endl;
     const Server& server = client.getServer();
 
     std::map<std::string, std::string> errorPageMap = server.getErrorPage();
@@ -84,6 +99,7 @@ void generate_html_page_error(const Client& client, std::string error_code)
     std::string file_content = readFile(path);
     std::string response = httpHeaderResponse(error_code, "text/html", file_content);
 
+    std::cout << GREEN << response.c_str() << RESET << std::endl;
     send(client.getSocket(), response.c_str(), response.size(), 0); //TODO CHECK ALL SEND
 }
 
