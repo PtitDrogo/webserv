@@ -90,7 +90,6 @@ std::string create_page(std::string html, std::string directory)
 
 std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client)
 {
-	std::cout << "directory-------------------------------------- = " << directory << std::endl;
 	std::string html;
 	html = create_page(html, directory);
 	for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)

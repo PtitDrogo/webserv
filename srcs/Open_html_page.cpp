@@ -32,11 +32,11 @@ std::string readFile(std::string &path)
 {
     // std::cout << "DEBUG: path = " << path << std::endl;
 
-    // if (!isRegularFile(path))
-    // {
-    //     std::cerr << "Error: " << path << " is not a regular file." << std::endl;
-    //     return "";
-    // }
+    if (!isRegularFile(path))
+    {
+        std::cerr << "Error: " << path << " is not a regular file." << std::endl;
+        return "";
+    }
 
     std::ifstream file(path.c_str(), std::ios::binary);
     if (!file.is_open())
@@ -82,11 +82,8 @@ void generate_html_page_error(const Client& client, std::string error_code)
 {
     const Server& server = client.getServer();
 
-    // On récupère la map de l'erreur pour l'utiliser ensuite
     std::map<std::string, std::string> errorPageMap = server.getErrorPage();
-    //conf.getServer()[server_index].getRoot()
 
-    // Recherche de l'erreur dans la map
     std::map<std::string, std::string>::iterator it = errorPageMap.find(error_code);
     std::string path;
     if (it != errorPageMap.end())
@@ -97,11 +94,13 @@ void generate_html_page_error(const Client& client, std::string error_code)
     {
         std::cerr << "Error page for code " << error_code << " not found." << std::endl;
         generate_default_error_page(error_code, client.getSocket());
+        return;
     }
-
     std::string file_content = readFile(path);
+    std::string response = httpHeaderResponse(error_code, "text/html", file_content);
 
-    std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
-    std::cout << GREEN << reponse.c_str() << RESET << std::endl;
-    send(client.getSocket(), reponse.c_str(), reponse.size(), 0); //TODO CHECK ALL SEND
+    std::cout << GREEN << response.c_str() << RESET << std::endl;
+    send(client.getSocket(), response.c_str(), response.size(), 0); //TODO CHECK ALL SEND
 }
+
+

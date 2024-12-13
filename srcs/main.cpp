@@ -17,7 +17,9 @@ int main(int argc, char **argv, char **envp)
 		return 0;
 	}
 	if (conf.parse_config_file(argv[1]) == false)
-		std::cout << "Webserv : [WARNING] conflicting server name" << std::endl;
+	{
+		return 0;
+	}
 	size_t number_of_servers = conf.addAllServers(fds);
 
 	while (server_running)
@@ -90,7 +92,6 @@ int main(int argc, char **argv, char **envp)
 					generate_html_page_error(client, "404");
 				client.reset();
 				std::cout << req << std::endl;
-				//add code to clear the buffer request here;
 			}
 		}
 	}
