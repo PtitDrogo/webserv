@@ -89,7 +89,7 @@ int main(int argc, char **argv, char **envp)
 				else
 					generate_html_page_error(client, "404");
 				client.reset();
-				// std::cout << req << std::endl;
+				std::cout << req << std::endl;
 				//add code to clear the buffer request here;
 			}
 		}
