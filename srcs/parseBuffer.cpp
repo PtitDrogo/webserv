@@ -188,21 +188,14 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 }
 
 
-bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMethod) {
-    // Afficher les méthodes autorisées et la méthode demandée
-    // std::cout << "allowedMethods = |" << allowedMethods << "|" << std::endl;
-    // std::cout << "reqMethod = |" << reqMethod << "|" << std::endl;
-
-    // Trimmer la méthode demandée
+bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMethod)
+{
     std::string trimmedReqMethod = reqMethod;
     trimmedReqMethod.erase(0, trimmedReqMethod.find_first_not_of(" \t"));
     trimmedReqMethod.erase(trimmedReqMethod.find_last_not_of(" \t") + 1);
     
     std::stringstream ss(allowedMethods);
     std::string method;
-
-	std::stringstream ss(allowedMethods);
-	std::string method;
 
 	while (std::getline(ss, method, ' '))
 	{
@@ -287,7 +280,8 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	std::string reponse;
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
-
+	req.setIsCooked(false);
+	bool cookiesfound = false;
 	if (client.getLocation() != NULL)
 		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
@@ -323,12 +317,32 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 			}
 			// std::cout << "finalPathhhhhhhhhhh = |" << finalPath << "|" << std::endl;
 		}
+		size_t pos = line.find("Cookie: ");
+		if (pos != std::string::npos)
+		{
+			std::cout << "j'ai des cookies je rentre ici" << std::endl;
+			cookiesfound = true;
+			std::string cookies = line.substr(pos + 8);
+			cookies = cookies.substr(0, cookies.find_first_of("\r\n"));
+			req.setCookies(cookies);
+			req.setIsCooked(true);
+		}
+
+
 		if (check_host(line, server) == false)
 		{
 			generate_html_page_error(client, "400");
 			return ;
 		}
 	}
+	if (cookiesfound == false)
+	{
+		std::cout << "je ne trouve pas de cookies" << std::endl;
+		req.setCookies("");
+		req.setIsCooked(false);
+	}
+	std::cout << "cookie = |" << req.getCookies() << "|" << std::endl;
+	std::cout << "iscooked = |" << req.getIsCooked() << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(client, "404");
