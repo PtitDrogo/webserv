@@ -4,29 +4,6 @@
 #include <fstream>
 #include "sys/stat.h"
 
-// std::string display_meme(std::string response)
-// {
-//     std::string html;
-//     if(1)
-//     {
-//         if(1)
-//         {
-//             std::cout << "AAAAAAAAAAAAAAH" << std::endl;
-//             html =
-//                 "HELP ME HELP ME"
-//                 "\t<div class='user-info'>\n"
-//                 "\t\t<h2>User Connection Details</h2>\n"
-//                 "\t\t<p><strong>Email:</strong> " "Wesh la team" " </p>\n"
-//                 "\t\t<p><strong>Password:</strong> " "Wesh la team" " </p>\n"
-//                 "\t</div>\n"
-//                 "</body>\n</html>";
-
-//                 response += html;
-//         }
-//     }
-//     return (response);
-// }
-
 
 std::string readFile(std::string &path)
 {

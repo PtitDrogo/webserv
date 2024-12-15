@@ -370,7 +370,7 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
 	else
 	{
 			response += "Set-Cookie: session_token=" + cookie->token + "; Path=/; HttpOnly; Secure\r\n"; //This is just the full token we send back to client.
-			std::cout << RED << "cookie->token = " << cookie->token << RESET << std::endl;
+			// std::cout << RED << "cookie->token = " << cookie->token << RESET << std::endl;
 	}
 	//I want to send back session_token=THEO_12314143413412312314
 	response += "\r\n" + content;
@@ -381,7 +381,7 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
 std::string handle_connexion(std::string username, std::string password, Cookies &cook, std::string request_token)
 {
 	//I get the map of all the cookies
-    std::map<std::string, Cookie> cookies = cook.getCookies();
+    std::map<std::string, Cookie>& cookies = cook.getCookies();
 	std::map<std::string, Cookie>::iterator it = cookies.find(request_token);
     if (it != cookies.end())
 	{
@@ -403,18 +403,9 @@ std::string handle_connexion(std::string username, std::string password, Cookies
 		std::string session_token = "token_" + username;
 		cook.addCookie(username, password, session_token);
 
+
 		std::string file_content = readFile(path);
-		response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &cookies[session_token]);
-
-		//I have never triggered the code below, and I do not see the point of it;
-        // else
-        // {
-		// 	std::cout << "Connexion échouée" << std::endl;
-		// 	response = "HTTP/1.1 401 Unauthorized\r\n";
-		// 	response += "Content-Type: text/html\r\n\r\n";
-		// 	response += "<h1>Identifiants incorrects</h1>";
-		// }
-
+		response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &(cookies[session_token]));
 		return response;
 	}
 	//if we get here, it mean the user didnt type anything and just pressed enter;
@@ -439,7 +430,7 @@ std::string handle_deconnexion(Cookies &cook, std::string request_token)
 
 		// Redirige vers la page d'accueil ou affiche un message de déconnexion
 		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &it->second);
+		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, NULL);
 		std::cout << "response = |" << response << "|" << std::endl;
 		return response;
 	}
