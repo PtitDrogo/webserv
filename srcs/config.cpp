@@ -623,7 +623,7 @@ bool Config::parse_config_file(std::string filename)
 	}
 	file.clear();
 	file.seekg(0, std::ios::beg);
-	this->printConfig(file);
+	// this->printConfig(file);
 	if (!check_same_port(this->getServer()))
 		return false;
 	std::vector<location> locs = this->getServer()[0].getLocation();

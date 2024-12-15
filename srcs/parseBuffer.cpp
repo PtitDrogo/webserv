@@ -280,6 +280,7 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	std::string reponse;
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
+	
 	req.setIsCooked(false);
 	bool cookiesfound = false;
 	if (client.getLocation() != NULL)
@@ -293,11 +294,13 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	{
 		size_t pos1 = line.find("GET");
 		size_t pos2 = line.find("HTTP");
+		size_t pos8 = line.find("session_token=");
 		if (pos1 != std::string::npos && pos2 != std::string::npos)
 		{
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
+			
 			// std::cout << "path = |" << path << "|" << std::endl;
 			// std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
 			// std::cout << "locationPath[0].getPath() = |" << locationPath[0].getPath() << "|" << std::endl;
@@ -322,6 +325,13 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 		{
 			generate_html_page_error(client, "400");
 			return ;
+		}
+		if (pos8 != std::string::npos) //added cookie detection but for POST request;
+		{
+			std::cout << "j'ai des cookies je rentre ici" << std::endl;
+			std::string cookies = line.substr(pos8 + strlen("session_token=")); //This will be wrong
+			cookies = cookies.substr(0, cookies.find_first_of("\r\n"));
+			req.setCookies(cookies);
 		}
 	}
 	if (cookiesfound == false)
@@ -354,7 +364,7 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
 	
 	response += "Connection: close\r\n";
 	if (cookie == NULL)
-	{	
+	{
 		response += "Set-Cookie: session_token=; sessionID=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly; Secure\r\n";
 	}
 	else
@@ -394,7 +404,7 @@ std::string handle_connexion(std::string username, std::string password, Cookies
 		cook.addCookie(username, password, session_token);
 
 		std::string file_content = readFile(path);
-		response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &it->second);
+		response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &cookies[session_token]);
 
 		//I have never triggered the code below, and I do not see the point of it;
         // else
