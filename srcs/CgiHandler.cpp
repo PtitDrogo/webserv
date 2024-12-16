@@ -33,7 +33,7 @@ static bool file_exists(const char *path);
 static std::string getActualBody(std::string& fullbody);
 static std::string get_directory_path(const std::string& full_path);
 static std::string get_new_executable(const std::string& full_path);
-
+static std::string get_extension(const std::string& full_path, Client& client);
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
 _argv(NULL),
@@ -46,9 +46,43 @@ _client(client)
 CgiHandler::~CgiHandler() {}
 
 
-bool CgiHandler::HandleCgiRequest(const HttpRequest &request)
+static std::string get_extension(const std::string& full_path, Client& client)
 {
-	_path = "." + request.getPath(); //Sometime Ill need a dot, sometime not, exciting !
+	size_t dot_position = full_path.find(".");
+
+	std::string tmp_path = full_path.substr(dot_position);
+	std::cout << RED << tmp_path << " is tmp path" << std::endl;
+	size_t end_of_extension = tmp_path.find("?");
+	std::string final_extension = tmp_path.substr(0, end_of_extension);
+	std::cout << RED << final_extension << " is final_extension" << std::endl;
+	
+
+	std::map<std::string, std::string > &supported_cgis = client.getServer().getCgis();
+
+	std::map<std::string, std::string>::iterator it = supported_cgis.find(final_extension);
+	printMap(supported_cgis);
+	if (it == supported_cgis.end())
+	{	
+		std::cout << "PERDU" << std::endl;
+		return "";
+	}
+	else
+	{
+		return it->second;
+	}
+}	
+
+
+
+bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
+{
+	//Add function here that will get the extension, then see if it gets a return from the 
+	//map of extension, then uses that to fill the interpreter variable of CGIHandler. Ez pez !
+	_interpreter = get_extension(request.getPath(), client);
+	std::cout << _interpreter << std::endl;
+	if (_interpreter == "")
+		return false;
+	_path = "." + request.getPath(); //blindly adding a dot because i am a gigachad;
 	// std::cout << "Path is : " << _path << std::endl;
 	processCgiPath(request);
 	if (file_exists(_path.c_str()) == false)
@@ -187,12 +221,11 @@ char **CgiHandler::updateEnv()
 
 		new_var = it->first + "=" + it->second;
 		updated_envp[i] = strdup(new_var.c_str());
-		// std::cout << "Added : " << updated_envp[i] << ", to the envp " << std::endl;
 		if (updated_envp[i] == NULL)
 		{
 			for(i = 0; i < env_count + param_count; i++) 
 			{
-				free(updated_envp[i]); // With the power of calloc this ok actualy memory safe;
+				free(updated_envp[i]);
 			}
 		}
 		i++;
@@ -246,9 +279,9 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
         char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(_pipe_in[0], STDIN_FILENO);
-		// int null_fd = open("/dev/null", O_WRONLY);
-		// dup2(null_fd, STDERR_FILENO);
-		// close(null_fd);
+		int null_fd = open("/dev/null", O_WRONLY);
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
 		if (request.getMethod() == "CGI-POST")
 		{
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
@@ -302,7 +335,7 @@ void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& clien
 {
     CgiHandler cgi(envp, client);
 
-    if (cgi.HandleCgiRequest(request) == false)
+    if (cgi.HandleCgiRequest(client, request) == false)
     {
         // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
         std::cout << "Error executing CGI"<< std::endl;

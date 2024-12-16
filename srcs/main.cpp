@@ -54,6 +54,7 @@ int main(int argc, char **argv, char **envp)
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
 			HttpRequest req;
+			printMap(client.getServer().getCgis());
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);

@@ -17,6 +17,7 @@ private:
     Client&         _client; //client calling the cgi;
     std::map<std::string, std::string> _params;
     std::string     _body_post;
+    std::string     _interpreter;
 
     CgiHandler(); //have to build with request
     char **  updateEnv();
@@ -27,7 +28,7 @@ private:
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp, Client& client);
-    bool     HandleCgiRequest(const HttpRequest &request); 
+    bool     HandleCgiRequest(Client& client, const HttpRequest &request); 
 
     //getters
     int     *getPipeOut();

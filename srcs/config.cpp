@@ -545,6 +545,7 @@ void parse_cgi_path(std::string& line, Server &server)
 		else
 			pos = std::string::npos;
 	}
+	std::cout << "You should see me once I think ? or 3 times, once per server" << std::endl;
 	printMapCgi(server.getCgis());
 }
 
