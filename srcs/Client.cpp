@@ -126,7 +126,7 @@ void Client::extractFileName() {
 	// 	return false;
 	// }
 
-	fileName = "./config/base_donnees/" + fileName;
+	fileName = "." + this->getServer().getRoot() + "base_donnees/" + fileName;
 	_fileName = fileName;
 }
 

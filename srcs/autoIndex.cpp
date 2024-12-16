@@ -100,44 +100,34 @@ std::string generateAutoIndexPage(const std::string& directory, const std::vecto
 
         if (client.getLocation() != NULL) //kinda weird que conf soit celui qui se souvienne de ca.
         {
+            std::cout << "je rentre ici546" << std::endl;
             std::string rootLoc = client.getLocation()->getRoot();
-            std::cout << "relativePath: " << relativePath << std::endl;
-            std::cout << "rootLoc: " << rootLoc << std::endl;
 
             std::string rootLocRelative = rootLoc.substr(1);  // Supprime le premier '/' pour rendre `rootLoc` relatif
-            std::cout << "rootLocRelative: " << rootLocRelative << std::endl;
 
             // Supprime './' du début de relativePath si présent
             if (relativePath.find("./") == 0) {
                 relativePath = relativePath.substr(2);  // Retire './' du début
             }
 
-            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
-
             if (relativePath.find(rootLocRelative) == 0) {
                 relativePath = relativePath.substr(rootLocRelative.size());
-                std::cout << "relativePath modifié: " << relativePath << std::endl;
             }
         }
 
         else {
+            std::cout << "je rentre ici78" << std::endl;
             std::string root = client.getServer().getRoot();
-            std::cout << "relativePath: " << relativePath << std::endl;
-            std::cout << "root: " << root << std::endl;
 
             std::string rootRelative = root.substr(1);  // Supprime le premier '/' pour rendre `root` relatif
-            std::cout << "rootRelative: " << rootRelative << std::endl;
 
             // Supprime './' du début de relativePath si présent
             if (relativePath.find("./") == 0) {
                 relativePath = relativePath.substr(2);  // Retire './' du début
             }
 
-            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
-
             if (relativePath.find(rootRelative) == 0) {
                 relativePath = relativePath.substr(rootRelative.size());
-                std::cout << "relativePath modifié: " << relativePath << std::endl;
             }
         }
 
