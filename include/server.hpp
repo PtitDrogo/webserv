@@ -7,10 +7,10 @@
 class Server
 {
 	private :
-		std::string _port;
-		std::string _index;
-		std::string _server_name;
-		std::string _root;
+		std::string 		_port;
+		std::string 		_index;
+		std::string 		_server_name;
+		std::string 		_root;
 		std::map<std::string , std::string> _return;
 		std::map<std::string , std::string> _error_page;
 		std::vector<location> _location;

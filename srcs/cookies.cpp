@@ -2,8 +2,6 @@
 
 Cookies::Cookies()
 {
-	this->_cookies.clear();
-	this->isConnect = false;
 }
 
 Cookies::~Cookies()
@@ -19,40 +17,31 @@ Cookies &Cookies::operator=(const Cookies &other)
 {
 	if (this != &other)
 	{
-		this->_cookies = other._cookies;
-		this->isConnect = other.isConnect;
+		_cookies = other._cookies;
 	}
 	return (*this);
 }
 
-std::map<std::string, std::string> Cookies::getCookies() const
+std::map<std::string, Cookie>& Cookies::getCookies()
 {
-	return (this->_cookies);
+	return (_cookies);
 }
 
-bool Cookies::getIsConnect() const
+void Cookies::addCookie(std::string name, std::string password, std::string token_name)
 {
-	return (this->isConnect);
+	Cookie new_cookie;
+
+	new_cookie.username = name;
+	new_cookie.password = password;
+	new_cookie.token	= token_name;
+	_cookies[token_name] = new_cookie;
 }
 
-void Cookies::setCookies(std::string name, std::string value)
+void Cookies::deleteCookie(const std::string &token_name)
 {
-	this->_cookies[name] = value;
+	_cookies.erase(token_name);
 }
 
-void Cookies::setIsConnect(bool isConnect)
-{
-	this->isConnect = isConnect;
-}
 
-void Cookies::deleteCookie(const std::string &name)
-{
-	std::map<std::string, std::string>::iterator it = _cookies.find(name);  // Spécifie le type de l'itérateur
 
-	if (it != _cookies.end()) {  // Vérifie si l'itérateur n'est pas à la fin
-		_cookies.erase(it);      // Supprime l'élément de la map
-		std::cout << "Cookie " << name << " supprimé avec succès." << std::endl;
-	} else {
-		std::cout << "Cookie " << name << " non trouvé." << std::endl;
-	}
-}
+

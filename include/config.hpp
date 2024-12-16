@@ -29,9 +29,12 @@ class Config
 		void setServer(Server &serv);
 		void removeClient(int client_fd);
 
-		void createServerr(std::ifstream &file , Server &serv);
+		bool createServerr(std::ifstream &file , Server &serv);
 		void createServer(std::string line, std::ifstream &file);
+		void printConfig(std::ifstream& file);
+		void setIsLocation(bool islocation);
 		void printConfig();
+		static bool ServerRunning;
 };
 
 #endif

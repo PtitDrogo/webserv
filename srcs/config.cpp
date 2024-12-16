@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+bool Config::ServerRunning = true;
+
 Config::Config() {
 }
 
@@ -38,7 +40,6 @@ void Config::setServer(Server &serv)
 	this->_servers.push_back(serv);
 }
 
-//This adds all the server in the config file to the pollfd vector used by poll
 size_t Config::addAllServers(std::vector<struct pollfd> &fds)
 {
 	size_t i;
@@ -62,7 +63,7 @@ Server &Config::getServerOfClient(int client_fd)
     if (it != _clients.end()) {
         return it->second.getServer();
     }
-	throw std::out_of_range("Somehow, your socket doesnt have a server"); //Un peu obliger de faire ca sinon jai rien a renvoyer;
+	throw std::out_of_range("Somehow, your socket doesnt have a server");
 }
 
 Client &Config::getClientObject(int client_fd)
@@ -100,7 +101,6 @@ int Config::SetupServerSocket(int i)
 
 	int port = std::atoi(_servers[i].getPort().c_str());
 
-	// int port = std::atoi(conf.getServer()[0].getPort().c_str());
 	server_address.sin_port = htons(port);
 	server_address.sin_addr.s_addr = INADDR_ANY;
 	if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) == -1)
@@ -162,28 +162,68 @@ void printVectorServer(std::vector<Server> serv)
 	}
 }
 
-void parse_listen(std::string line, Server &serv)
+bool check_format_port(std::string port)
 {
-	// std::cout << "parse_listen" << std::endl;
+	for (size_t i = 0; i < port.size(); i++)
+	{
+		if (!std::isdigit(port[i]))
+		{
+			std::cerr << "Error: Invalid port" << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
+bool check_format_host(std::string host)
+{
+	for (size_t i = 0; i < host.size(); i++)
+	{
+		if (!std::isdigit(host[i]) && host[i] != '.' && host[i] != ':')
+		{
+			std::cerr << "Error: Invalid host" << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
+bool parse_listen(std::string line, Server &serv)
+{
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("listen", pos) == pos)
 	{
 		size_t start = pos + 6;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of("\t;", start);
 		std::string port = line.substr(start, end - start);
-		if (port.size() > 4)
+		if (port.size() > 4 && port.size() == 14)
 		{
+			if (check_format_host(port) == false)
+				return false;
 			serv.setHost(port);
 			port = port.substr(port.find(':') + 1);
+			serv.setPort(port);
+			return true;
 		}
-		// std::cout << "port------------- = " << port << std::endl;
-		serv.setPort(port);
+		else if (port.size() == 4)
+		{
+			if (check_format_port(port) == false)
+				return false;
+			serv.setPort(port);
+			return true;
+		}
+		else 
+		{
+			std::cout << "Error: Invalid port" << std::endl;
+			return false;
+		}
 	}
+	return true;
 }
 
-void parse_server_name(std::string line, Server &serv)
+bool parse_server_name(std::string line, Server &serv)
 {
 	// std::cout << "parse_server_name" << std::endl;	
 	size_t pos = line.find_first_not_of(" \t");
@@ -192,15 +232,15 @@ void parse_server_name(std::string line, Server &serv)
 		size_t start = pos + 11;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string server_name = line.substr(start, end - start);
-		if (server_name.empty() )
+		if (check_format_host(server_name) == false)
 		{
-			std::cout << RED << "Error: Invalid server name" << RESET << std::endl;
-			return;
+			return false;
 		}
 		serv.setServerName(server_name);
 	}
+	return true;
 }
 
 void parse_index(std::string line, Server &serv)
@@ -212,7 +252,7 @@ void parse_index(std::string line, Server &serv)
 		size_t start = pos + 5;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string index = line.substr(start, end - start);
 		serv.setIndex(index);
 	}
@@ -220,14 +260,13 @@ void parse_index(std::string line, Server &serv)
 
 void parse_root(std::string line, Server &serv)
 {
-	// std::cout << "parse_root" << std::endl;
-	size_t pos = line.find_first_not_of(" \t");
+	size_t pos = line.find_first_not_of(" \t;");
 	if (pos != std::string::npos && line.find("root", pos) == pos)
 	{
 		size_t start = pos + 4;
 		while (start < line.size() && std::isspace(line[start]))
 			start++;
-		size_t end = line.find_first_of(" \t", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string root = line.substr(start, end - start);
 		serv.setRoot(root);
 	}
@@ -235,8 +274,7 @@ void parse_root(std::string line, Server &serv)
 
 void parse_error_page(std::string line, Server &serv)
 {
-	// std::cout << "parse_error_page" << std::endl;
-	size_t pos = line.find_first_not_of(" \t");
+	size_t pos = line.find_first_not_of(" \t;");
 	if (pos != std::string::npos && line.find("error_page", pos) == pos)
 	{
 		std::istringstream iss(line);
@@ -247,13 +285,11 @@ void parse_error_page(std::string line, Server &serv)
 		std::string error_file;
 		iss >> error_file;
 		serv.setErrorPage(error_code, error_file);
-		// printVector(serv.getErrorPage());
 	}
 }
 
-void parse_location(std::string line, Server &serv, std::ifstream &file)
+bool parse_location(std::string line, Server &serv, std::ifstream &file)
 {
-	// std::cout << "parse_location" << std::endl;	
 	size_t pos5 = line.find_first_not_of(" \t");
 	if (pos5 != std::string::npos && line.find("location", pos5) == pos5)
 	{
@@ -263,11 +299,24 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			start++;
 		}
 		size_t end = line.find_first_of(" {", start);
+		if (end == std::string::npos) {
+			std::cerr << "Error: location block not opened" << std::endl;
+			return false;
+		}
 		std::string path = line.substr(start, end - start) + ' ';
-		// std::cout << "path = " << path << std::endl;
+		std::cout << "path = |" << path << "|" << std::endl;
+		if (path == " " || path == "/ " || path.empty())
+		{
+			std::cerr << "Error: location has no path" << std::endl;
+			return false;
+		}
 		loc.setPath(path);
 
 		size_t braceOpenPos = line.find('{', end);
+		if (braceOpenPos == std::string::npos) {
+			std::cerr << "Error: location block not opened" << std::endl;
+			return false;
+		}
 		std::string sectionContent;
 
 		if (braceOpenPos != std::string::npos) {
@@ -291,14 +340,17 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t indexPos = subLine.find("index");
 			if (indexPos != std::string::npos) {
 				size_t startIndex = subLine.find_first_not_of(" \t", indexPos + 5);
+				if (startIndex == std::string::npos)
+					return true;
 				size_t endIndex = subLine.find_first_of(" \t;", startIndex);
 				std::string index = subLine.substr(startIndex, endIndex - startIndex);
-				// std::cout << "---------------------------------------------------------------------index = " << index << std::endl;
 				loc.setIndex(index);
 			}
 			size_t rootPos = subLine.find("root");
 			if (rootPos != std::string::npos) {
 				size_t startRoot = subLine.find_first_not_of(" \t", rootPos + 4);
+				if (startRoot == std::string::npos)
+					return true;
 				size_t endRoot = subLine.find_first_of(" \t;", startRoot);
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
 				loc.setRoot(root);
@@ -306,11 +358,13 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {
 				size_t startAutoIndex = subLine.find_first_not_of(" \t", autoIndexPos + 5);
+				if (startAutoIndex == std::string::npos)
+					return true;
 				size_t endAutoIndex = subLine.find_first_of(" \t;", startAutoIndex);
 				std::string autoIndex = subLine.substr(startAutoIndex, endAutoIndex - startAutoIndex);
 				if (autoIndex != "on" && autoIndex != "off") {
 					std::cerr << "Error: invalid value for auto_index" << std::endl;
-					return;
+					return false;
 				}
 				loc.setAutoIndex(autoIndex);
 			}
@@ -318,8 +372,7 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			if (allowMethodPos != std::string::npos) {
 				size_t startAllowMethod = subLine.find_first_not_of(" \t", allowMethodPos + 13); // 12 = length of "allow_method"
 				if (startAllowMethod == std::string::npos) {
-					std::cerr << "Error: invalid value for allow_method" << std::endl;
-					return;
+					return true;
 				}
 				size_t endAllowMethod = subLine.find_first_of("\n", startAllowMethod); 
 				std::string allowMethod = subLine.substr(startAllowMethod, endAllowMethod - startAllowMethod);
@@ -328,6 +381,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			size_t cgiPathPos = subLine.find("cgi_path");
 			if (cgiPathPos != std::string::npos) {
 				size_t startCgiPath = subLine.find_first_not_of(" \t", cgiPathPos + 8);
+				if (startCgiPath == std::string::npos)
+					return true;
 				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
 				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
 				loc.setCgiPath(cgiPath);
@@ -336,6 +391,8 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 			if (redirPos != std::string::npos)
 			{
 				size_t startRedir = subLine.find_first_not_of(" \t", redirPos + 6);
+				if (startRedir == std::string::npos)
+					return true;
 				size_t endRedir = subLine.find_first_of(" \t;", startRedir);
 				std::string error_code = subLine.substr(startRedir, endRedir - startRedir);
 				startRedir = endRedir;
@@ -344,11 +401,11 @@ void parse_location(std::string line, Server &serv, std::ifstream &file)
 				endRedir = subLine.find_first_of(" \t;", startRedir);
 				std::string path = subLine.substr(startRedir, endRedir - startRedir);
 				loc.setRedir(error_code, path);
-				printMapRedirect(loc.getRedir());
 			}
 		}
 		serv.setLocation(loc);
 	}
+	return true;
 }
 
 bool isdigit(std::string str)
@@ -384,7 +441,6 @@ int convertToBytes(const std::string &size_str)
 
 void parse_max_body_size(const std::string &line, Server &serv)
 {
-	// std::cout << "parse_max_body_size" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	
 	if (pos != std::string::npos && line.find("max_body_size", pos) == pos)
@@ -396,7 +452,6 @@ void parse_max_body_size(const std::string &line, Server &serv)
 		std::string max_body_size_str = line.substr(start, end - start);
 		int max_body_size = convertToBytes(max_body_size_str);
 		serv.setMaxBodySize(max_body_size);
-		// std::cout << "Max Body Size: " << serv.getMaxBodySize() << " bytes" << std::endl;
 	}
 }
 
@@ -412,10 +467,7 @@ void parse_auto_index(std::string line, Server &serv)
 		size_t end = line.find_first_of(" \t", start);
 		std::string auto_index = line.substr(start, end - start);
 		if (auto_index != "on" && auto_index != "off")
-		{
-			std::cerr << "Error: invalid value for auto_index" << std::endl;
 			return;
-		}
 		serv.setAutoIndex(auto_index);
 	}
 }
@@ -432,19 +484,48 @@ bool isCommentLine(const std::string line)
 	return false;
 }
 
-void Config::createServerr(std::ifstream &file , Server &serv)
+bool count_bracket(std::ifstream &file)
+{
+	std::string line;
+	int count = 0;
+	int count_server = 0;
+
+	while (std::getline(file, line))
+	{
+		if (line.find("{") != std::string::npos)
+			count++;
+		if (line.find("}") != std::string::npos)
+			count--;
+		if (line.find("server") != std::string::npos)
+			count_server++;
+	}
+	if (count != 0)
+	{
+		std::cerr << "Error: Invalid bracket" << std::endl;
+		return false;
+	}
+	if (count_server == 0)
+	{
+		std::cerr << "Error: has nos server" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+bool Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
 
-	// std::cout << "createServerr" << std::endl;
 	while(std::getline(file, line))
 	{
 		if (isCommentLine(line) == true)
 			continue ;
 		if (line.find("listen") != std::string::npos)
-			parse_listen(line, serv);
+			if (parse_listen(line, serv) == false)
+				return false;
 		if (line.find("server_name") != std::string::npos)
-			parse_server_name(line, serv);
+			if (parse_server_name(line, serv) == false)
+				return false;
 		if (line.find("index") != std::string::npos)
 			parse_index(line, serv);
 		if (line.find("root") != std::string::npos)
@@ -454,40 +535,34 @@ void Config::createServerr(std::ifstream &file , Server &serv)
 		if (line.find("error_page") != std::string::npos)
 			parse_error_page(line, serv);
 		if (line.find("location") != std::string::npos)
-			parse_location(line, serv, file);
+			if (parse_location(line, serv, file) == false)
+				return false;
 		if (line.find("auto_index") != std::string::npos)
 			parse_auto_index(line, serv);
 		if (line.find("}") != std::string::npos)
 			break;
 	}
 	this->setServer(serv);
+	return true;
 }
 
 
-void Config::printConfig()
+void Config::printConfig(std::ifstream& file)
 {
-	std::cout << "printConfig" << std::endl;
 	std::vector<Server> serv = this->getServer();
-	std::ifstream file("./config/server.conf");
-
 	std::string line;
 	while (std::getline(file, line))
 	{
-		std::cout << line << std::endl;
+		std::cout << BLUE << line << RESET << std::endl;
 	}
-	std::cout << "--------------------------------" << std::endl;
-	// printVector(serv[0].getErrorPage());
-	std::cout << "--------------------------------" << std::endl;	
-	printVectorServer(serv);
-	// printVectorloc(serv[0].getLocation());
+	// printVectorServer(serv);
 }
 
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 {
-	// std::cout << "check_same_server_name" << std::endl;
 	if (serv[i].getServerName() == serv[j].getServerName())
 	{
-		std::cerr << "Error: same server name" << std::endl;
+		std::cout << "Webserv : conflicting server name" << std::endl;
 		return false;
 	}
 	return true;
@@ -495,15 +570,12 @@ bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 
 bool check_same_port(std::vector<Server> serv)
 {
-	// std::cout << "check_same_port" << std::endl;
 	for (size_t i = 0; i < serv.size(); i++)
 	{
 		for (size_t j = i + 1; j < serv.size(); j++)
 		{
-			// std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
 			if (serv[i].getPort() == serv[j].getPort())
 			{
-				// std::cout << serv[i].getPort() << " " << serv[j].getPort() << std::endl;
 				if (check_same_server_name(serv, j , i) == false)
 					return false;
 			}
@@ -512,28 +584,58 @@ bool check_same_port(std::vector<Server> serv)
 	return true;
 }
 
+bool check_same_path_of_location(const std::vector<location>& loc, size_t i, size_t j)
+{
+	if (loc.size() <= std::max(i, j))
+	{
+		std::cerr << "Webserv : Not enough locations to compare paths" << std::endl;
+		return true;
+	}
+	if (loc[i].getPath() == loc[j].getPath())
+	{
+		std::cerr << "Webserv : Conflicting paths in locations" << std::endl;
+		return false;
+	}
+	return true;
+}
+
 bool Config::parse_config_file(std::string filename)
 {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open())
+		return false;
+	if (file.peek() == std::ifstream::traits_type::eof())
 	{
-		std::cerr << "Error: could not open file" << std::endl;
+		std::cerr << "Error: file is empty" << std::endl;
 		return false;
 	}
-	// if (file.is_open())
-	// 	std::cout << "File opened successfully" << std::endl;
+	if (count_bracket(file) == false)
+		return false;
+	file.clear();
+	file.seekg(0, std::ios::beg);
 	std::string line;
 	while (std::getline(file, line))
 	{
 		if (line.find("server") != std::string::npos)
 		{
 			Server serv;
-			createServerr(file, serv);
+			if (createServerr(file, serv) == false)
+				return false;
 		}
 	}
-	// this->printConfig();
+	file.clear();
+	file.seekg(0, std::ios::beg);
+	// this->printConfig(file);
 	if (!check_same_port(this->getServer()))
 		return false;
+	std::vector<location> locs = this->getServer()[0].getLocation();
+	for (size_t i = 0; i < locs.size(); ++i)
+	{
+		for (size_t j = i + 1; j < locs.size(); ++j)
+		{
+			if (!check_same_path_of_location(locs, i, j))
+				return false;
+		}
+	}
 	return (true);
 }
-

@@ -33,7 +33,7 @@ void printMap(std::map<T, T> m)
 
 
 template <typename T>
-std::string to_string(T value) {
+std::string toString(T value) {
 	std::ostringstream oss;
 	oss << value;
 	return oss.str();
