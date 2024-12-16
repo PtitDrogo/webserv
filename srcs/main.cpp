@@ -4,10 +4,31 @@
 
 static void handleSignal(int signum);
 
+
+void	checkFailedExecve(Client &client)
+{
+	int status;
+
+	if (client.getCgiCaller() == NULL)
+		return ;
+	waitpid(client.getCgiCaller()->getCgiPID(), &status, WNOHANG);
+	std::cout << "hi boys, status is  " << status << "and going with the macro its " << WEXITSTATUS(status) << std::endl;
+	if (WIFEXITED(status)) 
+	{
+		std::cout << "hi again" << std::endl;
+		int exit_code = WEXITSTATUS(status);
+		if (exit_code == EXECVE_FAILURE)
+		{
+			std::cout << "Victory !" << std::endl;
+			generate_html_page_error(*client.getCgiCaller(), "500");
+			return ;
+		}
+	}
+}
+
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
-	// HttpRequest req;
 	Cookies cook;
 	std::vector<struct pollfd> fds;
 
@@ -36,6 +57,7 @@ int main(int argc, char **argv, char **envp)
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
+				checkFailedExecve(client);
 				disconnectClient(fds, client, conf);
 				break;
 			}

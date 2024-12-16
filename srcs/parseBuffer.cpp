@@ -341,7 +341,6 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 		if (it != cookies_map.end())
 			file_content = injectUserHtml(file_content, it->second.username);
 	}
-	(void) cook;
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 	// req.setCookies(""); //MAKE A SAFE SEND FUNCTION AND ADD THIS IN IT;
