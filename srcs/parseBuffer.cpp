@@ -549,7 +549,11 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 				return ;
 			}
 			else
+			{	
 				std::cout << "Unable to open file" << std::endl;
+				generate_html_page_error(client, "404");
+				return ;
+			}
 		}
 	}
 	std::cout << RED << "PATH IS : " << req.getPath() << RESET << std::endl;
@@ -568,7 +572,10 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 		return ;
 	}
 	else
+	{
 		std::cout << "Unable to open file" << std::endl; //Maybe we should send a 403 if thats the case ?
+		generate_html_page_error(client, "404");
+	}
 	filename.clear();
 	name.clear();
 	email.clear();
