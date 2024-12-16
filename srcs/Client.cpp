@@ -182,6 +182,7 @@ void Client::setCgiPID(pid_t pid) {_pid = pid;}
 void Client::setLocation(location *location) {_current_location = location;}
 void	Client::setBoundary(std::string boundary) { _boundary = boundary; }
 void	Client::setbodyEnd(size_t bodyEnd) { _bodyEnd = bodyEnd; }
+void	Client::setToken(std::string token) {_token = token;}
 
 std::string    Client::getRequest() const {return (_request);}
 size_t	Client::getContentLength() const {return (_contentLength);}
@@ -199,3 +200,4 @@ std::string	Client::getFileName() const { return (_fileName); }
 std::string	Client::getContentType() const { return (_contentType); }
 std::string	Client::getBoundary() const { return (_boundary); }
 size_t		Client::getBodyEnd() const { return (_bodyEnd); }
+std::string	Client::getToken() const {return (_token);}

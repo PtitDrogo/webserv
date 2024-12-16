@@ -7,7 +7,6 @@
 class CgiHandler
 {
 private:
-    // std::map<std::string, std::string>	_env; //what is this ?
     char *const *   _envp;
     char **         _argv;
     int             _exit_status;

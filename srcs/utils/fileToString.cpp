@@ -15,13 +15,6 @@ std::string fileToString(const char *filePath)
     return (buffer.str()); // sex
 }
 
-
-std::string intToString(int value) {
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
-}
-
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;
@@ -58,4 +51,19 @@ bool isRegularFile(const std::string& path)
     if (stat(path.c_str(), &buffer) != 0)
         return false;
     return S_ISREG(buffer.st_mode);
+}
+
+std::string injectUserHtml(const std::string& fileContent, const std::string& username) 
+{
+    std::stringstream updatedContent;
+
+    updatedContent << fileContent;
+
+    // Add a simple HTML snippet with the username
+    updatedContent << "\n<!-- Injected User Information -->\n";
+    updatedContent << "<div style=\"border: 1px solid #ccc; padding: 10px; margin-top: 20px;\">\n";
+    updatedContent << "    <p><strong>Logged in as:</strong> " << username << "</p>\n";
+    updatedContent << "</div>\n";
+
+    return updatedContent.str();
 }
