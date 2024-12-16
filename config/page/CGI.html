@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Website - Delete</title>
+    <title>Simple Website - Actions</title>
     <link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Style de base */
+        /* Style général */
         body {
             font-family: 'Roboto', Arial, sans-serif;
             background-color: #363636;
@@ -18,7 +18,6 @@
             overflow-x: hidden;
         }
 
-        /* Style du titre principal */
         h1 {
             color: #f30000;
             text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.8);
@@ -27,7 +26,6 @@
             animation: fadeInDown 1s ease-out;
         }
 
-        /* Animation pour les titres */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -39,48 +37,20 @@
             }
         }
 
-        h3 {
-            color: #e0e0e0;
-            font-size: 2vw;
-            margin-top: 3vh;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-        }
-
-        /* Style du formulaire */
-        form {
-            background-color: #444;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 600px;
-            margin: 5vh auto;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        /* Boutons d'action */
+        .buttons-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px; /* Espacement entre les boutons */
+            margin: 5vh auto;
+            max-width: 80%; /* Limite la largeur du conteneur */
         }
 
-        /* Style des champs d'input */
-        input[type="text"] {
-            width: 80%;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-            border: 1px solid #777;
-            background-color: #222;
-            color: white;
-            font-size: 1.2vw;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #f30000;
-        }
-
-        /* Style du bouton de suppression */
-        .delete-button {
+        .action-button {
             font-size: 1.5vw;
             padding: 15px 30px;
+            margin: 0;
             border: none;
             border-radius: 5px;
             background: linear-gradient(135deg, #f30000, #ff5252);
@@ -91,16 +61,16 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .delete-button:hover {
+        .action-button:hover {
             background: linear-gradient(135deg, #ff5252, #f30000);
             transform: translateY(-3px);
         }
 
-        .delete-button:active {
+        .action-button:active {
             transform: translateY(2px);
         }
 
-        /* Style de la popup */
+        /* Popup */
         .popup {
             position: fixed;
             top: 20px;
@@ -121,7 +91,7 @@
             visibility: visible;
         }
 
-        /* Nouveau style pour le bouton Accueil */
+        /* Bouton Accueil */
         .home-button {
             position: absolute;
             top: 20px;
@@ -146,48 +116,28 @@
     </style>
 </head>
 <body>
-    <!-- Nouveau bouton Accueil -->
+    <!-- Bouton Accueil -->
     <a href="../index.html" class="home-button">Accueil</a>
 
-    <h1>DELETE</h1>
-    <div>
-        <h3>Supprimer une ressource</h3>
-        <form onsubmit="deleteFile(event)">
-            <input type="text" id="fileName" name="fileName" placeholder="Entrez le nom du fichier à supprimer">
-            <button type="submit" class="delete-button">Supprimer la ressource</button>
-        </form>
+    <h1>Actions</h1>
+    <div class="buttons-container">
+        <!-- Boutons dynamiques alignés -->
+        <button class="action-button" onclick="showSuccess('Bouton 1')">Action 1</button>
+        <button class="action-button" onclick="showSuccess('Bouton 2')">Action 2</button>
+        <button class="action-button" onclick="showSuccess('Bouton 3')">Action 3</button>
+        <button class="action-button" onclick="showSuccess('Bouton 4')">Action 4</button>
+        <button class="action-button" onclick="showSuccess('Bouton 5')">Action 5</button>
+        <button class="action-button" onclick="showSuccess('Bouton 6')">Action 6</button>
+        <button class="action-button" onclick="showSuccess('Bouton 7')">Action 7</button>
+        <button class="action-button" onclick="showSuccess('Bouton 8')">Action 8</button>
+        <button class="action-button" onclick="showSuccess('Bouton 9')">Action 9</button>
+        <button class="action-button" onclick="showSuccess('Bouton 10')">Action 10</button>
     </div>
-    <div id="popup" class="popup">Fichier supprimé avec succès !</div>
+    <div id="popup" class="popup">Action réalisée avec succès !</div>
     <script>
-        function deleteFile(event) {
-            event.preventDefault();
-            const fileName = document.getElementById('fileName').value.trim();
-
-            if (!fileName) {
-                alert("Veuillez entrer un nom de fichier valide.");
-                return;
-            }
-
-            fetch(`/config/base_donnees/${fileName}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        showPopup("Fichier supprimé avec succès !");
-                    } else {
-                        showPopup("Échec de la suppression du fichier.", true);
-                    }
-                })
-                .catch(error => {
-                    console.error('Une erreur est survenue :', error);
-                    showPopup("Erreur de connexion.", true);
-                });
-        }
-
-        function showPopup(message, isError = false) {
+        function showSuccess(buttonName) {
             const popup = document.getElementById('popup');
-            popup.textContent = message;
-            popup.style.backgroundColor = isError ? '#e74c3c' : '#63db01';
+            popup.textContent = `${buttonName} : Action réalisée avec succès !`;
             popup.classList.add('show');
             setTimeout(() => {
                 popup.classList.remove('show');
