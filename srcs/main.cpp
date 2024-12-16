@@ -7,7 +7,7 @@ static void handleSignal(int signum);
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
-	HttpRequest req;
+	// HttpRequest req;
 	Cookies cook;
 	std::vector<struct pollfd> fds;
 
@@ -32,6 +32,7 @@ int main(int argc, char **argv, char **envp)
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
+			HttpRequest req;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);

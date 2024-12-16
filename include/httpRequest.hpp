@@ -11,7 +11,6 @@ class HttpRequest
 		std::string _version;
 		std::string _body;
 		std::string _cookies;
-		bool isCooked;
 	public :
 		HttpRequest();
 		~HttpRequest();
@@ -23,14 +22,12 @@ class HttpRequest
 		std::string getVersion() const;
 		std::string getBody() const;
 		std::string getCookies() const;
-		bool getIsCooked() const;
 
 		void setMethod(std::string method);
 		void setPath(std::string path);
 		void setVersion(std::string version);
 		void setBody(std::string body);
 		void setCookies(std::string cookies);
-		void setIsCooked(bool isCooked);
 };
 
 std::ostream    &operator<<(std::ostream &o, HttpRequest const &req);
