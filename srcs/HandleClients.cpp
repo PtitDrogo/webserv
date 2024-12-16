@@ -68,6 +68,7 @@ void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& c
 	std::cout << "Client disconnected" << std::endl;
 	if (client.getCgiCallee() != NULL)
 	{
+		std::cout << "Yo jai un callee" << std::endl;
 		Client *cgi_client = client.getCgiCallee();
 		kill(cgi_client->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
 		waitpid(cgi_client->getCgiPID(), 0, 0);
@@ -76,6 +77,7 @@ void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& c
 	}
 	else if (client.getCgiCaller() != NULL)
 	{
+		std::cout << "Yo jai un caller" << std::endl;
 		Client *caller_client = client.getCgiCaller();
 		kill(client.getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
 		waitpid(client.getCgiPID(), 0, 0);

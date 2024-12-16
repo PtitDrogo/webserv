@@ -33,7 +33,7 @@ class Cookies;
 # define SUCCESS 0
 # define FAILURE 1
 # define POLL_TIMEOUT_MILISECONDS 5000
-# define CGI_TIMEOUT_SECONDS 2
+# define CGI_TIMEOUT_SECONDS 12
 # define PIPE_BUFFER 65535
 # define EXECVE_FAILURE 127
 

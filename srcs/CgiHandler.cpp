@@ -249,6 +249,8 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
 			{
 				freeUpdatedEnv(updated_env);
+				for (int i = 3; i < 1024; i++)
+					close (i);
 				close (_pipe_in[0]);
 				close (_pipe_in[1]);
 				close (_pipe_out[0]);
@@ -266,12 +268,16 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		{
 			freeUpdatedEnv(updated_env);
 			close (_pipe_in[1]);
+			for (int i = 3; i < 1024; i++)
+				close (i);
 			perror("chdir");
 			std::exit(EXIT_FAILURE);
 		}
 		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env);
+		for (int i = 3; i < 1024; i++)
+			close (i);
 		close (_pipe_in[1]);
         perror("execve");
         std::exit(EXECVE_FAILURE); //st
@@ -325,21 +331,6 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 	{
 		std::cout << GREEN << "Pipe POLLIN triggered" << RESET << std::endl;
 		//checking to see if the process didnt exit failure (aka execve failed);
-		int status;
-		waitpid(client.getCgiCaller()->getCgiPID(), &status, WNOHANG);
-		std::cout << "hi boys " << std::endl;
-		if (WIFEXITED(status)) 
-		{
-			std::cout << "hi again" << std::endl;
-			int exit_code = WEXITSTATUS(status);
-			if (exit_code == EXECVE_FAILURE)
-			{
-				std::cout << "Victory !" << std::endl;
-				generate_html_page_error(client, "500");
-				disconnectClient(fds, client, conf);
-				return true;
-			}
-		}
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
 		//Check process status here, and if its bad, send a error 500.	
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
