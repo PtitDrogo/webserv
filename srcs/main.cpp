@@ -86,7 +86,7 @@ int main(int argc, char **argv, char **envp)
 				else
 					generate_html_page_error(client, "400");
 				client.reset();
-				std::cout << req << std::endl;
+				// std::cout << req << std::endl;
 			}
 		}
 	}
