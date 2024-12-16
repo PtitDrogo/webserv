@@ -1,7 +1,7 @@
 #include "Webserv.hpp"
 #include "Cookies.hpp"
 
-bool server_running = true; //we can hide this variable in a class statically somewhere
+
 static void handleSignal(int signum);
 
 int main(int argc, char **argv, char **envp)
@@ -22,7 +22,7 @@ int main(int argc, char **argv, char **envp)
 	}
 	size_t number_of_servers = conf.addAllServers(fds);
 
-	while (server_running)
+	while (Config::ServerRunning)
 	{
 		signal(SIGINT, &handleSignal);
     	signal(SIGTERM, &handleSignal);
@@ -31,10 +31,7 @@ int main(int argc, char **argv, char **envp)
 			return FAILURE;
 		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
 		{
-			Client &client = conf.getClientObject(fds[i].fd); //putting this first again if it bugs for any reason its error in the code.
-			// std::cout << "number of servers is : " << number_of_servers << std::endl;
-			// std::cout << "In client index : " << i << ", revents is : " << fds[i].revents << std::endl;
-			// std::cout << "fds.size() is : " << fds.size() << std::endl;
+			Client &client = conf.getClientObject(fds[i].fd);
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
 				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
@@ -49,22 +46,20 @@ int main(int argc, char **argv, char **envp)
 			}
 			if (handleTimeout(client, fds, conf, i) == true)
 				continue ;
-			if ((!(fds[i].revents & POLLIN))) // || (!(fds[i].revents & POLLOUT)) maybe later but rn its infinite
+			if ((!(fds[i].revents & POLLIN)))
 				continue;
 			if (isCgiStuff(client, conf, fds, i) == true)
 				continue ;
 			// Lecture initiale du buffer
 			char buffer[4096] = {0};
 			int recv_value = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-			if (handleRecvValue(recv_value, i, fds, conf) == FAILURE)
+			if (handleRecvValue(recv_value) == FAILURE)
 			{	
 				disconnectClient(fds, client, conf);
 				break ;
 			}
 			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
-
-			
 
 			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
@@ -81,7 +76,7 @@ int main(int argc, char **argv, char **envp)
 				}
 				else if (type_request == "GET") 
 				{
-					if (prepareGetParse(client, req) == false) 
+					if (prepareGetParse(client, cook, req) == false) 
 						break ;
 				}
 				else if (type_request == "DELETE")
@@ -98,10 +93,11 @@ int main(int argc, char **argv, char **envp)
 	return SUCCESS;
 }
 
-static void handleSignal(int signum) {
+static void handleSignal(int signum) 
+{
     static_cast<void>(signum);
-    std::cout << "server shutdown" << std::endl;
-    server_running = false;
+    std::cout  << std::endl << MAGENTA << "Shutting Down Server, Bye !"  << RESET << std::endl;
+    Config::ServerRunning = false;
     signal(SIGINT, &handleSignal);
     signal(SIGTERM, &handleSignal);
 }

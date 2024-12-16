@@ -22,10 +22,8 @@ void autoIndex(std::string path, Client& client)
 	std::string file_content;
 	Server &server = client.getServer();
 
-	// if (conf.getIsLocation() == true)
 	if (client.getLocation() != NULL)
 	{
-		std::cout << "haaaaaaaaaaaaaaaaaaaaaaaaaaaaa----d--d-d-d-d-d-d--d" << std::endl;
 		finalPath = path;
 	}
 	else 
@@ -39,7 +37,8 @@ void autoIndex(std::string path, Client& client)
 }
 
 
-std::string trim(const std::string& str) {
+std::string trim(const std::string& str) 
+{
     size_t start = str.find_first_not_of(" \t\r\n");
     size_t end = str.find_last_not_of(" \t\r\n");
 
@@ -60,19 +59,13 @@ void printVectorrr(std::vector<std::string> vec)
 
 std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
 {
-
-	// std::cout << "path = |" << path << "|" << std::endl;
 	std::string cleanedPath = trim(path);
-	// std::cout << "cleanedPath = |" << cleanedPath << "|" << std::endl;
-	// std::cout << "Location vector size is " << locationPath.size() << std::endl;
 	for (size_t i = 0; i < locationPath.size(); ++i)
 	{
 		std::string locationStr = locationPath[i].getPath();
 		locationStr = trim(locationStr);
-		// std::cout << "IN STRING :" << cleanedPath << ", We are trying to find" << locationStr << std::endl;
-		if (cleanedPath == locationStr) //This used to be find, it caused some bugs, but maybe was useful for other reasons.
+		if (cleanedPath == locationStr)
 		{
-			// std::cout << "locationStr = |" << locationStr << "|" << std::endl;
 			if (cleanedPath.size() <= locationStr.size())
 			{
 				client.setLocation(&locationPath[i]);
@@ -93,7 +86,6 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
 	}
-	// std::cout << std::endl << "NO LOCATION ASSIGNED" << std::endl;
 	return "";
 }
 
@@ -266,7 +258,7 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 
 
 
-void	parse_buffer_get(Client &client, HttpRequest &req)
+void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 {
 	Server& 	server = client.getServer();
 	int 		client_socket = client.getSocket();
@@ -281,8 +273,6 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
 	
-	req.setIsCooked(false);
-	bool cookiesfound = false;
 	if (client.getLocation() != NULL)
 		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
@@ -334,17 +324,19 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 			req.setCookies(cookies);
 		}
 	}
-	if (cookiesfound == false)
-	{
-		std::cout << "je ne trouve pas de cookies" << std::endl;
-		req.setCookies("");
-		req.setIsCooked(false);
-	}
 	std::cout << "cookie = |" << req.getCookies() << "|" << std::endl;
 	std::cout << "iscooked = |" << req.getIsCooked() << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(client, "404");
+	if (!req.getCookies().empty())
+	{
+		std::map<std::string, Cookie> &cookies_map = cook.getCookies();
+		std::map<std::string, Cookie>::iterator it = cookies_map.find(req.getCookies());
+		if (it != cookies_map.end())
+			file_content = injectUserHtml(file_content, it->second.username);
+	}
+	(void) cook;
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
@@ -696,10 +688,8 @@ static bool file_exists_parsebuffer(const char *path)
 	return true;
 }
 
-bool prepareGetParse(Client& client, HttpRequest &req) {
-
-	// const Server& 	server = client.getServer();
-
+bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req) 
+{
 	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
 	{
 		// Extraire le nom du fichier depuis l'URL de la requête
@@ -742,13 +732,12 @@ bool prepareGetParse(Client& client, HttpRequest &req) {
 		rep << "\r\n";
 		rep << fileContent;
 
-
 		std::cout << "rep = " << rep.str() << std::endl;
 
         // Envoyer les en-têtes HTTP
         send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
 	}
 	else
-		parse_buffer_get(client, req);
+		parse_buffer_get(client, cook, req);
 	return true;
 }

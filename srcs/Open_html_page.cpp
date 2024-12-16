@@ -32,7 +32,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 {
 	return ("HTTP/1.1 " + code + "\r\n"
 			"Content-Type: " + contentType + "\r\n"
-			"Content-Length: " + to_string(content.size()) + "\r\n"
+			"Content-Length: " + toString(content.size()) + "\r\n"
 			"Connection: close\r\n"
 			"\r\n" + content); //IT REALLY SHOULD BE CLOSE OR KEEP ALIVE DEPENDING ON CONTEXT;
 }

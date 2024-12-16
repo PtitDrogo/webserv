@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+bool Config::ServerRunning = true;
+
 Config::Config() {
 }
 
