@@ -7,7 +7,6 @@ static void handleSignal(int signum);
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
-	// HttpRequest req;
 	Cookies cook;
 	std::vector<struct pollfd> fds;
 

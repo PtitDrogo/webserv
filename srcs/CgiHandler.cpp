@@ -274,7 +274,7 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		freeUpdatedEnv(updated_env);
 		close (_pipe_in[1]);
         perror("execve");
-        std::exit(EXIT_FAILURE);
+        std::exit(EXECVE_FAILURE); //st
     }
     else
     {
@@ -324,7 +324,22 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
 	{
 		std::cout << GREEN << "Pipe POLLIN triggered" << RESET << std::endl;
-
+		//checking to see if the process didnt exit failure (aka execve failed);
+		int status;
+		waitpid(client.getCgiCaller()->getCgiPID(), &status, WNOHANG);
+		std::cout << "hi boys " << std::endl;
+		if (WIFEXITED(status)) 
+		{
+			std::cout << "hi again" << std::endl;
+			int exit_code = WEXITSTATUS(status);
+			if (exit_code == EXECVE_FAILURE)
+			{
+				std::cout << "Victory !" << std::endl;
+				generate_html_page_error(client, "500");
+				disconnectClient(fds, client, conf);
+				return true;
+			}
+		}
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
 		//Check process status here, and if its bad, send a error 500.	
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
@@ -333,7 +348,7 @@ bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, s
 		disconnectClient(fds, client, conf);
 		return true;
 	}
-	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP)
+	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP) //I have never seen this trigger.
 	{
 		printf("Pipe disconnected2\n");
 		//I want my client caller to send the content from the cgi pipe to its websocket;
