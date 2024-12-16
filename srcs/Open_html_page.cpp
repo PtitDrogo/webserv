@@ -4,29 +4,6 @@
 #include <fstream>
 #include "sys/stat.h"
 
-// std::string display_meme(std::string response)
-// {
-//     std::string html;
-//     if(1)
-//     {
-//         if(1)
-//         {
-//             std::cout << "AAAAAAAAAAAAAAH" << std::endl;
-//             html =
-//                 "HELP ME HELP ME"
-//                 "\t<div class='user-info'>\n"
-//                 "\t\t<h2>User Connection Details</h2>\n"
-//                 "\t\t<p><strong>Email:</strong> " "Wesh la team" " </p>\n"
-//                 "\t\t<p><strong>Password:</strong> " "Wesh la team" " </p>\n"
-//                 "\t</div>\n"
-//                 "</body>\n</html>";
-
-//                 response += html;
-//         }
-//     }
-//     return (response);
-// }
-
 
 std::string readFile(std::string &path)
 {
@@ -55,7 +32,7 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 {
 	return ("HTTP/1.1 " + code + "\r\n"
 			"Content-Type: " + contentType + "\r\n"
-			"Content-Length: " + to_string(content.size()) + "\r\n"
+			"Content-Length: " + toString(content.size()) + "\r\n"
 			"Connection: close\r\n"
 			"\r\n" + content); //IT REALLY SHOULD BE CLOSE OR KEEP ALIVE DEPENDING ON CONTEXT;
 }

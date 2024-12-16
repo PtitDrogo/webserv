@@ -1,12 +1,8 @@
 #include "server.hpp"
 
-Server::Server() 
+Server::Server()
 {
 	_max_body_size = -1;
-	// this->_index = "";
-	// this->_port = "";
-	// this->_root = "";
-	// this->_server_name = "";
 }
 
 Server::~Server() {}
@@ -34,116 +30,26 @@ Server &Server::operator=(const Server &copy)
 	return *this;
 }
 
-std::string Server::getPort() const 
-{
-	return (this->_port);
-}
+std::string Server::getPort() const { return (this->_port); }
+std::string Server::getIndex() const { return (this->_index); }
+std::string Server::getRoot() const { return (this->_root); }
+std::string Server::getServerName() const { return (this->_server_name); }
+std::map<std::string, std::string> Server::getReturn() const { return (this->_return); }
+std::vector<location> &Server::getLocation() { return (this->_location); }
+std::map<std::string, std::string> Server::getErrorPage() const { return (this->_error_page); }
+int Server::getMaxBodySize() const { return (this->_max_body_size); }
+std::string Server::getAutoIndex() const { return (this->_auto_index); }
+std::string Server::getHost() const { return (this->_host); }
+int Server::getServerSocket() const { return (_server_socket); }
 
-std::string Server::getIndex() const 
-{
-	return (this->_index);
-}
-
-std::string Server::getRoot() const 
-{
-	return (this->_root);
-}
-
-std::string Server::getServerName() const 
-{
-	return (this->_server_name);
-}
-
-std::map<std::string , std::string> Server::getReturn() const 
-{
-	return (this->_return);
-}
-
-std::vector<location> &Server::getLocation()
-{
-	return (this->_location);
-}
-
-std::map<std::string ,std::string> Server::getErrorPage() const
-{
-	return (this->_error_page);
-}
-
-int Server::getMaxBodySize() const
-{
-	return (this->_max_body_size);
-}
-
-std::string Server::getAutoIndex() const
-{
-	return (this->_auto_index);
-}
-
-std::string Server::getHost() const
-{
-	return (this->_host);
-}
-int Server::getServerSocket() const
-{
-	return (_server_socket);
-}
-
-void Server::setPort(std::string port)
-{
-	this->_port = port;
-}
-
-void Server::setIndex(std::string index)
-{
-	this->_index = index;
-}
-
-void Server::setRoot(std::string root)
-{
-	this->_root = root;
-}
-
-void Server::setServerName(std::string server_name)
-{
-	this->_server_name = server_name;
-}
-
-void Server::setReturn(std::map<std::string , std::string> return_)
-{
-	this->_return = return_;
-}
-
-void Server::setErrorPage(std::string& error_code, std::string& error_file)
-{
-	_error_page[error_code] = error_file;
-}
-
-void Server::setLocation(location &loc)
-{
-	this->_location.push_back(loc);
-}
-
-void Server::setMaxBodySize(int max_body_size)
-{
-	this->_max_body_size = max_body_size;
-}
-
-void Server::setAutoIndex(std::string auto_index)
-{
-	this->_auto_index = auto_index;
-}
-
-void Server::setServerSocket(int server_socket)
-{
-	_server_socket = server_socket;
-}
-
-// void Server::setLocation(std::string loc)
-// {
-// 	this->_location = loc;
-// }
-
-void Server::setHost(std::string host)
-{
-	this->_host = host;
-}
+void Server::setPort(std::string port) { this->_port = port; }
+void Server::setIndex(std::string index) { this->_index = index; }
+void Server::setRoot(std::string root) { this->_root = root; }
+void Server::setServerName(std::string server_name) { this->_server_name = server_name; }
+void Server::setReturn(std::map<std::string, std::string> return_) { this->_return = return_; }
+void Server::setErrorPage(std::string &error_code, std::string &error_file) { _error_page[error_code] = error_file; }
+void Server::setLocation(location &loc) { this->_location.push_back(loc); }
+void Server::setMaxBodySize(int max_body_size) { this->_max_body_size = max_body_size; }
+void Server::setAutoIndex(std::string auto_index) { this->_auto_index = auto_index; }
+void Server::setServerSocket(int server_socket) { _server_socket = server_socket; }
+void Server::setHost(std::string host) { this->_host = host; }

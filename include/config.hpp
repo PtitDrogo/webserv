@@ -34,6 +34,7 @@ class Config
 		void printConfig(std::ifstream& file);
 		void setIsLocation(bool islocation);
 		void printConfig();
+		static bool ServerRunning;
 };
 
 #endif

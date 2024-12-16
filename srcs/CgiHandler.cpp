@@ -90,7 +90,7 @@ void	CgiHandler::processCgiPath(const HttpRequest &request)
 		std::string full_body = request.getBody();
 		_body_post = getActualBody(full_body);
 		_params["REQUEST_METHOD"] = "POST";
-		_params["CONTENT_LENGTH"] = intToString(_body_post.size());
+		_params["CONTENT_LENGTH"] = toString(_body_post.size());
 		_params["PATH_INFO"] = _path;
 		// std::cout << GREEN << "ACTUAL VARIABLE = " << getActualBody(full_body) << std::endl;
 		// std::cout << GREEN << "BODY LENGTH = " << _client.getContentLength() << std::endl;

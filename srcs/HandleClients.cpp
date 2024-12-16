@@ -12,7 +12,6 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 			int client_socket = SetupClientAddress(fds[i].fd);
 			addPollFD(client_socket, fds);
 			conf.addClient(client_socket, conf.getServer()[i]);
-			//continue ; maybe ? Idk
 		}
 	}
 }
@@ -23,7 +22,8 @@ int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
     if (poll(fds.data(), fds.size(), POLL_TIMEOUT_MILISECONDS) == -1) //POLL_TIMEOUT
     {
         //NOTE : if we use ctrlC or ctrl Z, this will print this, before pushing to prod i could check the static variable to know that its normal to fail this and not print.
-		std::cerr << "Poll failed" << std::endl;
+		if (Config::ServerRunning == true)
+			std::cerr << "Poll failed" << std::endl;
         for (unsigned int i = 0; i < number_of_servers; i++)
 		{
 			close(fds[i].fd); //do we have to do more cleanup ? I dont even know
@@ -103,11 +103,8 @@ static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config&
 
 
 //Parametres -> retour de recv, la liste de fds et l'index du client (pour deconnect sur fail)
-int	handleRecvValue(int valread, size_t &i, std::vector<struct pollfd> &fds, Config& conf)
+int	handleRecvValue(int valread)
 {
-	(void)i;
-	(void)fds;
-	(void)conf;
 	if (valread > 0)
 	{
 		// std::cout << "DEBUG:Received from client successfully" << std::endl;
