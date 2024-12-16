@@ -13,6 +13,7 @@ class location
 		std::string _allow_method;
 		std::string _cgi_path;
 		std::map<std::string, std::string> _redir;
+		std::map<std::string, std::string> _cgi;
 
 	public :
 		location();
@@ -30,6 +31,7 @@ class location
 		std::map<std::string, std::string> getRedir() const;
 		bool getCanPost() const;
 		bool getCanDelete() const;
+		std::map<std::string, std::string> getCgi() const;
 
 
 
@@ -43,6 +45,7 @@ class location
 		void setRedir(std::string& error_code, std::string& path);
 		void setCanPost(bool canPost);
 		void setCanDelete(bool canDelete);
+		void setCgi(std::string& cgi_path, std::string& cgi_extension);
 };
 
 #endif

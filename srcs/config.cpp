@@ -381,7 +381,7 @@ bool parse_location(std::string line, Server &serv, std::ifstream &file)
 				size_t startCgiPath = subLine.find_first_not_of(" \t", cgiPathPos + 8);
 				if (startCgiPath == std::string::npos)
 					return true;
-				size_t endCgiPath = subLine.find_first_of(" \t;", startCgiPath);
+				size_t endCgiPath = subLine.find_first_of(";", startCgiPath);
 				std::string cgiPath = subLine.substr(startCgiPath, endCgiPath - startCgiPath);
 				loc.setCgiPath(cgiPath);
 			}
@@ -510,6 +510,47 @@ bool count_bracket(std::ifstream &file)
 	return true;
 }
 
+void printMapCgi(std::map<std::string, std::string> cgi)
+{
+	for (std::map<std::string, std::string>::iterator it = cgi.begin(); it != cgi.end(); ++it)
+	{
+		std::cout << "Cgi: " << it->first << " => " << it->second << std::endl;
+	}
+}
+
+void parse_cgi_path(Server &server)
+{
+	std::cout << "parse_cgi_path" << std::endl;
+	std::cout << "cgi_path = " << server.getLocation()[0].getCgiPath() << std::endl;
+
+	std::string cgi_path = server.getLocation()[0].getCgiPath();
+	size_t pos = 0;
+
+	while ((pos = cgi_path.find(".", pos)) != std::string::npos)
+	{
+		size_t extention = cgi_path.find(":", pos);
+		if (extention == std::string::npos)
+			break;
+
+		std::string cgi_extension = cgi_path.substr(pos, extention - pos + 1);
+
+		size_t start = extention + 1;
+		size_t end = cgi_path.find(" ", start);
+		std::string extracted_path;
+		if (end != std::string::npos)
+			extracted_path = cgi_path.substr(start, end - start);
+		else
+			extracted_path = cgi_path.substr(start);
+
+		server.getLocation()[0].setCgi(extracted_path, cgi_extension);
+		if (end != std::string::npos)
+			pos = end;
+		else
+			pos = std::string::npos;
+	}
+	printMapCgi(server.getLocation()[0].getCgi());
+}
+
 bool Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
@@ -539,6 +580,10 @@ bool Config::createServerr(std::ifstream &file , Server &serv)
 			parse_auto_index(line, serv);
 		if (line.find("}") != std::string::npos)
 			break;
+	}
+	if (serv.getLocation()[0].getCgiPath().empty() == false)
+	{
+		parse_cgi_path(serv);
 	}
 	this->setServer(serv);
 	return true;
