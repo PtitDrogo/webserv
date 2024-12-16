@@ -520,37 +520,32 @@ void printMapCgi(std::map<std::string, std::string> cgi)
 	}
 }
 
-void parse_cgi_path(Server &server)
+void parse_cgi_path(std::string& line, Server &server)
 {
-	std::cout << "parse_cgi_path" << std::endl;
-	std::cout << "cgi_path = " << server.getLocation()[0].getCgiPath() << std::endl;
-
-	std::string cgi_path = server.getLocation()[0].getCgiPath();
 	size_t pos = 0;
 
-	while ((pos = cgi_path.find(".", pos)) != std::string::npos)
+	while ((pos = line.find(".", pos)) != std::string::npos)
 	{
-		size_t extention = cgi_path.find(":", pos);
+		size_t extention = line.find(":", pos);
 		if (extention == std::string::npos)
 			break;
 
-		std::string cgi_extension = cgi_path.substr(pos, extention - pos + 1);
+		std::string cgi_extension = line.substr(pos, extention - pos + 1);
 
 		size_t start = extention + 1;
-		size_t end = cgi_path.find(" ", start);
+		size_t end = line.find(" ", start);
 		std::string extracted_path;
 		if (end != std::string::npos)
-			extracted_path = cgi_path.substr(start, end - start);
+			extracted_path = line.substr(start, end - start);
 		else
-			extracted_path = cgi_path.substr(start);
-
-		server.getLocation()[0].setCgi(extracted_path, cgi_extension);
+			extracted_path = line.substr(start);
+		server.addCgis(cgi_extension, extracted_path);
 		if (end != std::string::npos)
 			pos = end;
 		else
 			pos = std::string::npos;
 	}
-	printMapCgi(server.getLocation()[0].getCgi());
+	printMapCgi(server.getCgis());
 }
 
 bool Config::createServerr(std::ifstream &file , Server &serv)
@@ -580,12 +575,10 @@ bool Config::createServerr(std::ifstream &file , Server &serv)
 				return false;
 		if (line.find("auto_index") != std::string::npos)
 			parse_auto_index(line, serv);
+		if (line.find("cgi_path") != std::string::npos)
+			parse_cgi_path(line, serv);
 		if (line.find("}") != std::string::npos)
 			break;
-	}
-	if (serv.getLocation()[0].getCgiPath().empty() == false)
-	{
-		parse_cgi_path(serv);
 	}
 	this->setServer(serv);
 	return true;
@@ -673,14 +666,19 @@ bool Config::parse_config_file(std::string filename)
 	// this->printConfig(file);
 	if (!check_same_port(this->getServer()))
 		return false;
-	std::vector<location> locs = this->getServer()[0].getLocation();
-	for (size_t i = 0; i < locs.size(); ++i)
+	//tfreydie, added checking accross all servers;
+	for (size_t x = 0; x < _servers.size(); x++)
 	{
-		for (size_t j = i + 1; j < locs.size(); ++j)
+		std::vector<location> locs = _servers[x].getLocation();
+		for (size_t i = 0; i < locs.size(); ++i)
 		{
-			if (!check_same_path_of_location(locs, i, j))
-				return false;
+			for (size_t j = i + 1; j < locs.size(); ++j)
+			{
+				if (!check_same_path_of_location(locs, i, j))
+					return false;
+			}
 		}
 	}
+
 	return (true);
 }
