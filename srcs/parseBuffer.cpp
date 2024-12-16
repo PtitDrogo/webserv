@@ -38,7 +38,6 @@ void autoIndex(std::string path, Client& client)
 	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }
 
-
 std::string trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t\r\n");
     size_t end = str.find_last_not_of(" \t\r\n");
@@ -97,7 +96,6 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 	return "";
 }
 
-
 bool check_host(std::string line, const Server& Server)
 {
 	size_t pos = line.find("Host: ");
@@ -125,7 +123,6 @@ bool check_host(std::string line, const Server& Server)
 	}
 	return true;
 }
-
 
 void sendRedirection(int client_socket, const std::string& path)
 {
@@ -190,7 +187,6 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 	return finalPath;
 }
 
-
 bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMethod) {
     // Afficher les méthodes autorisées et la méthode demandée
     std::cout << "allowedMethods = |" << allowedMethods << "|" << std::endl;
@@ -218,7 +214,6 @@ bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMe
     }
     return false;  // Aucun match trouvé
 }
-
 
 std::string parse_with_location(Client &client, std::string finalPath, HttpRequest &req)
 {
@@ -275,9 +270,6 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 	}
 	return finalPath;
 }
-
-
-
 
 void	parse_buffer_get(Client &client, HttpRequest &req)
 {
@@ -343,10 +335,6 @@ void	parse_buffer_get(Client &client, HttpRequest &req)
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
 }
 
-
-
-
-
 std::string httpHeaderResponseForCookies(std::string code, std::string contentType, std::string content, Cookies &cook)
 {
     std::string response = "HTTP/1.1 " + code + "\r\n";
@@ -369,10 +357,6 @@ std::string httpHeaderResponseForCookies(std::string code, std::string contentTy
 
     return response;
 }
-
-
-
-
 
 std::string generate_token()
 {
@@ -436,7 +420,6 @@ std::string handle_connexion(std::string username, std::string password, Cookies
     return "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<h1>Veuillez fournir un nom d'utilisateur et un mot de passe</h1>";
 }
 
-
 std::string handle_deconnexion(Cookies &cook)
 {
 	std::map<std::string, std::string> cookies = cook.getCookies();
@@ -466,7 +449,6 @@ std::string handle_deconnexion(Cookies &cook)
 		return response;
 	}
 }
-
 
 void parse_buffer_post(Client& client, Cookies &cook)
 {
@@ -593,32 +575,6 @@ void parse_buffer_post(Client& client, Cookies &cook)
 	password.clear();
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 bool preparePostParse(Client& client, Cookies &cook)
 {
 	const Server& 	server = client.getServer();
@@ -666,7 +622,7 @@ bool preparePostParse(Client& client, Cookies &cook)
 			// return ;
 		}
 
-		//vas chercher de lq dernier boundary de la requete
+		//vas chercher la dernier pos de la boundary
 		size_t lastBoundaryPos = client.getRequest().find("--" + client.getBoundary() + "--");
 		lastBoundaryPos += 6 + client.getBoundary().size(); // 6 = "--" + "--" + "\r\n"
 		// lastBoundaryPos -= client.getHeadEnd();
@@ -698,8 +654,7 @@ bool preparePostParse(Client& client, Cookies &cook)
 	return true;
 }
 
-
-static bool file_exists_parsebuffer(const char *path)
+bool file_exists_parsebuffer(const char *path)
 {
 	struct stat st;
     
@@ -710,43 +665,42 @@ static bool file_exists_parsebuffer(const char *path)
 	return true;
 }
 
+std::string readFile_http(std::string filePath)
+{
+    std::ifstream inputFile(filePath.c_str(), std::ios::binary);
+
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf(); //gets all content of the file and puts it into buffer;
+    return (buffer.str());
+}
+
 bool prepareGetParse(Client& client, HttpRequest &req) {
 
-	// const Server& 	server = client.getServer();
-
-	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
+	if (client.getRequest().find("/config/base_donnees/") != std::string::npos)
 	{
-		// Extraire le nom du fichier depuis l'URL de la requête
+		std::cout << YELLOW << "DOWNLOAD in process..." << RESET << std::endl;
         std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
 
-        if (filename.find("?fileName=") != std::string::npos) {
+        if (filename.find("?fileName=") != std::string::npos) // in botton case
             filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
-        }
-		// else
-        //     filename = filename.substr(filename.find("/config/base_donnees/"));
+		else //in url case
+            filename = filename.substr(0, filename.find(" "));
 
         std::string filePath = "./config/base_donnees/" + filename;
 		if (file_exists_parsebuffer(filePath.c_str()) == false)
 		{
+			std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
 			generate_html_page_error(client, "404");
 			return false;
 		}
-		std::cout << MAGENTA << "filePath: \"" << filePath << "\"" << RESET << std::endl; // debug filename
 
-
-        std::string fileContent = readFile(filePath);
-		std::cout << "fileContent = " << fileContent << std::endl;
-
+        std::string fileContent = readFile_http(filePath);
         if (fileContent.empty()) {
-            // Si le fichier n'est pas trouvé, envoyer une réponse d'erreur 404
-            std::string response = "HTTP/1.1 404 Not Found\r\n";
-            response += "Content-Type: text/plain\r\n\r\n";
-            response += "File not found.\r\n";
-            send(client.getSocket(), response.c_str(), response.size(), 0);
+			std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
+			generate_html_page_error(client, "404");
             return false;
         }
 
-        // Préparer la réponse HTTP avec les en-têtes appropriés pour un téléchargement de fichier
         std::stringstream rep;
         rep << "HTTP/1.1 200 OK\r\n";
         rep << "Content-Type: application/octet-stream\r\n";
@@ -756,11 +710,8 @@ bool prepareGetParse(Client& client, HttpRequest &req) {
 		rep << "\r\n";
 		rep << fileContent;
 
-
-		std::cout << "rep = " << rep.str() << std::endl;
-
-        // Envoyer les en-têtes HTTP
         send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
+		std::cout << GREEN << "DOWNLOAD Successful" << RESET << std::endl;
 	}
 	else
 		parse_buffer_get(client, req);

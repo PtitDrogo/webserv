@@ -89,6 +89,7 @@ int main(int argc, char **argv, char **envp)
 				client.reset();
 				// std::cout << req << std::endl;
 				//add code to clear the buffer request here;
+				NLINE;
 			}
 		}
 	}

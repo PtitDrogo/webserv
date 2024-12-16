@@ -10,61 +10,36 @@ bool deleteFile(const std::string& path)
 
 void parse_buffer_delete(std::string buffer, Client& client)
 {
-	std::istringstream stream(buffer);
-	std::string line;
+	(void)buffer;
 	Server& 	server = client.getServer();
 
+	if (client.getRequest().find("DELETE /config/base_donnees/") != std::string::npos) {
 
-	if (!stream)
-	{
-		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
-		return ;
-	}
-	if (server.getLocation()[0].getAllowMethod().find("DELETE") == std::string::npos && server.getLocation()[0].getAllowMethod().empty() == false)
-	{
-		generate_html_page_error(client, "404");
-		return ;
-	}
-	std::string method;
-	std::string path;
-	std::string version;
-	std::string finalPath;
-	std::string name;
-	std::string email;
-	std::string message;
-	while (std::getline(stream, line))
-	{
-		size_t pos1 = line.find("DELETE");
-		size_t pos2 = line.find("HTTP");
+		std::cout << YELLOW << "DELETE in process..." << RESET << std::endl; // print debug
+        std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
+
+        if (filename.find("?fileName=") != std::string::npos) // in botton case
+            filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
+		else //in url case
+            filename = filename.substr(0, filename.find(" "));
 		
-		if (pos1 != std::string::npos && pos2 != std::string::npos)
-		{
-			method = line.substr(pos1, 7);
-			path = line.substr(pos1 + 7, pos2 - pos1 - 8);
-			version = line.substr(pos2);
-			if (path.find(".txt") == std::string::npos)
-				path = path + ".txt";
-			finalPath = "." + server.getRoot() + path;
-		}
-	}
-	if (!finalPath.empty())
-	{
-		std::ifstream infile(finalPath.c_str());
-		if (infile.is_open())
-		{
-			std::string file_content = readFile(finalPath);
-			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
-			infile.close();
-			if (deleteFile(finalPath))
-				std::cout << "Fichier supprimé après lecture." << std::endl;
-			else
-				std::cerr << "Échec de la suppression du fichier." << std::endl;
-		}
-		else
-		{
-			std::cerr << "Le fichier n'existe pas ou ne peut pas être ouvert." << std::endl;
+        std::string filePath = "./config/base_donnees/" + filename;
+		if (file_exists_parsebuffer(filePath.c_str()) == false) {
+			std::cout << RED << "DELETE Fail" << RESET << std::endl;
 			generate_html_page_error(client, "404");
+			return ;
 		}
+
+		if (deleteFile(filePath) == false) {
+			std::cout << RED << "DELETE Fail" << RESET << std::endl;
+			generate_html_page_error(client, "404");
+			return ;
+		}
+
+		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string file_content = readFile(path);
+		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+		std::cout << GREEN << "DETELE Successful" << RESET << std::endl;
 	}
 }
