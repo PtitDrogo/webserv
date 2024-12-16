@@ -334,8 +334,6 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	// 	req.setCookies("");
 	// 	req.setIsCooked(false);
 	// }
-	std::cout << "cookie = |" << req.getCookies() << "|" << std::endl;
-	std::cout << "iscooked = |" << req.getIsCooked() << "|" << std::endl;
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(client, "404");
@@ -349,7 +347,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	(void) cook;
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
-	req.setCookies(""); //MAKE A SAFE SEND FUNCTION AND ADD THIS IN IT;
+	// req.setCookies(""); //MAKE A SAFE SEND FUNCTION AND ADD THIS IN IT;
 }
 
 
