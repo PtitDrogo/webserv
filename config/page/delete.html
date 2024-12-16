@@ -80,7 +80,7 @@
 			}
 
 			// Envoi de la requête DELETE
-			fetch(`../base_donnees/${fileName}`, {
+			fetch(`/config/base_donnees/${fileName}`, {
 				method: 'DELETE'
 			})
 			.then(response => {

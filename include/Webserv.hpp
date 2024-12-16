@@ -33,7 +33,7 @@ class Cookies;
 # define SUCCESS 0
 # define FAILURE 1
 # define POLL_TIMEOUT_MILISECONDS 5000
-# define CGI_TIMEOUT_SECONDS 12
+# define CGI_TIMEOUT_SECONDS 1
 # define PIPE_BUFFER 65535
 
 
@@ -42,11 +42,11 @@ class Cookies;
 //*********************************************************//
 
 #define RESET	"\033[0m"
-#define MAGENTA	"\033[35m"
-#define YELLOW "\033[33m"
+#define MAGENTA	"\033[1;35m"
+#define YELLOW "\033[1;33m"
 #define BLUE "\033[1;34m"
-#define GREEN "\033[32m"
-#define RED "\033[31m"
+#define GREEN "\033[1;32m"
+#define RED "\033[1;31m"
 #define NLINE std::cout << std::endl;
 
 
@@ -83,9 +83,11 @@ bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf
 
 //-----------Server-----------//
 std::string readFile(std::string &path);
+std::string readFile_http(std::string filePath);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 void 		generate_html_page_error(const Client& client, std::string error_code);
+bool        file_exists_parsebuffer(const char *path);
 
 //-----------Delete-----------//
 
