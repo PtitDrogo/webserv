@@ -272,7 +272,11 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	std::string reponse;
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
-	
+
+	//This nonsense actually got the thing working;
+	// req.setIsCooked(false);
+	// bool cookiesfound = false;
+	//
 	if (client.getLocation() != NULL)
 		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
@@ -324,6 +328,12 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			req.setCookies(cookies);
 		}
 	}
+	// if (cookiesfound == false)
+	// {
+	// 	std::cout << "je ne trouve pas de cookies" << std::endl;
+	// 	req.setCookies("");
+	// 	req.setIsCooked(false);
+	// }
 	std::cout << "cookie = |" << req.getCookies() << "|" << std::endl;
 	std::cout << "iscooked = |" << req.getIsCooked() << "|" << std::endl;
 	file_content = readFile(finalPath);
@@ -339,6 +349,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	(void) cook;
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
+	req.setCookies(""); //MAKE A SAFE SEND FUNCTION AND ADD THIS IN IT;
 }
 
 
