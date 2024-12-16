@@ -31,7 +31,8 @@ Step to do a CGI:
 static bool is_executable(const char *path);
 static bool file_exists(const char *path);
 static std::string getActualBody(std::string& fullbody);
-static std::string get_directory_path(const std::string& full_path); 
+static std::string get_directory_path(const std::string& full_path);
+static std::string get_new_executable(const std::string& full_path);
 
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
@@ -83,7 +84,6 @@ void	CgiHandler::processCgiPath(const HttpRequest &request)
 		_params["QUERY_STRING"] = tmp_path;
 		_params["REQUEST_METHOD"] = "GET";
 		_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
-		_params["PATH_INFO"] = _path;
 	}
 	else if (request.getMethod() == "CGI-POST")
 	{	
@@ -91,9 +91,6 @@ void	CgiHandler::processCgiPath(const HttpRequest &request)
 		_body_post = getActualBody(full_body);
 		_params["REQUEST_METHOD"] = "POST";
 		_params["CONTENT_LENGTH"] = toString(_body_post.size());
-		_params["PATH_INFO"] = _path;
-		// std::cout << GREEN << "ACTUAL VARIABLE = " << getActualBody(full_body) << std::endl;
-		// std::cout << GREEN << "BODY LENGTH = " << _client.getContentLength() << std::endl;
 	}
 	return ;
 }
@@ -105,6 +102,14 @@ static std::string get_directory_path(const std::string& full_path)
     if (last_slash == std::string::npos) 
         return ".";  
     return full_path.substr(0, last_slash);
+}
+
+static std::string get_new_executable(const std::string& full_path) 
+{
+    size_t last_slash = full_path.find_last_of('/');
+    if (last_slash == std::string::npos) 
+        return "./" + full_path;
+    return "." + full_path.substr(last_slash);
 }
 
 //As it stands in the code, "body" is just the entire request, so this gets what i actually care about
@@ -249,8 +254,8 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
 			{
 				freeUpdatedEnv(updated_env);
-				// for (int i = 3; i < 1024; i++)
-				// 	close (i);
+				for (int i = 3; i < 1024; i++)
+					close (i);
 				close (_pipe_in[0]);
 				close (_pipe_in[1]);
 				close (_pipe_out[0]);
@@ -261,23 +266,24 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		close(_pipe_out[0]);
 		close(_pipe_out[1]);
 		close(_pipe_in[0]);
-        std::cerr << "about to execve" << _path.c_str() << std::endl;
 		std::string script_dir = get_directory_path(_path);
     
 		if (chdir(script_dir.c_str()) == -1) 
 		{
 			freeUpdatedEnv(updated_env);
 			close (_pipe_in[1]);
-			// for (int i = 3; i < 1024; i++)
-			// 	close (i);
+			for (int i = 3; i < 1024; i++)
+				close (i);
 			perror("chdir");
 			std::exit(EXIT_FAILURE);
 		}
-		execve(_path.c_str(), _argv, updated_env);
+		std::string final_path = get_new_executable(_path);
+        // std::cerr << "about to execve" << final_path << std::endl;
+		execve(final_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env);
-		// for (int i = 3; i < 1024; i++)
-		// 	close (i);
+		for (int i = 3; i < 1024; i++)
+			close (i);
 		close (_pipe_in[1]);
         perror("execve");
         std::exit(EXECVE_FAILURE); //st
