@@ -241,16 +241,16 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
         char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(_pipe_in[0], STDIN_FILENO);
-		int null_fd = open("/dev/null", O_WRONLY);
-		dup2(null_fd, STDERR_FILENO);
-		close(null_fd);
+		// int null_fd = open("/dev/null", O_WRONLY);
+		// dup2(null_fd, STDERR_FILENO);
+		// close(null_fd);
 		if (request.getMethod() == "CGI-POST")
 		{
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
 			{
 				freeUpdatedEnv(updated_env);
-				for (int i = 3; i < 1024; i++)
-					close (i);
+				// for (int i = 3; i < 1024; i++)
+				// 	close (i);
 				close (_pipe_in[0]);
 				close (_pipe_in[1]);
 				close (_pipe_out[0]);
@@ -268,16 +268,16 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		{
 			freeUpdatedEnv(updated_env);
 			close (_pipe_in[1]);
-			for (int i = 3; i < 1024; i++)
-				close (i);
+			// for (int i = 3; i < 1024; i++)
+			// 	close (i);
 			perror("chdir");
 			std::exit(EXIT_FAILURE);
 		}
 		execve(_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env);
-		for (int i = 3; i < 1024; i++)
-			close (i);
+		// for (int i = 3; i < 1024; i++)
+		// 	close (i);
 		close (_pipe_in[1]);
         perror("execve");
         std::exit(EXECVE_FAILURE); //st
@@ -324,15 +324,12 @@ pid_t   CgiHandler::getPID() {return _pid;}
 
 bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
 {
-	(void)i;
 	if (client.getCgiCaller() == NULL)
 		return (false);
 	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
 	{
 		std::cout << GREEN << "Pipe POLLIN triggered" << RESET << std::endl;
-		//checking to see if the process didnt exit failure (aka execve failed);
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
-		//Check process status here, and if its bad, send a error 500.	
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
 			std::cerr << "Couldnt send data of CGI to client, error 500" << std::endl;
