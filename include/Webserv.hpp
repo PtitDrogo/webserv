@@ -120,5 +120,50 @@ bool isdigit(std::string str);
 bool isExtension(std::string path);
 std::string trim(const std::string& str);
 std::string injectUserHtml(const std::string& fileContent, const std::string& username);
+bool isCommentLine(const std::string line);
+bool count_bracket(std::ifstream &file);
+
+
+//-----------ParseServer-----------//
+
+bool parse_listen(std::string line, Server &serv);
+bool parse_server_name(std::string line, Server &serv);
+void parse_index(std::string line, Server &serv);
+void parse_root(std::string line, Server &serv);
+void parse_error_page(std::string line, Server &serv);
+void parse_max_body_size(const std::string &line, Server &serv);
+void parse_auto_index(std::string line, Server &serv);
+void parse_cgi_path(Server &server);
+
+//-----------ParseLocation-----------//
+
+bool parse_location(std::string line, Server &serv, std::ifstream &file);
+std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket);
+bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMethod);
+std::string parse_with_location(Client &client, std::string finalPath, HttpRequest &req);
+std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client);
+std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket);
+std::string parse_with_location(Client &client, std::string finalPath, HttpRequest &req);
+
+//-----------Print-----------//
+
+void printVector(std::map<std::string, std::string> errorPage);
+void printMapRedirect(std::map<std::string, std::string> redirect);
+void printVectorloc(std::vector<location> loc);
+void printVectorServer(std::vector<Server> serv);
+void printMapCgi(std::map<std::string, std::string> cgi);
+
+//-----------Cookies-----------//
+
+std::string handle_connexion(std::string username, std::string password, Cookies &cook, std::string request_token, Client& client);
+std::string handle_deconnexion(Cookies &cook, std::string request_token, Client& client);
+
+//-----------Auto_index-----------//
+
+void autoIndex(std::string path, Client& client);
+
+//-----------Check-----------//
+
+bool check_host(std::string line, const Server& Server);
 
 #endif
