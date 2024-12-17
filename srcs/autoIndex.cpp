@@ -80,7 +80,6 @@ std::string create_page(std::string html, std::string directory)
     html += "\t</style>\n";
     html += "</head>\n";
     html += "<body>\n";
-    // html += "\t<h1>Index of " + directory + "</h1>\n";
     html += "\t<h1>AutoIndex_Page</h1>\n";
 
     html += "\t<ul>\n";
@@ -154,4 +153,24 @@ std::string generateAutoIndexPage(const std::string& directory, const std::vecto
 	html += "</body>\n";
 	html += "</html>";
 	return html;
+}
+
+
+void autoIndex(std::string path, Client& client)
+{
+	std::string finalPath;
+	std::string reponse;
+	std::string file_content;
+	Server &server = client.getServer();
+
+	if (client.getLocation() != NULL)
+	{
+		finalPath = path;
+	}
+	else 
+		finalPath = "." + server.getRoot() + path;
+	std::vector<std::string> files = listDirectory(finalPath);
+	file_content = generateAutoIndexPage(finalPath, files, client);
+	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }

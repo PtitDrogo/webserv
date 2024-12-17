@@ -1,262 +1,5 @@
 #include "Webserv.hpp"
 
-bool isExtension(std::string path)
-{
-	//return false if there is not extension
-	if(path.find(".html") == std::string::npos &&
-		path.find(".css") == std::string::npos &&
-		path.find(".js") == std::string::npos &&
-		path.find(".png") == std::string::npos &&
-		path.find(".jpg") == std::string::npos &&
-		path.find(".gif") == std::string::npos &&
-		path.find(".ico") == std::string::npos &&
-		path.find(".py") == std::string::npos &&
-		path.find(".php") == std::string::npos
-		)
-		return (false);
-	return (true);
-}
-
-void autoIndex(std::string path, Client& client)
-{
-	std::string finalPath;
-	std::string reponse;
-	std::string file_content;
-	Server &server = client.getServer();
-
-	if (client.getLocation() != NULL)
-	{
-		finalPath = path;
-	}
-	else 
-		finalPath = "." + server.getRoot() + path;
-	std::cout << "---------------------------------------finalPath = |" << finalPath << "|" << std::endl;
-	std::vector<std::string> files = listDirectory(finalPath);
-	file_content = generateAutoIndexPage(finalPath, files, client);
-	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	std::cout << "reponse = |" << reponse << "|" << std::endl;
-	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
-}
-
-
-std::string trim(const std::string& str) 
-{
-    size_t start = str.find_first_not_of(" \t\r\n");
-    size_t end = str.find_last_not_of(" \t\r\n");
-
-    if (start == std::string::npos || end == std::string::npos) {
-        return "";
-    }
-
-    return str.substr(start, end - start + 1);
-}
-
-void printVectorrr(std::vector<std::string> vec)
-{
-	for (size_t i = 0; i < vec.size(); i++)
-	{
-		std::cout << "vec[" << i << "] = " << vec[i] << std::endl;
-	}
-}
-
-std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
-{
-	std::string cleanedPath = trim(path);
-	for (size_t i = 0; i < locationPath.size(); ++i)
-	{
-		std::string locationStr = locationPath[i].getPath();
-		locationStr = trim(locationStr);
-		if (cleanedPath == locationStr)
-		{
-			if (cleanedPath.size() <= locationStr.size())
-			{
-				client.setLocation(&locationPath[i]);
-				return "." + locationPath[i].getRoot();
-			}
-			std::string relativePath = cleanedPath.substr(locationStr.size());
-			if (relativePath.empty() || relativePath == "/")
-			{
-				if (!locationPath[i].getIndex().empty())
-				{
-					client.setLocation(&locationPath[i]);
-					return "." + locationPath[i].getRoot() + locationPath[i].getIndex();
-				}
-				client.setLocation(&locationPath[i]);
-				return "." + locationPath[i].getRoot();
-			}
-			client.setLocation(&locationPath[i]);
-			return "." + locationPath[i].getRoot() + relativePath;
-		}
-	}
-	return "";
-}
-
-bool check_host(std::string line, const Server& Server)
-{
-	size_t pos = line.find("Host: ");
-	if (pos != std::string::npos)
-	{
-		std::string host = line.substr(pos + 6);
-		// Nettoyage de la chaîne pour éviter les caractères superflus
-		host = host.substr(0, host.find_first_of("\r\n"));
-		host.erase(std::remove_if(host.begin(), host.end(), ::isspace), host.end());
-
-		// std::cout << "-------------host = |" << host << "|" << std::endl;
-		std::string my_host;
-		if (Server.getHost().empty())
-		{
-			my_host = Server.getServerName() + ":" + Server.getPort();
-		}
-		else
-			my_host = Server.getHost();
-		// std::cout << "-------------my_host = |" << my_host << "|" << std::endl;
-		if (host != my_host)
-		{
-			std::cout << "host.conf = |" << my_host << "|" << std::endl;
-			return false;
-		}
-	}
-	return true;
-}
-
-void sendRedirection(int client_socket, const std::string& path)
-{
-	std::ostringstream responseStream;
-	std::cout << "---------------------------------------------path = " << path << std::endl;
-	responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
-				<< "Location: " << path << "\r\n"
-				<< "Content-Type: text/html\r\n"
-				<< "Content-Length: 0\r\n"
-				<< "Connection: close\r\n"
-				<< "\r\n";
-	std::string response = responseStream.str();
-	std::cout << GREEN "response = |" << response << "|" << RESET << std::endl;
-	send(client_socket, response.c_str(), response.size(), 0);
-}
-
-
-std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket)
-{
-	std::string reponse;
-	std::string file_content;
-	Server& server = client.getServer();
-
-	if (path == "/")
-	{
-		if (!server.getIndex().empty())
-		{
-			finalPath = "." + server.getRoot() + server.getIndex();
-			return finalPath;
-		}
-		if (server.getAutoIndex() == "on")
-		{
-			autoIndex(path, client);
-			return "";
-		}
-		else
-		{
-			generate_html_page_error(client, "404");
-		}
-	}
-	else if (server.getAutoIndex() == "on" && server.getIndex().empty())
-	{
-		finalPath = "." + server.getRoot() + path;
-		if (!isExtension(finalPath))
-		{
-			std::vector<std::string> files = listDirectory(finalPath);
-			file_content = generateAutoIndexPage(finalPath, files, client);
-		}
-		else if (isExtension(finalPath))
-			file_content = readFile(finalPath);
-		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << "reponse = " << reponse << std::endl;
-		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client_socket, reponse.c_str(), reponse.size(), 0);
-		return "";
-	}
-	else
-		finalPath = "." + server.getRoot() + path;
-	return finalPath;
-}
-
-
-bool isMethodAllowed(const std::string& allowedMethods, const std::string& reqMethod)
-{
-    std::string trimmedReqMethod = reqMethod;
-    trimmedReqMethod.erase(0, trimmedReqMethod.find_first_not_of(" \t"));
-    trimmedReqMethod.erase(trimmedReqMethod.find_last_not_of(" \t") + 1);
-    
-    std::stringstream ss(allowedMethods);
-    std::string method;
-
-	while (std::getline(ss, method, ' '))
-	{
-		method.erase(0, method.find_first_not_of(" \t"));
-		method.erase(method.find_last_not_of(" \t") + 1);
-		if (method == trimmedReqMethod)
-			return true;
-	}
-	return false;
-}
-
-std::string parse_with_location(Client &client, std::string finalPath, HttpRequest &req)
-{
-	std::cout << "je suis laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-	if (client.getLocation() != NULL)
-	{	
-		
-		std::cout << "C'est tfreydie, location treated is :" << client.getLocation()->getPath() << std::endl;
-		std::cout << "allow method " << client.getLocation()->getAllowMethod() << std::endl;
-	}
-	location location = *(client.getLocation());
-
-	std::cout << req.getMethod() << std::endl;
-	if (isMethodAllowed(location.getAllowMethod(), req.getMethod()) == false)
-		std::cout << "isMethodAllowed = false" << std::endl;
-	if (location.getAllowMethod().empty() == false)
-		std::cout << "location.getAllowMethod().empty() = false" << std::endl;
-	if (isMethodAllowed(location.getAllowMethod(), req.getMethod()) == false && location.getAllowMethod().empty() == false)
-	{
-		generate_html_page_error(client, "404");
-		return "";
-	}
-	if (location.getRedir().empty() == false)
-	{
-		std::cout << "je rentre la ------------------------------------------------------" << std::endl;
-		std::map<std::string, std::string> redirMap = location.getRedir();
-		for (std::map<std::string, std::string>::iterator it = redirMap.begin(); it != redirMap.end(); ++it)
-		{
-			std::string errorCode = it->first;
-			std::string path = it->second;
-			if (errorCode == "301" && path != "")
-				sendRedirection(client.getSocket(), path);
-			return "";
-		}
-	}
-	std::cout << "index =" << location.getIndex() << std::endl;
-	if (location.getIndex().empty() == false)
-	{
-		finalPath = "." + location.getRoot() + location.getIndex();
-		return finalPath;
-	}
-	else if (location.getAutoIndex() == "on")
-	{
-		if (location.getAutoIndex() == "on")
-		{
-			autoIndex(finalPath, client);
-		}
-		else
-		{
-			generate_html_page_error(client, "404");
-			return "";
-		}
-	}
-	return finalPath;
-}
-
-
-
-
 void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 {
 	Server& 	server = client.getServer();
@@ -272,10 +15,6 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
 
-	//This nonsense actually got the thing working;
-	// req.setIsCooked(false);
-	// bool cookiesfound = false;
-	//
 	if (client.getLocation() != NULL)
 		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
@@ -293,25 +32,13 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
-			
-			// std::cout << "path = |" << path << "|" << std::endl;
-			// std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
-			// std::cout << "locationPath[0].getPath() = |" << locationPath[0].getPath() << "|" << std::endl;
 			pathLoc = CheckLocation(path, locationPath, client);
-			// std::cout << "pathloc3 = |" << pathLoc << "|" << std::endl;
 			if (client.getLocation() == NULL)	
-			{
 				finalPath = parse_no_location(path, client, pathLoc, client_socket);
-			}
 			else
-			{
 				finalPath = parse_with_location(client, pathLoc, req);
-			}
 			if (finalPath.empty() || finalPath == pathLoc)
-			{
 				return ;
-			}
-			// std::cout << "finalPathhhhhhhhhhh = |" << finalPath << "|" << std::endl;
 		}
 
 		if (check_host(line, server) == false)
@@ -345,106 +72,8 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	}
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
-	// req.setCookies(""); //MAKE A SAFE SEND FUNCTION AND ADD THIS IN IT;
 }
 
-
-
-
-
-std::string httpHeaderResponseForCookies(std::string code, std::string contentType, std::string content, Cookie *cookie)
-{
-	std::string response = "HTTP/1.1 " + code + "\r\n";
-	response += "Content-Type: " + contentType + "\r\n";
-
-	std::stringstream ss;
-	ss << content.size();
-	response += "Content-Length: " + ss.str() + "\r\n";
-	
-	response += "Connection: close\r\n";
-	if (cookie == NULL)
-	{
-		response += "Set-Cookie: session_token=; sessionID=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly; Secure\r\n";
-	}
-	else
-	{
-			response += "Set-Cookie: session_token=" + cookie->token + "; Path=/; HttpOnly; Secure\r\n"; //This is just the full token we send back to client.
-			// std::cout << RED << "cookie->token = " << cookie->token << RESET << std::endl;
-	}
-	//I want to send back session_token=THEO_12314143413412312314
-	response += "\r\n" + content;
-
-	return response;
-}
-
-std::string handle_connexion(std::string username, std::string password, Cookies &cook, std::string request_token)
-{
-	//I get the map of all the cookies
-    std::map<std::string, Cookie>& cookies = cook.getCookies();
-	std::map<std::string, Cookie>::iterator it = cookies.find(request_token);
-    if (it != cookies.end())
-	{
-
-		std::cout << "------------------------------------Utilisateur déjà connecté" << std::endl;
-		std::string path = "./config/page/dejaConnecter.html";
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &it->second);
-		return response;
-	}
-
-	//if we get here, this means This is a brand new cookie, so we check if user actually typed a username and password
-	//then we add the cookie to our cookie map;
-	if (password.empty() == false && username.empty() == false)
-	{
-		std::string response;
-		std::string path = "./config/page/IsConnected.html";
-		std::cout << "Connexion réussie" << std::endl;
-		std::string session_token = "token_" + username;
-		cook.addCookie(username, password, session_token);
-
-
-		std::string file_content = readFile(path);
-		response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, &(cookies[session_token]));
-		return response;
-	}
-	//if we get here, it mean the user didnt type anything and just pressed enter;
-	return "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n<h1>Veuillez fournir un nom d'utilisateur et un mot de passe</h1>";
-}
-
-
-std::string handle_deconnexion(Cookies &cook, std::string request_token)
-{
-    std::map<std::string, Cookie> cookies = cook.getCookies();
-	std::map<std::string, Cookie>::iterator it = cookies.find(request_token);
-    
-    if (it != cookies.end())
-    {
-        std::cout << "Déconnexion réussie" << std::endl;
-        
-        // Supprimer le cookie côté serveur (dans la map)
-        cook.deleteCookie(request_token);
-
-		// Créer une réponse pour informer le client de la déconnexion
-        std::string path = "./config/page/isDeconnected.html";
-
-		// Redirige vers la page d'accueil ou affiche un message de déconnexion
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponseForCookies("200 Ok", "text/html", file_content, NULL);
-		std::cout << "response = |" << response << "|" << std::endl;
-		return response;
-	}
-	else
-	{
-		std::string path = "./config/page/PasConnecter.html";
-		std::cout << "Aucun utilisateur connecté" << std::endl;
-		// L'utilisateur n'est pas connecté
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << "response = |" << response << "|" << std::endl;
-
-		return response;
-	}
-}
 
 
 void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
@@ -506,21 +135,17 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 			end_pos = line.find('\0', start_pos);
 			password = line.substr(start_pos, end_pos - start_pos);
 		}
-		if (pos8 != std::string::npos) //added cookie detection but for POST request;
+		if (pos8 != std::string::npos)
 		{
-			std::cout << "j'ai des cookies je rentre ici" << std::endl;
-			std::string cookies = line.substr(pos8 + strlen("session_token=")); //This will be wrong
+			std::string cookies = line.substr(pos8 + strlen("session_token="));
 			cookies = cookies.substr(0, cookies.find_first_of("\r\n"));
 			req.setCookies(cookies);
 		}
 
 	}
-	// (void) cook;
 	if (!filename.empty())
 	{
 		filename = "." + client.getServer().getRoot() + "base_donnees/" + filename + ".txt";
-		std::cout << "filename -------------------------------------------------= |" << filename << "|" << std::endl;	
-		
 		std::ifstream infile(filename.c_str());
 		if (infile.is_open())
 		{
@@ -550,33 +175,27 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 				return ;
 			}
 			else
-			{	
-				std::cout << "Unable to open file" << std::endl;
+			{
 				generate_html_page_error(client, "404");
 				return ;
 			}
 		}
 	}
-	std::cout << RED << "PATH IS : " << req.getPath() << RESET << std::endl;
 	if (req.getPath() == "/login")
 	{
 			std::string response;
-			std::cout << "Printing username, password, and getCookies" << username << ", " << password << ", " << req.getCookies() << "|"<< std::endl;
-			response = handle_connexion(username, password, cook, req.getCookies()); //Add client.getToken ?
+			response = handle_connexion(username, password, cook, req.getCookies(), client);
 			send(client.getSocket(), response.c_str(), response.size(), 0);
 			return ;
 	}
 	else if (req.getPath() == "/Unlog")
 	{
-		std::string response2 = handle_deconnexion(cook, req.getCookies());
+		std::string response2 = handle_deconnexion(cook, req.getCookies(), client);
 		send(client.getSocket(), response2.c_str(), response2.size(), 0);
 		return ;
 	}
 	else
-	{
-		std::cout << "Unable to open file" << std::endl; //Maybe we should send a 403 if thats the case ?
 		generate_html_page_error(client, "404");
-	}
 	filename.clear();
 	name.clear();
 	email.clear();
@@ -584,30 +203,6 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	username.clear();
 	password.clear();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -679,7 +274,6 @@ bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
 
 		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl; // debug extra content type
 
-		// redirections vers la page home
 		std::string path = "." + server.getRoot() + server.getIndex();
 		std::string file_content = readFile(path);
 		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
@@ -704,9 +298,8 @@ bool file_exists_parsebuffer(const char *path)
 std::string readFile_http(std::string filePath)
 {
     std::ifstream inputFile(filePath.c_str(), std::ios::binary);
-
     std::stringstream buffer;
-    buffer << inputFile.rdbuf(); //gets all content of the file and puts it into buffer;
+    buffer << inputFile.rdbuf();
     return (buffer.str());
 }
 
