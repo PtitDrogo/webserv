@@ -80,7 +80,6 @@ std::string create_page(std::string html, std::string directory)
     html += "\t</style>\n";
     html += "</head>\n";
     html += "<body>\n";
-    // html += "\t<h1>Index of " + directory + "</h1>\n";
     html += "\t<h1>AutoIndex_Page</h1>\n";
 
     html += "\t<ul>\n";
