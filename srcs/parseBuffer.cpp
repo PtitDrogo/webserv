@@ -15,13 +15,8 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	std::string file_content;
 	std::vector<location> locationPath = server.getLocation();
 
-	if (client.getLocation() != NULL)
-		std::cout << "content of location is : " << client.getLocation()->getPath() << std::endl;
 	if (!stream)
-	{
-		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return ;
-	}
 	while (std::getline(stream, line))
 	{
 		size_t pos1 = line.find("GET");
@@ -48,8 +43,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 		}
 		if (pos8 != std::string::npos)
 		{
-			std::cout << "j'ai des cookies je rentre ici" << std::endl;
-			std::string cookies = line.substr(pos8 + strlen("session_token=")); //This will be wrong
+			std::string cookies = line.substr(pos8 + strlen("session_token="));
 			cookies = cookies.substr(0, cookies.find_first_of("\r\n"));
 			req.setCookies(cookies);
 		}
@@ -77,10 +71,7 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	Server& 	server = client.getServer();
 
 	if (!stream)
-	{
-		std::cout << "Erreur : le flux n'a pas pu être créé." << std::endl;
 		return ;
-	}
 	std::string method;
 	std::string path;
 	std::string version;
@@ -177,10 +168,10 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	}
 	if (req.getPath() == "/login")
 	{
-			std::string response;
-			response = handle_connexion(username, password, cook, req.getCookies(), client);
-			send(client.getSocket(), response.c_str(), response.size(), 0);
-			return ;
+		std::string response;
+		response = handle_connexion(username, password, cook, req.getCookies(), client);
+		send(client.getSocket(), response.c_str(), response.size(), 0);
+		return ;
 	}
 	else if (req.getPath() == "/Unlog")
 	{
@@ -201,11 +192,11 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 bool file_exists_parsebuffer(const char *path)
 {
 	struct stat st;
-    
-    if (stat(path, &st) != 0)
+	
+	if (stat(path, &st) != 0)
 		return false;
 	if (!S_ISREG(st.st_mode)) 
-        return false;
+		return false;
 	return true;
 }
 
@@ -218,25 +209,26 @@ bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
 		return false;
 	}
 
-	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize()) {
-		std::cout << "MAXBODYSIZE IS :" << server.getMaxBodySize() << std::endl;
+	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize())
+	{
 		generate_html_page_error(client, "413");
 		return false;
 	}
 
-	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
-		if (upload(client) == false) {
+	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos)
+	{
+		if (upload(client) == false)
 			return false;
-		}
 	}
 	else
 		parse_buffer_post(client, cook, req);
 	return true;
 }
 
-bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req) 
+bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req)
 {
-	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
+	// if (client.printfgetRequest().find("GET /config/base_donnees/") != std::string::npos)
+	if (client.getRequest().find("GET" + client.getServer().getRoot() + "base_donnees/") != std::string::npos)
 	{
 		if (download(client) == false){
 			return false;
@@ -246,3 +238,7 @@ bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req)
 		parse_buffer_get(client, cook, req);
 	return true;
 }
+
+
+
+
