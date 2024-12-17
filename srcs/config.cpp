@@ -22,6 +22,14 @@ Config &Config::operator=(const Config &copy)
 	return *this;
 }
 
+// void printVector(std::map<std::string, std::string> errorPage)
+// {
+// 	for (std::map<std::string, std::string>::iterator it = errorPage.begin(); it != errorPage.end(); ++it)
+// 	{
+// 		std::cout << "	Error Page: " << it->first << " => " << it->second << std::endl;
+// 	}
+// }
+
 std::vector<Server> &Config::getServer()
 {
 	return this->_servers;
@@ -52,9 +60,9 @@ void	Config::addClient(int client_fd, Server &serv)
 Server &Config::getServerOfClient(int client_fd)
 {
 	std::map<int, Client>::const_iterator it = _clients.find(client_fd);
-	if (it != _clients.end()) {
-		return it->second.getServer();
-	}
+    if (it != _clients.end()) {
+        return it->second.getServer();
+    }
 	throw std::out_of_range("Somehow, your socket doesnt have a server");
 }
 
@@ -62,8 +70,8 @@ Client &Config::getClientObject(int client_fd)
 {
 	std::map<int, Client>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
-		return it->second;
-	}
+        return it->second;
+    }
 	throw std::out_of_range("Somehow, your socket isnt linked to a client object");
 }
 
@@ -110,7 +118,6 @@ int Config::SetupServerSocket(int i)
 	return server_socket;
 }
 
-
 bool Config::createServerr(std::ifstream &file , Server &serv)
 {
 	std::string line;
@@ -145,17 +152,6 @@ bool Config::createServerr(std::ifstream &file , Server &serv)
 	}
 	this->setServer(serv);
 	return true;
-}
-
-
-void Config::printConfig(std::ifstream& file)
-{
-	std::vector<Server> serv = this->getServer();
-	std::string line;
-	while (std::getline(file, line))
-	{
-		std::cout << BLUE << line << RESET << std::endl;
-	}
 }
 
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)

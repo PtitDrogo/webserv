@@ -80,6 +80,8 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 void generate_html_page_error(const Client &client, std::string error_code);
 bool file_exists_parsebuffer(const char *path);
+int	execute_server(Config& conf, char **envp);
+void handleSignal(int signum);
 
 //-----------Delete-----------//
 
@@ -162,5 +164,7 @@ void autoIndex(std::string path, Client& client);
 
 bool check_host(std::string line, const Server& Server);
 void checkFailedExecve(Client &client);
+
+
 
 #endif
