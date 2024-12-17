@@ -1,101 +1,198 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Simple Website - Delete</title>
-	<link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
-	<style>
-		/* Style de base */
-		body {
-			font-family: Arial, sans-serif;
-			background-color: #333;
-			color: white;
-			text-align: center;
-			margin: 0;
-			padding: 0;
-		}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Website - Delete</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Style de base */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #363636;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
 
-		/* Style du titre principal */
-		h1 {
-			color: rgb(243, 0, 0);
-			text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
-			font-size: 3vw;
-			margin-top: 10vh;
-		}
+        /* Style du titre principal */
+        h1 {
+            color: #f30000;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.8);
+            font-size: 4vw;
+            margin-top: 10vh;
+            animation: fadeInDown 1s ease-out;
+        }
 
-		/* Style pour le titre de sous-section */
-		h3 {
-			color: aliceblue;
-			font-size: 2vw;
-			margin-top: 5vh;
-			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-		}
+        /* Animation pour les titres */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-		/* Style du bouton de suppression */
-		.delete-button {
-			font-size: 1.5vw;
-			padding: 15px 30px;
-			border: none;
-			border-radius: 5px;
-			background-color: rgb(243, 0, 0);
-			color: white;
-			cursor: pointer;
-			transition: background-color 0.3s ease;
-			text-transform: uppercase;
-		}
+        h3 {
+            color: #e0e0e0;
+            font-size: 2vw;
+            margin-top: 3vh;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+        }
 
-		/* Effet de survol du bouton */
-		.delete-button:hover {
-			background-color: #c10000;
-		}
+        /* Style du formulaire */
+        form {
+            background-color: #444;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 5vh auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-		/* Style de l'input */
-		#fileName {
-			padding: 10px;
-			font-size: 1.2vw;
-			margin-top: 2vh;
-			border-radius: 5px;
-			border: 1px solid #ccc;
-			width: 50%;
-		}
+        /* Style des champs d'input */
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border: 1px solid #777;
+            background-color: #222;
+            color: white;
+            font-size: 1.2vw;
+            transition: border-color 0.3s ease;
+        }
 
-	</style>
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #f30000;
+        }
+
+        /* Style du bouton de suppression */
+        .delete-button {
+            font-size: 1.5vw;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #f30000, #ff5252);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .delete-button:hover {
+            background: linear-gradient(135deg, #ff5252, #f30000);
+            transform: translateY(-3px);
+        }
+
+        .delete-button:active {
+            transform: translateY(2px);
+        }
+
+        /* Style de la popup */
+        .popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #63db01;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Nouveau style pour le bouton Accueil */
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1vw;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .home-button:hover {
+            background: linear-gradient(135deg, #45a049, #4CAF50);
+            transform: translateY(-3px);
+        }
+
+        .home-button:active {
+            transform: translateY(2px);
+        }
+    </style>
 </head>
 <body>
-	<h1>DELETE</h1>
-	<div>
-		<h3>Supprimer une ressource</h3>
-		<input type="text" id="fileName" placeholder="Entrez le nom du fichier à supprimer">
-		<button id="deleteButton" class="delete-button">Supprimer la ressource</button>
-	</div>
+    <!-- Nouveau bouton Accueil -->
+    <a href="../index.html" class="home-button">Accueil</a>
 
-	<script>
-		document.getElementById('deleteButton').addEventListener('click', function() {
-			const fileName = document.getElementById('fileName').value.trim();
-			
-			if (!fileName) {
-				alert("Veuillez entrer un nom de fichier valide.");
-				return;
-			}
+    <h1>DELETE</h1>
+    <div>
+        <h3>Supprimer une ressource</h3>
+        <form onsubmit="deleteFile(event)">
+            <input type="text" id="fileName" name="fileName" placeholder="Entrez le nom du fichier à supprimer">
+            <button type="submit" class="delete-button">Supprimer la ressource</button>
+        </form>
+    </div>
+    <div id="popup" class="popup">Fichier supprimé avec succès !</div>
+    <script>
+        function deleteFile(event) {
+            event.preventDefault();
+            const fileName = document.getElementById('fileName').value.trim();
 
-			// Envoi de la requête DELETE
-			fetch(`/config/base_donnees/${fileName}`, {
-				method: 'DELETE'
-			})
-			.then(response => {
-				if (response.status === 200) {
-					alert(`Le fichier '${fileName}' a été supprimé avec succès.`);
-				} else {
-					alert(`Échec de la suppression du fichier '${fileName}'.`);
-				}
-			})
-			.catch(error => {
-				console.error('Une erreur est survenue :', error);
-			});
-		});
-	</script>
+            if (!fileName) {
+                alert("Veuillez entrer un nom de fichier valide.");
+                return;
+            }
+
+            fetch(`/config/base_donnees/${fileName}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showPopup("Fichier supprimé avec succès !");
+                    } else {
+                        showPopup("Échec de la suppression du fichier.", true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Une erreur est survenue :', error);
+                    showPopup("Erreur de connexion.", true);
+                });
+        }
+
+        function showPopup(message, isError = false) {
+            const popup = document.getElementById('popup');
+            popup.textContent = message;
+            popup.style.backgroundColor = isError ? '#e74c3c' : '#63db01';
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
-
-

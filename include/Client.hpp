@@ -31,9 +31,10 @@ public:
 	bool	isValidSocket() const;
 	void	appendToRequest(char *chunk, int recvValue);
 	size_t	findContentLength();
-	void	extractFileName();
+	bool	extractFileName();
 	void	extractBody();
-	void	extractContentType();
+	bool	extractContentType();
+	bool	extractBoundary();
 	void	reset();
 	// void disconnect();
 	bool	didClientTimeout() const;
@@ -54,6 +55,7 @@ public:
 	void 	setCgiPID(pid_t pid);
 	void	setLocation(location *location);
 	void	setToken(std::string token);
+	void	setBoundaryLen(size_t len);
 
 	// getters
 	Server&		getServer() const;
@@ -73,6 +75,7 @@ public:
 	pid_t		getCgiPID() const;
 	location	*getLocation() const;
 	std::string	getToken() const;
+	size_t		getBoundaryLen() const;
 
 
 private:
@@ -90,6 +93,7 @@ private:
 	size_t				_totalRead;
 	size_t				_headEnd;
 	size_t				_bodyEnd;
+	size_t				_boundaryLen;
 	std::string			_token;
 
 	

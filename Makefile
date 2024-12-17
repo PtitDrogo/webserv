@@ -27,6 +27,8 @@ SRCS	=		$(SRCS_DIR)/main.cpp \
 				$(SRCS_DIR)/utils/utils.cpp \
 				$(SRCS_DIR)/Client.cpp \
 				$(SRCS_DIR)/cookies.cpp \
+				$(SRCS_DIR)/download.cpp \
+				$(SRCS_DIR)/upload.cpp \
 				$(SRCS_DIR)/Print/print.cpp\
 				$(SRCS_DIR)/parsing/check.cpp\
 				$(SRCS_DIR)/parsing/parse_location.cpp\

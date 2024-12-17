@@ -30,8 +30,8 @@ class Cookies;
 
 #define SUCCESS 0
 #define FAILURE 1
-#define POLL_TIMEOUT_MILISECONDS 12
-#define CGI_TIMEOUT_SECONDS 60
+#define POLL_TIMEOUT_MILISECONDS 5
+#define CGI_TIMEOUT_SECONDS 12
 #define PIPE_BUFFER 65535
 #define EXECVE_FAILURE 127
 
@@ -76,7 +76,6 @@ bool handleTimeout(Client &client, std::vector<struct pollfd> &fds, Config &conf
 
 //-----------Server-----------//
 std::string readFile(std::string &path);
-std::string readFile_http(std::string filePath);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 void generate_html_page_error(const Client &client, std::string error_code);
@@ -86,6 +85,13 @@ bool file_exists_parsebuffer(const char *path);
 
 bool deleteFile(const std::string &path);
 void parse_buffer_delete(std::string buffer, Client &client);
+
+//-----------Download-----------//
+bool download(Client& client);
+
+//-----------Upload-----------//
+bool upload(Client& client);
+
 
 //-----------CGI-----------//
 void cgiProtocol(char *const *envp, const HttpRequest &request, Client &client, Config &conf, std::vector<struct pollfd> &fds);

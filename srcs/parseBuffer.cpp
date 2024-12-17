@@ -46,7 +46,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			generate_html_page_error(client, "400");
 			return ;
 		}
-		if (pos8 != std::string::npos) //added cookie detection but for POST request;
+		if (pos8 != std::string::npos)
 		{
 			std::cout << "j'ai des cookies je rentre ici" << std::endl;
 			std::string cookies = line.substr(pos8 + strlen("session_token=")); //This will be wrong
@@ -54,12 +54,6 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			req.setCookies(cookies);
 		}
 	}
-	// if (cookiesfound == false)
-	// {
-	// 	std::cout << "je ne trouve pas de cookies" << std::endl;
-	// 	req.setCookies("");
-	// 	req.setIsCooked(false);
-	// }
 	file_content = readFile(finalPath);
 	if (file_content.empty())
 		generate_html_page_error(client, "404");
@@ -204,86 +198,6 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	password.clear();
 }
 
-
-
-bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
-{
-	const Server& 	server = client.getServer();
-
-	if (client.getContentLength() == std::string::npos)
-	{
-		generate_html_page_error(client, "400");
-		return false;
-	}
-
-	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize())
-	{
-		std::cout << "MAXBODYSIZE IS :" << server.getMaxBodySize() << std::endl;
-		generate_html_page_error(client, "413");
-		return false;
-	}
-
-
-	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
-
-
-		// foutre tout sa dans une fonction de la class client/////////////////////////////////
-
-		size_t boundaryPos = client.getRequest().find("boundary=");
-		if (boundaryPos != std::string::npos) {
-			// extraire tout ce qui vient apres "boundary="
-			std::string boundary = client.getRequest().substr(boundaryPos + 9); // 9 = longueur de "boundary="
-			
-			// trouver la premiere position ou les tirets s'arretent
-			std::size_t nonDashPos = boundary.find_first_not_of('-');
-			if (nonDashPos != std::string::npos) {
-				// extraire tout ce qui vient apres les tirets
-				std::string result = boundary.substr(nonDashPos, boundary.find("\r\n", nonDashPos) - nonDashPos);
-				client.setBoundary(result);
-			}
-			else {
-				std::cout << "Aucun contenu après les tirets." << std::endl;
-				//generate a html page error !!!
-				// return ;
-			}
-		}
-		else {
-			std::cout << "La clé 'boundary=' est introuvable." << std::endl;
-			//generate a html page error !!!
-			// return ;
-		}
-
-		//vas chercher la dernier pos de la boundary
-		size_t lastBoundaryPos = client.getRequest().find("--" + client.getBoundary() + "--");
-		lastBoundaryPos += 6 + client.getBoundary().size(); // 6 = "--" + "--" + "\r\n"
-		// lastBoundaryPos -= client.getHeadEnd();
-
-		std::cout << "lastBoundaryPos = " << lastBoundaryPos << std::endl;
-		client.setbodyEnd(lastBoundaryPos);
-
-		////////////////////////////////////////////////////////////////////////////////////////
-
-
-		std::cout << MAGENTA << "Extract data form request" << RESET << std::endl;
-
-		client.extractFileName();
-
-		std::cout << MAGENTA << "fileName: \"" << client.getFileName() << "\"" << RESET << std::endl; // debug filename
-		
-		client.extractContentType();
-
-		std::cout << MAGENTA << "File saved successfully: " << client.getFileName() << RESET << std::endl; // debug extra content type
-
-		std::string path = "." + server.getRoot() + server.getIndex();
-		std::string file_content = readFile(path);
-		std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client.getSocket(), response.c_str(), response.size(), 0);
-	}
-	else
-		parse_buffer_post(client, cook, req);
-	return true;
-}
-
 bool file_exists_parsebuffer(const char *path)
 {
 	struct stat st;
@@ -295,56 +209,38 @@ bool file_exists_parsebuffer(const char *path)
 	return true;
 }
 
-std::string readFile_http(std::string filePath)
+bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
 {
-    std::ifstream inputFile(filePath.c_str(), std::ios::binary);
-    std::stringstream buffer;
-    buffer << inputFile.rdbuf();
-    return (buffer.str());
+	const Server& 	server = client.getServer();
+
+	if (client.getContentLength() == std::string::npos) {
+		generate_html_page_error(client, "400");
+		return false;
+	}
+
+	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize()) {
+		std::cout << "MAXBODYSIZE IS :" << server.getMaxBodySize() << std::endl;
+		generate_html_page_error(client, "413");
+		return false;
+	}
+
+	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos) {
+		if (upload(client) == false) {
+			return false;
+		}
+	}
+	else
+		parse_buffer_post(client, cook, req);
+	return true;
 }
 
 bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req) 
 {
 	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
 	{
-		std::cout << YELLOW << "DOWNLOAD in process..." << RESET << std::endl;
-        std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
-
-        if (filename.find("?fileName=") != std::string::npos) // in botton case
-            filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
-		else //in url case
-            filename = filename.substr(0, filename.find(" "));
-
-        std::string filePath = "./config/base_donnees/" + filename;
-		if (file_exists_parsebuffer(filePath.c_str()) == false)
-		{
-			std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
-			generate_html_page_error(client, "404");
+		if (download(client) == false){
 			return false;
 		}
-
-        std::string fileContent = readFile_http(filePath);
-        if (fileContent.empty()) {
-			std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
-			generate_html_page_error(client, "404");
-            return false;
-        }
-
-        std::stringstream rep;
-        rep << "HTTP/1.1 200 OK\r\n";
-        rep << "Content-Type: application/octet-stream\r\n";
-		rep << "content-length: " << fileContent.size() << "\r\n";
-        rep << "Content-Disposition: attachment; filename=\"" << filename << "\"\r\n";
-		rep << "Connection: close\r\n";
-		rep << "\r\n";
-		rep << fileContent;
-
-
-		// std::cout << "rep = " << rep.str() << std::endl;
-
-        // Envoyer les en-têtes HTTP
-        send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
-		std::cout << GREEN << "DOWNLOAD Successful" << RESET << std::endl;
 	}
 	else
 		parse_buffer_get(client, cook, req);

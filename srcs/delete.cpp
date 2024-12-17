@@ -18,9 +18,9 @@ void parse_buffer_delete(std::string buffer, Client& client)
 		std::cout << YELLOW << "DELETE in process..." << RESET << std::endl; // print debug
         std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
 
-        if (filename.find("?fileName=") != std::string::npos) // in botton case
+        if (filename.find("?fileName=") != std::string::npos)
             filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
-		else //in url case
+		else
             filename = filename.substr(0, filename.find(" "));
 		
         std::string filePath = "./config/base_donnees/" + filename;
