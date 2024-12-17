@@ -38,15 +38,15 @@ void generate_default_error_page(std::string error_code, int client_socket, cons
 	std::string path;
 
 	if (error_code == "400")
-		path = "." + client.getServer().getRoot() + "default_error_pages/400.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/400.html";
 	else if (error_code == "403")
-		path = "." + client.getServer().getRoot() + "default_error_pages/403.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/403.html";
 	else if (error_code == "404")
-		path = "." + client.getServer().getRoot() + "default_error_pages/404.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/404.html";
 	else if (error_code == "413")
-		path = "." + client.getServer().getRoot() + "default_error_pages/413.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/413.html";
 	else
-		path = "." + client.getServer().getRoot() + "default_error_pages/404.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/404.html";
 	std::string file_content = readFile(path);
 	std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
 	send(client_socket, reponse.c_str(), reponse.size(), 0);
