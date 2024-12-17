@@ -84,7 +84,7 @@ bool file_exists_parsebuffer(const char *path);
 //-----------Delete-----------//
 
 bool deleteFile(const std::string &path);
-void parse_buffer_delete(std::string buffer, Client &client);
+void parse_buffer_delete(Client &client);
 
 //-----------Download-----------//
 bool download(Client& client);

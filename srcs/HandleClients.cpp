@@ -2,7 +2,6 @@
 
 static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config& conf);
 
-//Check if a new client wants to connect to our server
 void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_servers, Config &conf)
 {
     for (unsigned int i = 0; i < number_of_servers; i++)
@@ -15,20 +14,16 @@ void    checkIfNewClient(std::vector<struct pollfd> &fds, size_t number_of_serve
 		}
 	}
 }
-//Checks all clients sockets to see if something happened
-//In this function we are also polling the server, should we do that ??
+
 int safe_poll(std::vector<struct pollfd> &fds, size_t number_of_servers)
 {
-    if (poll(fds.data(), fds.size(), POLL_TIMEOUT_MILISECONDS) == -1) //POLL_TIMEOUT
+    if (poll(fds.data(), fds.size(), POLL_TIMEOUT_MILISECONDS) == -1)
     {
-        //NOTE : if we use ctrlC or ctrl Z, this will print this, before pushing to prod i could check the static variable to know that its normal to fail this and not print.
-		if (Config::ServerRunning == true)
-			std::cerr << "Poll failed" << std::endl;
         for (unsigned int i = 0; i < number_of_servers; i++)
 		{
-			close(fds[i].fd); //do we have to do more cleanup ? I dont even know
+			close(fds[i].fd);
 		}
-        return FAILURE; //Question : Est ce que on doit vraiment quitter si poll fail ? Surement oui mais a voir.
+        return FAILURE;
     }
 	return SUCCESS;
 }
@@ -62,32 +57,26 @@ bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf
 	return false;
 }
 
-//Handle a bunch of logic regarding Pipes of Cgis before calling the disconnect of one (or two !) clients.
 void disconnectClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
 {
-	std::cout << "Client disconnected" << std::endl;
 	if (client.getCgiCallee() != NULL)
 	{
-		std::cout << "Yo jai un callee" << std::endl;
 		Client *cgi_client = client.getCgiCallee();
-		kill(cgi_client->getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
+		kill(cgi_client->getCgiPID(), SIGKILL); 
 		waitpid(cgi_client->getCgiPID(), 0, 0);
-		eraseClient(fds, *cgi_client, conf); //killing cgi client
-		eraseClient(fds, client, conf); //killing current client
+		eraseClient(fds, *cgi_client, conf);
+		eraseClient(fds, client, conf);
 	}
 	else if (client.getCgiCaller() != NULL)
 	{
-		std::cout << "Yo jai un caller" << std::endl;
 		Client *caller_client = client.getCgiCaller();
-		kill(client.getCgiPID(), SIGKILL); //calling kill on zombie does nothing, woohoo !
+		kill(client.getCgiPID(), SIGKILL);
 		waitpid(client.getCgiPID(), 0, 0);
-		eraseClient(fds, client, conf); //killing current client
-		eraseClient(fds, *caller_client, conf); //killing cgi client
+		eraseClient(fds, client, conf);
+		eraseClient(fds, *caller_client, conf);
 	}
 	else
-	{
 		eraseClient(fds, client, conf);
-	}
 }
 
 static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config& conf)
@@ -99,46 +88,30 @@ static void	eraseClient(std::vector<struct pollfd> &fds, Client& client, Config&
 			break;
 	}
 	close(client.getSocket());
-	conf.removeClient(client.getSocket()); //Remove the client from the map of conf
+	conf.removeClient(client.getSocket());
 	fds.erase(it);
 }
 
-
-//Parametres -> retour de recv, la liste de fds et l'index du client (pour deconnect sur fail)
 int	handleRecvValue(int valread)
 {
 	if (valread > 0)
-	{
-		// std::cout << "DEBUG:Received from client successfully" << std::endl;
 		return (SUCCESS);
-	}
 	else if (valread == 0)
-	{
-		std::cout << "DEBUG:Recve detected no client, disconnecting" << std::endl;
-		// disconnectClient(fds, i, conf);
-		return (FAILURE); //In theory this should never trigger but leaving just in case
-	}
-	else
-	{
-		std::cerr << "Error reading from client" << std::endl;
-		// disconnectClient(fds, i, conf);
 		return (FAILURE);
-	}
+	else
+		return (FAILURE);
 }
 
 
-//add POLLHUP later;
 void addPollFD(int client_socket, std::vector<struct pollfd> &fds)
 {
 	if (client_socket != -1)
 	{
 		struct pollfd client_pollfd;
 		client_pollfd.fd = client_socket;
-		//POLLHUP because im going mad debugging this, but later will be useful for pipe
-		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP | POLLERR; //POLLIN = Un truc happened sur la socket POLLRDHUP = plus de client // NOT ADDING POLLOUT because it makes loop go infinite for now
+		client_pollfd.events = POLLIN | POLLRDHUP | POLLHUP | POLLERR;
 		client_pollfd.revents = 0;
 		fds.push_back(client_pollfd);
 	}
 	return ;
 }
-
