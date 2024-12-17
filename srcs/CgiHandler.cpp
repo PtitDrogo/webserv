@@ -81,7 +81,10 @@ bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 	_interpreter = get_extension(request.getPath(), client);
 	std::cout << _interpreter << std::endl;
 	if (_interpreter == "")
+	{
+		generate_html_page_error(client, "403");
 		return false;
+	}
 	_path = "." + request.getPath(); //blindly adding a dot because i am a gigachad;
 	// std::cout << "Path is : " << _path << std::endl;
 	processCgiPath(request);
@@ -99,8 +102,11 @@ bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 	// std::cout << std::endl << std::endl << "CGI PID IS :" << cgi_pid << std::endl << std::endl;
 	_pid = cgi_pid;
     if (cgi_pid == -1)
-        return false;
-    return true;
+    {
+		generate_html_page_error(client, "500");
+		return false;
+	}
+	return true;
 
 }
 
