@@ -83,7 +83,6 @@ bool	handleTimeout(Client& client, std::vector<struct pollfd> &fds, Config& conf
 
 //-----------Server-----------//
 std::string readFile(std::string &path);
-std::string readFile_http(std::string filePath);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 void 		generate_html_page_error(const Client& client, std::string error_code);
@@ -93,6 +92,13 @@ bool        file_exists_parsebuffer(const char *path);
 
 bool deleteFile(const std::string& path);
 void parse_buffer_delete(std::string buffer, Client& client);
+
+//-----------Download-----------//
+bool download(Client& client);
+
+//-----------Upload-----------//
+bool upload(Client& client);
+
 
 //-----------CGI-----------//
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds);

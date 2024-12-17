@@ -7,8 +7,8 @@ Client::~Client()
 
 Client::Client(const Client& other) : _socket(other._socket), _server(other._server), 
  _request(other._request), _body(other._body), _fileName(other._fileName), _contentType(other._contentType), _boundary(other._boundary), 
- _contentLength(other._contentLength), _totalRead(other._totalRead), _bodyEnd(other._bodyEnd), _cgi_caller(other._cgi_caller),
- _time_start(other._time_start), _cgi_callee(other._cgi_callee), _pid(other._pid)
+ _contentLength(other._contentLength), _totalRead(other._totalRead), _bodyEnd(other._bodyEnd), _boundaryLen(other._boundaryLen),
+ _cgi_caller(other._cgi_caller), _time_start(other._time_start), _cgi_callee(other._cgi_callee), _pid(other._pid)
 {
 	_current_location = other._current_location;
 	// std::cout << "client copy constructor called" << std::endl;
@@ -31,6 +31,7 @@ Client& Client::operator=(const Client& other) {
 		_contentLength = other._contentLength;
 		_totalRead = other._totalRead;
 		_bodyEnd = other._bodyEnd;
+		_boundaryLen = other._boundaryLen;
 		_time_start = other._time_start;
 		_cgi_caller = other._cgi_caller;
 		_cgi_callee = other._cgi_callee;
@@ -41,7 +42,7 @@ Client& Client::operator=(const Client& other) {
 }
 
 Client::Client(int clientSocket, Server& serv) : _socket(clientSocket), _server(serv), _contentLength(0), _totalRead(0), 
-_bodyEnd(0), _current_location(NULL), _cgi_caller(NULL), _time_start(std::time(0)), _cgi_callee(NULL), _pid(-42)
+_bodyEnd(0) , _boundaryLen(0), _current_location(NULL), _cgi_caller(NULL), _time_start(std::time(0)), _cgi_callee(NULL), _pid(-42)
 {
 	// std::cout << "Defaultish constructor called" << std::endl
 	//There used to be stuff here, i think there should be nothing.
@@ -58,26 +59,16 @@ bool	Client::didClientTimeout() const
 	return false;
 }
 
-
-
 void    Client::appendToRequest(char *chunk, int recvValue) {
 	_request.append(chunk, recvValue);
 	_totalRead += recvValue;
 	if (getContentLength() == 0) {
 		setHeadEnd(getRequest().find("\r\n\r\n") + 4);
-		// std::cout << MAGENTA << "headEnd: " <<  getHeadEnd() << RESET << std::endl;	// debug print headEnd
 		if (findContentLength() != 0) {
 			setContentLength(findContentLength());
-
-			// std::string test;												// debug print header
-			// test = getRequest().substr(0, getHeadEnd() + 4);	// debug print header
-			// std::cout << GREEN << "header: " << test << RESET << std::endl;	// debug print header
-
-			setTotalRead(_totalRead - getHeadEnd() /* - 4 */);
-			// std::cout << MAGENTA << "content_length: " << getContentLength() << RESET << std::endl;	// debug print content_length
+			setTotalRead(_totalRead - getHeadEnd());
 		}
 	}
-	// std::cout << MAGENTA << "READ...: " << recvValue << "  " << getTotalRead() << RESET << std::endl;	// debug print totalRead
 }
 
 
@@ -94,14 +85,36 @@ size_t Client::findContentLength() {
 	return (_contentLength);
 }
 
+bool	Client::extractBoundary() {
+	size_t boundaryPos = getRequest().find("boundary=");
+		if (boundaryPos != std::string::npos) {
+			std::string boundary = getRequest().substr(boundaryPos + 9);
+			
+			std::size_t nonDashPos = boundary.find_first_not_of('-');
+			std::size_t endOfLinePos = boundary.find("\r\n");
+			if (nonDashPos != std::string::npos) {
+				std::string result = boundary.substr(nonDashPos, boundary.find("\r\n", nonDashPos) - nonDashPos);
+				std::string fullBoundary = boundary.substr(0, endOfLinePos);
+				setBoundary(result);
+				setBoundaryLen(fullBoundary.length());
+			}
+			else
+				return false;
+		}
+		else
+			return false;
 
-
+		size_t lastBoundaryPos = getRequest().find("--" + getBoundary() + "--");
+		lastBoundaryPos += 6 + getBoundary().size(); 
+		setbodyEnd(lastBoundaryPos);
+		return true;
+}
 
 void Client::extractBody() {
 	_body = _request.substr(getHeadEnd(), getBodyEnd() - getHeadEnd());
 }
 
-void Client::extractFileName() {
+bool Client::extractFileName() {
 	const std::string key = "filename=\"";
 
 	extractBody();
@@ -109,54 +122,44 @@ void Client::extractFileName() {
 
 	if (fileNamePos == std::string::npos) {
 		std::cerr << "Error: Filename not found." << std::endl;
-		return ; // try/catch ??
+		return false;
 	}
 
 	size_t endPos = getBody().find("\"\r\n", fileNamePos);
 	if (endPos == std::string::npos) {
 		std::cerr << "Error: Invalid filename format." << std::endl;
-		return ; // try/catch ??
+		return false;
 	}
 
 	std::string fileName = getBody().substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
-
-	// // Validation du nom de fichier pour éviter les chemins traversants
-	// if (fileName.find("/") != std::string::npos || fileName.find("..") != std::string::npos) {
-	// 	std::cerr << "Error: Invalid filename." << std::endl;
-	// 	return false;
-	// }
-
 	fileName = "./config/base_donnees/" + fileName;
 	_fileName = fileName;
+	return true;
 }
 
-void Client::extractContentType() {
+bool Client::extractContentType() {
 	size_t contentTypePos = _body.find("Content-Type:", _body.find("--" + _boundary));
 	if (contentTypePos == std::string::npos) {
 		std::cerr << "Error: Content-Type not found." << std::endl;
-		return ; // try catch ???
+		return false;
 	}
 
 	size_t contentTypeEnd = _body.find("\r\n", contentTypePos);
 	if (contentTypeEnd == std::string::npos) {
 		std::cerr << "Error: Malformed Content-Type header." << std::endl;
-		return ; // try catch ???
+		return false;
 	}
 	std::string contentType = _body.substr(contentTypePos + std::string("Content-Type: ").length(), contentTypeEnd - (contentTypePos + std::string("Content-Type: ").length()));
-
-	std::cout << MAGENTA << "contentType: \"" << contentType << "\"" << RESET << std::endl;
-
-
-	std::string filecontent = _body.substr(contentTypeEnd + 4, _body.size() - (contentTypeEnd + 4));
-
+	std::string filecontent = _body.substr(contentTypeEnd + 4, (_body.size() - (contentTypeEnd + 4)) - getBoundaryLen() - 6);
 
 	std::ofstream outFile(_fileName.c_str(), std::ios::binary);
 	if (!outFile) {
 		std::cerr << "Error: Unable to create file: " << _fileName << std::endl;
-		return ; // try catch ???
+		return false;
 	}
 	outFile.write(filecontent.data(), filecontent.size());
 	outFile.close();
+	return true;
 }
 
 void	Client::reset() {
@@ -183,6 +186,7 @@ void Client::setLocation(location *location) {_current_location = location;}
 void	Client::setBoundary(std::string boundary) { _boundary = boundary; }
 void	Client::setbodyEnd(size_t bodyEnd) { _bodyEnd = bodyEnd; }
 void	Client::setToken(std::string token) {_token = token;}
+void	Client::setBoundaryLen(size_t len) {_boundaryLen = len;}
 
 std::string    Client::getRequest() const {return (_request);}
 size_t	Client::getContentLength() const {return (_contentLength);}
@@ -201,3 +205,4 @@ std::string	Client::getContentType() const { return (_contentType); }
 std::string	Client::getBoundary() const { return (_boundary); }
 size_t		Client::getBodyEnd() const { return (_bodyEnd); }
 std::string	Client::getToken() const {return (_token);}
+size_t	Client::getBoundaryLen() const {return (_boundaryLen);}
