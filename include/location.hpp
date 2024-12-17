@@ -13,7 +13,7 @@ class location
 		std::string _allow_method;
 		std::string _cgi_path;
 		std::map<std::string, std::string> _redir;
-		std::map<std::string, std::string> _cgi;
+		// std::map<std::string, std::string> _cgi;
 
 	public :
 		location();

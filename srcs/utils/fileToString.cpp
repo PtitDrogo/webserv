@@ -67,3 +67,21 @@ std::string injectUserHtml(const std::string& fileContent, const std::string& us
 
     return updatedContent.str();
 }
+
+void	checkFailedExecve(Client &client)
+{
+	int status;
+
+	if (client.getCgiCaller() == NULL)
+		return ;
+	waitpid(client.getCgiCaller()->getCgiPID(), &status, WNOHANG);
+	if (WIFEXITED(status)) 
+	{
+		int exit_code = WEXITSTATUS(status);
+		if (exit_code == EXECVE_FAILURE)
+		{
+			generate_html_page_error(*client.getCgiCaller(), "500");
+			return ;
+		}
+	}
+}

@@ -10,7 +10,9 @@ bool isExtension(std::string path)
 		path.find(".jpg") == std::string::npos &&
 		path.find(".gif") == std::string::npos &&
 		path.find(".ico") == std::string::npos &&
-		path.find(".py") == std::string::npos)
+		path.find(".py") == std::string::npos &&
+		path.find(".php") == std::string::npos
+		)
 		return (false);
 	return (true);
 }
@@ -32,6 +34,7 @@ void autoIndex(std::string path, Client& client)
 	std::vector<std::string> files = listDirectory(finalPath);
 	file_content = generateAutoIndexPage(finalPath, files, client);
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+	std::cout << "reponse = |" << reponse << "|" << std::endl;
 	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }
 
@@ -208,6 +211,10 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 	location location = *(client.getLocation());
 
 	std::cout << req.getMethod() << std::endl;
+	if (isMethodAllowed(location.getAllowMethod(), req.getMethod()) == false)
+		std::cout << "isMethodAllowed = false" << std::endl;
+	if (location.getAllowMethod().empty() == false)
+		std::cout << "location.getAllowMethod().empty() = false" << std::endl;
 	if (isMethodAllowed(location.getAllowMethod(), req.getMethod()) == false && location.getAllowMethod().empty() == false)
 	{
 		generate_html_page_error(client, "404");
@@ -228,27 +235,22 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 	}
 	std::cout << "index =" << location.getIndex() << std::endl;
 	if (location.getIndex().empty() == false)
-	{	
-		std::cout << "je rentre la2" << std::endl;
+	{
 		finalPath = "." + location.getRoot() + location.getIndex();
 		return finalPath;
 	}
-	else if (location.getIndex().empty() == true)
+	else if (location.getAutoIndex() == "on")
 	{
-			std::cout << "je rentre la3" << std::endl;
 		if (location.getAutoIndex() == "on")
 		{
 			autoIndex(finalPath, client);
-			return "";
 		}
 		else
 		{
-			std::cout << "je rentre la" << std::endl;
 			generate_html_page_error(client, "404");
 			return "";
 		}
 	}
-			std::cout << "je rentre la5" << std::endl;
 	return finalPath;
 }
 
@@ -307,7 +309,6 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			}
 			if (finalPath.empty() || finalPath == pathLoc)
 			{
-				std::cout << "je suis iciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii9" << std::endl;
 				return ;
 			}
 			// std::cout << "finalPathhhhhhhhhhh = |" << finalPath << "|" << std::endl;

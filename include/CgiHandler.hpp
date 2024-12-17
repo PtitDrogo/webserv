@@ -17,17 +17,18 @@ private:
     Client&         _client; //client calling the cgi;
     std::map<std::string, std::string> _params;
     std::string     _body_post;
+    std::string     _interpreter;
 
     CgiHandler(); //have to build with request
     char **  updateEnv();
     pid_t    executeCGI(const HttpRequest &request);
     void	 processCgiPath(const HttpRequest &request);
-    void     freeUpdatedEnv(char **tofree);
+    void     freeUpdatedEnv(char **tofree, char** argv_tofree);
 
 public:
     ~CgiHandler();
     CgiHandler(char *const *envp, Client& client);
-    bool     HandleCgiRequest(const HttpRequest &request); 
+    bool     HandleCgiRequest(Client& client, const HttpRequest &request); 
 
     //getters
     int     *getPipeOut();
