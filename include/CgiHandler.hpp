@@ -23,7 +23,7 @@ private:
     char **  updateEnv();
     pid_t    executeCGI(const HttpRequest &request);
     void	 processCgiPath(const HttpRequest &request);
-    void     freeUpdatedEnv(char **tofree);
+    void     freeUpdatedEnv(char **tofree, char** argv_tofree);
 
 public:
     ~CgiHandler();

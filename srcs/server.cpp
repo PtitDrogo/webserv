@@ -26,6 +26,8 @@ Server &Server::operator=(const Server &copy)
 		this->_max_body_size = copy._max_body_size;
 		this->_auto_index = copy._auto_index;
 		this->_host = copy._host;
+		_server_socket = copy._server_socket;
+		_cgi = copy._cgi;
 	}
 	return *this;
 }

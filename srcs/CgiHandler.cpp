@@ -11,22 +11,8 @@
 //GET /favicon.ico HTTP/1.1 is a typical request
 //GET /hello-world.py would be a cgi request;
 //GET /config/cgi-bin/basicparam.py?name=theo&age=29 HTTP/1.1
-
 //GET /config/cgi-bin/helloworld.py HTTP/1.1
-
 //GET /config/cgi-bin/printquerystring.py?name=theo&age=29 HTTP/1.1
-
-/*
-Step to do a CGI:
-- Recognize that the end of the request is a CGI worthy file (.py, .php)
-- Then we Send a response and execute the cgi using fork and dup
-- We add everything we can from the request to the env of the cgi. (TODO)
-- ARGV is ideally = argv[0] : interpreter path, argv[1] = cgi_path, argv[2] = NULL
-(a bash script could add flags somehow).
-- We execute the cgi.
-- We read cgi_tmp/webserv_cgi_stdout and send the content back to the client
-*/
-
 
 static bool is_executable(const char *path);
 static bool file_exists(const char *path);
@@ -34,6 +20,7 @@ static std::string getActualBody(std::string& fullbody);
 static std::string get_directory_path(const std::string& full_path);
 static std::string get_new_executable(const std::string& full_path);
 static std::string get_extension(const std::string& full_path, Client& client);
+static char **createExecveArgv(const std::string& final_path, const std::string& interpreter);
 CgiHandler::CgiHandler(char * const *envp, Client& client) :
 _envp(envp),
 _argv(NULL),
@@ -57,10 +44,12 @@ static std::string get_extension(const std::string& full_path, Client& client)
 	std::cout << RED << final_extension << " is final_extension" << std::endl;
 	
 
-	std::map<std::string, std::string > &supported_cgis = client.getServer().getCgis();
+	std::map<std::string, std::string>& supported_cgis = client.getServer().getCgis();
 
 	std::map<std::string, std::string>::iterator it = supported_cgis.find(final_extension);
 	printMap(supported_cgis);
+	std::cout << "Address of cgis in process is " << &supported_cgis << std::endl;
+	std::cout << "Address of server in process is " << &client.getServer() << std::endl;
 	if (it == supported_cgis.end())
 	{	
 		std::cout << "PERDU" << std::endl;
@@ -240,7 +229,7 @@ char **CgiHandler::updateEnv()
 	return (updated_envp);
 }
 
-void CgiHandler::freeUpdatedEnv(char **tofree)
+void CgiHandler::freeUpdatedEnv(char **tofree, char **argv_tofree)
 {
 	size_t env_count = 0;
 	size_t new_max_count = 0;
@@ -250,6 +239,15 @@ void CgiHandler::freeUpdatedEnv(char **tofree)
 	for(size_t i = env_count; i < new_max_count; i++) 
 		free(tofree[i]);
 	free(tofree);
+
+	if (argv_tofree != NULL)
+	{
+		free(argv_tofree[0]);
+		free(argv_tofree[1]);
+		free(argv_tofree);
+	}
+	for (int i = 3; i < 1024; i++)
+		close (i);
 	return ;
 }
 
@@ -272,34 +270,31 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
     int pid = fork();
     if (pid < 0)
     {
-        std::cout << "Fork failed" << std::endl; //oh no !
+        std::cout << "Fork failed" << std::endl;
         close (_pipe_in[0]);
 		close (_pipe_in[1]);
 		close (_pipe_out[0]);
 		close (_pipe_out[1]);
 		return pid;
-        //this will be an error 500 !
     }
     else if (pid == 0)
     {
         char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(_pipe_in[0], STDIN_FILENO);
-		int null_fd = open("/dev/null", O_WRONLY);
-		dup2(null_fd, STDERR_FILENO);
-		close(null_fd);
+		// int null_fd = open("/dev/null", O_WRONLY);
+		// dup2(null_fd, STDERR_FILENO);
+		// close(null_fd);
 		if (request.getMethod() == "CGI-POST")
 		{
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
 			{
-				freeUpdatedEnv(updated_env);
-				for (int i = 3; i < 1024; i++)
-					close (i);
+				freeUpdatedEnv(updated_env, _argv);
 				close (_pipe_in[0]);
 				close (_pipe_in[1]);
 				close (_pipe_out[0]);
 				close (_pipe_out[1]);
-				std::exit(EXIT_FAILURE);
+				std::exit(EXECVE_FAILURE);
 			}
 		}	
 		close(_pipe_out[0]);
@@ -309,23 +304,24 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
     
 		if (chdir(script_dir.c_str()) == -1) 
 		{
-			freeUpdatedEnv(updated_env);
+			freeUpdatedEnv(updated_env, _argv);
 			close (_pipe_in[1]);
-			for (int i = 3; i < 1024; i++)
-				close (i);
 			perror("chdir");
-			std::exit(EXIT_FAILURE);
+			std::exit(EXECVE_FAILURE);
 		}
 		std::string final_path = get_new_executable(_path);
+		_argv = createExecveArgv(final_path, _interpreter);
+		if (_argv != NULL)
+		{
+			std::cerr << "Argv is |" << _argv[0] << "|" << _argv[1] << "|" << _argv[2] << "|" << std::endl;
+			execve(_argv[0], _argv, updated_env);
+		}
         // std::cerr << "about to execve" << final_path << std::endl;
-		execve(final_path.c_str(), _argv, updated_env);
         std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
-		freeUpdatedEnv(updated_env);
-		for (int i = 3; i < 1024; i++)
-			close (i);
+		freeUpdatedEnv(updated_env, _argv);
 		close (_pipe_in[1]);
         perror("execve");
-        std::exit(EXECVE_FAILURE); //st
+        std::exit(EXECVE_FAILURE);
     }
     else
     {
@@ -334,6 +330,24 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		close (_pipe_out[1]);
     }
     return (pid);
+}
+
+static char **createExecveArgv(const std::string& final_path, const std::string& interpreter) 
+{
+    char** argv = (char**)calloc(3, sizeof(char*));
+    if (argv == NULL) 
+        return NULL;  // malloc failed
+
+    argv[0] = strdup(interpreter.c_str());
+    argv[1] = strdup(final_path.c_str());
+    argv[2] = NULL;
+	if (!argv[0] || !argv[1])
+	{
+		free(argv[0]);
+		free(argv[1]);
+		return NULL;
+	}
+    return argv;
 }
 
 //ADD client there later;

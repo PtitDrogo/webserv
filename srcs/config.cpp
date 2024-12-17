@@ -516,7 +516,7 @@ void printMapCgi(std::map<std::string, std::string> cgi)
 {
 	for (std::map<std::string, std::string>::iterator it = cgi.begin(); it != cgi.end(); ++it)
 	{
-		std::cout << "Cgi: " << it->first << " => " << it->second << std::endl;
+		std::cout << "Cgi: |" << it->first << "| => |" << it->second << "|" << std::endl;
 	}
 }
 
@@ -530,10 +530,10 @@ void parse_cgi_path(std::string& line, Server &server)
 		if (extention == std::string::npos)
 			break;
 
-		std::string cgi_extension = line.substr(pos, extention - pos + 1);
+		std::string cgi_extension = line.substr(pos, extention - pos);
 
 		size_t start = extention + 1;
-		size_t end = line.find(" ", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string extracted_path;
 		if (end != std::string::npos)
 			extracted_path = line.substr(start, end - start);
@@ -546,6 +546,8 @@ void parse_cgi_path(std::string& line, Server &server)
 			pos = std::string::npos;
 	}
 	std::cout << "You should see me once I think ? or 3 times, once per server" << std::endl;
+	std::cout << "address of map is " << &server.getCgis() << std::endl;
+	std::cout << "address of server is " << &server << std::endl;
 	printMapCgi(server.getCgis());
 }
 
