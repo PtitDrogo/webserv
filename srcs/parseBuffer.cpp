@@ -227,8 +227,8 @@ bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
 
 bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req)
 {
-	// if (client.printfgetRequest().find("GET /config/base_donnees/") != std::string::npos)
-	if (client.getRequest().find("GET" + client.getServer().getRoot() + "base_donnees/") != std::string::npos)
+	// if (client.getRequest().find("GET " + client.getServer().getRoot() + "base_donnees/") != std::string::npos)
+	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
 	{
 		if (download(client) == false){
 			return false;
