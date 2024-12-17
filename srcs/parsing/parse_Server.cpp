@@ -191,32 +191,33 @@ void parse_auto_index(std::string line, Server &serv)
 	}
 }
 
-void parse_cgi_path(Server &server)
+void parse_cgi_path(std::string& line, Server &server)
 {
-	std::string cgi_path = server.getLocation()[0].getCgiPath();
 	size_t pos = 0;
 
-	while ((pos = cgi_path.find(".", pos)) != std::string::npos)
+	while ((pos = line.find(".", pos)) != std::string::npos)
 	{
-		size_t extention = cgi_path.find(":", pos);
+		size_t extention = line.find(":", pos);
 		if (extention == std::string::npos)
 			break;
 
-		std::string cgi_extension = cgi_path.substr(pos, extention - pos + 1);
+		std::string cgi_extension = line.substr(pos, extention - pos);
 
 		size_t start = extention + 1;
-		size_t end = cgi_path.find(" ", start);
+		size_t end = line.find_first_of(" \t;", start);
 		std::string extracted_path;
 		if (end != std::string::npos)
-			extracted_path = cgi_path.substr(start, end - start);
+			extracted_path = line.substr(start, end - start);
 		else
-			extracted_path = cgi_path.substr(start);
-
-		server.getLocation()[0].setCgi(extracted_path, cgi_extension);
+			extracted_path = line.substr(start);
+		server.addCgis(cgi_extension, extracted_path);
 		if (end != std::string::npos)
 			pos = end;
 		else
 			pos = std::string::npos;
 	}
-	printMapCgi(server.getLocation()[0].getCgi());
+	std::cout << "You should see me once I think ? or 3 times, once per server" << std::endl;
+	std::cout << "address of map is " << &server.getCgis() << std::endl;
+	std::cout << "address of server is " << &server << std::endl;
+	printMapCgi(server.getCgis());
 }

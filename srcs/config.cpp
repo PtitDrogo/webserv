@@ -138,12 +138,10 @@ bool Config::createServerr(std::ifstream &file , Server &serv)
 				return false;
 		if (line.find("auto_index") != std::string::npos)
 			parse_auto_index(line, serv);
+		if (line.find("cgi_path") != std::string::npos)
+			parse_cgi_path(line, serv);
 		if (line.find("}") != std::string::npos)
 			break;
-	}
-	if (serv.getLocation()[0].getCgiPath().empty() == false)
-	{
-		parse_cgi_path(serv);
 	}
 	this->setServer(serv);
 	return true;
@@ -230,14 +228,19 @@ bool Config::parse_config_file(std::string filename)
 	// this->printConfig(file);
 	if (!check_same_port(this->getServer()))
 		return false;
-	std::vector<location> locs = this->getServer()[0].getLocation();
-	for (size_t i = 0; i < locs.size(); ++i)
+	//tfreydie, added checking accross all servers;
+	for (size_t x = 0; x < _servers.size(); x++)
 	{
-		for (size_t j = i + 1; j < locs.size(); ++j)
+		std::vector<location> locs = _servers[x].getLocation();
+		for (size_t i = 0; i < locs.size(); ++i)
 		{
-			if (!check_same_path_of_location(locs, i, j))
-				return false;
+			for (size_t j = i + 1; j < locs.size(); ++j)
+			{
+				if (!check_same_path_of_location(locs, i, j))
+					return false;
+			}
 		}
 	}
+
 	return (true);
 }

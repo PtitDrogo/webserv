@@ -26,6 +26,8 @@ Server &Server::operator=(const Server &copy)
 		this->_max_body_size = copy._max_body_size;
 		this->_auto_index = copy._auto_index;
 		this->_host = copy._host;
+		_server_socket = copy._server_socket;
+		_cgi = copy._cgi;
 	}
 	return *this;
 }
@@ -41,6 +43,7 @@ int Server::getMaxBodySize() const { return (this->_max_body_size); }
 std::string Server::getAutoIndex() const { return (this->_auto_index); }
 std::string Server::getHost() const { return (this->_host); }
 int Server::getServerSocket() const { return (_server_socket); }
+std::map<std::string, std::string>& Server::getCgis() { return (_cgi);}
 
 void Server::setPort(std::string port) { this->_port = port; }
 void Server::setIndex(std::string index) { this->_index = index; }
@@ -53,3 +56,8 @@ void Server::setMaxBodySize(int max_body_size) { this->_max_body_size = max_body
 void Server::setAutoIndex(std::string auto_index) { this->_auto_index = auto_index; }
 void Server::setServerSocket(int server_socket) { _server_socket = server_socket; }
 void Server::setHost(std::string host) { this->_host = host; }
+
+void Server::addCgis(std::string& extension ,std::string& interpreter_path)
+{
+	_cgi[extension] = interpreter_path;
+}
