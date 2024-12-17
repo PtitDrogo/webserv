@@ -107,7 +107,6 @@ std::string generateAutoIndexPage(const std::string &directory, const std::vecto
 
         else
         {
-            std::cout << "je rentre ici78" << std::endl;
             std::string root = client.getServer().getRoot();
 
             std::string rootRelative = root.substr(1);

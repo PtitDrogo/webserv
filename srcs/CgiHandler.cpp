@@ -65,8 +65,6 @@ static std::string get_extension(const std::string& full_path, Client& client)
 
 bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 {
-	//Add function here that will get the extension, then see if it gets a return from the 
-	//map of extension, then uses that to fill the interpreter variable of CGIHandler. Ez pez !
 	_interpreter = get_extension(request.getPath(), client);
 	std::cout << _interpreter << std::endl;
 	if (_interpreter == "")
@@ -74,8 +72,7 @@ bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 		generate_html_page_error(client, "403");
 		return false;
 	}
-	_path = "." + request.getPath(); //blindly adding a dot because i am a gigachad;
-	// std::cout << "Path is : " << _path << std::endl;
+	_path = "." + request.getPath();
 	processCgiPath(request);
 	if (file_exists(_path.c_str()) == false)
 	{
@@ -88,7 +85,6 @@ bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 		return false;
 	}
     pid_t cgi_pid = executeCGI(request);
-	// std::cout << std::endl << std::endl << "CGI PID IS :" << cgi_pid << std::endl << std::endl;
 	_pid = cgi_pid;
     if (cgi_pid == -1)
     {
@@ -99,20 +95,19 @@ bool CgiHandler::HandleCgiRequest(Client& client, const HttpRequest &request)
 
 }
 
-//This gets the real path of the cgi and extract all parameters into a map;
 void	CgiHandler::processCgiPath(const HttpRequest &request)
 {
 	if (request.getMethod() == "CGI-GET")
 	{
 		size_t start = _path.find('?');
 		if (start == std::string::npos)
-			return ; //This means theres no parameters, we fuck off;
+			return ;
 		std::string tmp_path = _path.substr(start + 1);
 		if (tmp_path.empty())
-			return ; //to be safe
+			return ;
 		_params["QUERY_STRING"] = tmp_path;
 		_params["REQUEST_METHOD"] = "GET";
-		_path = _path.substr(0, start); //Setting the actual path has the entire string thats before the ?
+		_path = _path.substr(0, start);
 	}
 	else if (request.getMethod() == "CGI-POST")
 	{	
@@ -124,7 +119,6 @@ void	CgiHandler::processCgiPath(const HttpRequest &request)
 	return ;
 }
 
-// for ./config/cgi-bin/hello.py, this will get ./config/cgi-bin/, so we can them move into that directory
 static std::string get_directory_path(const std::string& full_path) 
 {
     size_t last_slash = full_path.find_last_of('/');
@@ -141,7 +135,6 @@ static std::string get_new_executable(const std::string& full_path)
     return "." + full_path.substr(last_slash);
 }
 
-//As it stands in the code, "body" is just the entire request, so this gets what i actually care about
 static std::string getActualBody(std::string& fullbody) 
 {
     std::string line;
@@ -181,11 +174,9 @@ static bool is_executable(const char *path)
 {
 	struct stat st;
     
-    // Is it a file
 	stat(path, &st);
     if (!S_ISREG(st.st_mode)) 
         return false;
-    //is it exe
     if (access(path, X_OK) != 0) 
 	{
         return false;
@@ -193,7 +184,6 @@ static bool is_executable(const char *path)
     return true;
 }
 
-//Returns an updated env equal to envp + parameters of the cgi request
 char **CgiHandler::updateEnv()
 {
 	size_t env_count = 0;
@@ -255,13 +245,11 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 {
     if (pipe(_pipe_in) < 0)
 	{
-        std::cerr << "Pipe failed, error 500 !" << std::endl;
 		return -1;
 	}
 	
 	if (pipe(_pipe_out) < 0)
 	{
-        std::cerr << "Pipe failed, sending back error 500 !" << std::endl;
 		close (_pipe_in[0]);
 		close (_pipe_in[1]);
 		return -1;
@@ -270,7 +258,6 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
     int pid = fork();
     if (pid < 0)
     {
-        std::cout << "Fork failed" << std::endl;
         close (_pipe_in[0]);
 		close (_pipe_in[1]);
 		close (_pipe_out[0]);
@@ -282,9 +269,9 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
         char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(_pipe_in[0], STDIN_FILENO);
-		// int null_fd = open("/dev/null", O_WRONLY);
-		// dup2(null_fd, STDERR_FILENO);
-		// close(null_fd);
+		int null_fd = open("/dev/null", O_WRONLY);
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
 		if (request.getMethod() == "CGI-POST")
 		{
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
@@ -312,12 +299,7 @@ pid_t    CgiHandler::executeCGI(const HttpRequest &request)
 		std::string final_path = get_new_executable(_path);
 		_argv = createExecveArgv(final_path, _interpreter);
 		if (_argv != NULL)
-		{
-			std::cerr << "Argv is |" << _argv[0] << "|" << _argv[1] << "|" << _argv[2] << "|" << std::endl;
 			execve(_argv[0], _argv, updated_env);
-		}
-        // std::cerr << "about to execve" << final_path << std::endl;
-        std::cerr << RED << "failed to execve, path was : " << _path << RESET << std::endl;
 		freeUpdatedEnv(updated_env, _argv);
 		close (_pipe_in[1]);
         perror("execve");
@@ -336,8 +318,7 @@ static char **createExecveArgv(const std::string& final_path, const std::string&
 {
     char** argv = (char**)calloc(3, sizeof(char*));
     if (argv == NULL) 
-        return NULL;  // malloc failed
-
+        return NULL;
     argv[0] = strdup(interpreter.c_str());
     argv[1] = strdup(final_path.c_str());
     argv[2] = NULL;
@@ -350,26 +331,19 @@ static char **createExecveArgv(const std::string& final_path, const std::string&
     return argv;
 }
 
-//ADD client there later;
 void    cgiProtocol(char *const *envp, const HttpRequest &request, Client& client, Config &conf, std::vector<struct pollfd> &fds)
 {
     CgiHandler cgi(envp, client);
 
-    if (cgi.HandleCgiRequest(client, request) == false)
-    {
-        // response = httpHeaderResponse("504 Gateway Timeout", "text/plain", "The CGI script timed out.");
-        std::cout << "Error executing CGI"<< std::endl;
-    }
-    else
+    if (cgi.HandleCgiRequest(client, request) == true)
     {
 		int pipe_fd = cgi.getPipeOut()[0];
         
 		client.setCgiPID(cgi.getPID());
-		// std::cout << "After setting, client PID is :" << client.getCgiPID() << std::endl;
-        addPollFD(pipe_fd, fds); //add to fds
-        conf.addClient(pipe_fd, client.getServer()); //add to map;
-        conf.getClientObject(pipe_fd).setCgiCaller(&client); //convoluted way of getting the client we just created and adding the CGI client caller;
-		client.setCgiCallee(&conf.getClientObject(pipe_fd)); //Adding the pipe as callee of the initial client;
+        addPollFD(pipe_fd, fds);
+        conf.addClient(pipe_fd, client.getServer());
+        conf.getClientObject(pipe_fd).setCgiCaller(&client);
+		client.setCgiCallee(&conf.getClientObject(pipe_fd));
 	}
     return ;
 
@@ -379,32 +353,17 @@ int     *CgiHandler::getPipeOut() {return _pipe_out;}
 int     *CgiHandler::getPipeIn() {return _pipe_in;}
 pid_t   CgiHandler::getPID() {return _pid;}
 
-
-
 bool isCgiStuff(Client& client, Config &conf, std::vector<struct pollfd> &fds, size_t i)
 {
 	if (client.getCgiCaller() == NULL)
 		return (false);
-	if (client.getCgiCaller() != NULL && fds[i].revents & POLLIN)
+	if (client.getCgiCaller() != NULL && fds[i].revents & (POLLIN | POLLHUP))
 	{
 		std::cout << GREEN << "Pipe POLLIN triggered" << RESET << std::endl;
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
 		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
-			std::cerr << "Couldnt send data of CGI to client, error 500" << std::endl;
-		disconnectClient(fds, client, conf);
-		return true;
-	}
-	if (client.getCgiCaller() != NULL && fds[i].revents & POLLHUP) //I have never seen this trigger.
-	{
-		printf("Pipe disconnected2\n");
-		//I want my client caller to send the content from the cgi pipe to its websocket;
-		//then we disconnect client of Pipe and all is well;
-
-		std::string cgi_output = readFromPipeFd(fds[i].fd);
-		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
-			std::cout << "Couldnt send data of CGI to client, error 500" << std::endl;
+			std::cerr << RED << "Disconnecting client after failure to send response" << RESET << std::endl;
 		disconnectClient(fds, client, conf);
 		return true;
 	}
