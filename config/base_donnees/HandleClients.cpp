@@ -107,19 +107,16 @@ int	handleRecvValue(int valread)
 {
 	if (valread > 0)
 	{
-		// std::cout << "DEBUG:Received from client successfully" << std::endl;
 		return (SUCCESS);
 	}
 	else if (valread == 0)
 	{
 		std::cout << "DEBUG:Recve detected no client, disconnecting" << std::endl;
-		// disconnectClient(fds, i, conf);
-		return (FAILURE); //In theory this should never trigger but leaving just in case
+		return (FAILURE);
 	}
 	else
 	{
 		std::cerr << "Error reading from client" << std::endl;
-		// disconnectClient(fds, i, conf);
 		return (FAILURE);
 	}
 }
