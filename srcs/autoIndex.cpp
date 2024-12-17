@@ -3,37 +3,35 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-
-bool isDirectory(const std::string& path)
+bool isDirectory(const std::string &path)
 {
-	struct stat statbuf;
-	std::string full = "./www/" + path;
-	if (stat(full.c_str(), &statbuf) != 0)
-	{
-		return false;
-	}
-	std::cout << "true " << path << " and full " << full << std::endl;
-	return S_ISDIR(statbuf.st_mode);
+    struct stat statbuf;
+    std::string full = "./www/" + path;
+    if (stat(full.c_str(), &statbuf) != 0)
+    {
+        return false;
+    }
+    std::cout << "true " << path << " and full " << full << std::endl;
+    return S_ISDIR(statbuf.st_mode);
 }
 
-
-std::vector<std::string> listDirectory(const std::string& directory)
+std::vector<std::string> listDirectory(const std::string &directory)
 {
-	std::vector<std::string> files;
-	DIR* dir = opendir(directory.c_str());
-	if (dir != NULL)
-	{
-		struct dirent* entry;
-		while ((entry = readdir(dir)) != NULL)
-			files.push_back(entry->d_name);
-		closedir(dir);
-	}
-	return files;
+    std::vector<std::string> files;
+    DIR *dir = opendir(directory.c_str());
+    if (dir != NULL)
+    {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL)
+            files.push_back(entry->d_name);
+        closedir(dir);
+    }
+    return files;
 }
 
 std::string create_page(std::string html, std::string directory)
 {
-	html = "<!DOCTYPE html>\n";
+    html = "<!DOCTYPE html>\n";
     html += "<html lang=\"fr\">\n";
     html += "<head>\n";
     html += "\t<meta charset=\"UTF-8\">\n";
@@ -83,94 +81,71 @@ std::string create_page(std::string html, std::string directory)
     html += "\t<h1>AutoIndex_Page</h1>\n";
 
     html += "\t<ul>\n";
-	return html;
+    return html;
 }
 
-
-std::string generateAutoIndexPage(const std::string& directory, const std::vector<std::string>& files, Client& client)
+std::string generateAutoIndexPage(const std::string &directory, const std::vector<std::string> &files, Client &client)
 {
-	std::string html;
-	html = create_page(html, directory);
-	for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
-	{
-		if (*it == "." || *it == "..")
-			continue;
-		std::string relativePath = directory;
+    std::string html;
+    html = create_page(html, directory);
+    for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
+    {
+        if (*it == "." || *it == "..")
+            continue;
+        std::string relativePath = directory;
 
-        if (client.getLocation() != NULL) //kinda weird que conf soit celui qui se souvienne de ca.
+        if (client.getLocation() != NULL)
         {
-            std::cout << "je rentre ici546" << std::endl;
             std::string rootLoc = client.getLocation()->getRoot();
 
-            std::string rootLocRelative = rootLoc.substr(1);  // Supprime le premier '/' pour rendre `rootLoc` relatif
-
-            // Supprime './' du début de relativePath si présent
-            if (relativePath.find("./") == 0) {
-                relativePath = relativePath.substr(2);  // Retire './' du début
-            }
-
-            if (relativePath.find(rootLocRelative) == 0) {
+            std::string rootLocRelative = rootLoc.substr(1);
+            if (relativePath.find("./") == 0)
+                relativePath = relativePath.substr(2);
+            if (relativePath.find(rootLocRelative) == 0)
                 relativePath = relativePath.substr(rootLocRelative.size());
-            }
         }
 
-        else {
+        else
+        {
             std::cout << "je rentre ici78" << std::endl;
             std::string root = client.getServer().getRoot();
 
-            std::string rootRelative = root.substr(1);  // Supprime le premier '/' pour rendre `root` relatif
-
-            // Supprime './' du début de relativePath si présent
-            if (relativePath.find("./") == 0) {
-                relativePath = relativePath.substr(2);  // Retire './' du début
-            }
-
-            if (relativePath.find(rootRelative) == 0) {
+            std::string rootRelative = root.substr(1);
+            if (relativePath.find("./") == 0)
+                relativePath = relativePath.substr(2);
+            if (relativePath.find(rootRelative) == 0)
                 relativePath = relativePath.substr(rootRelative.size());
-            }
         }
+        if (!relativePath.empty() && relativePath[relativePath.size() - 1] != '/')
+            relativePath += "/";
+        relativePath += *it;
+        size_t pos;
+        while ((pos = relativePath.find("//")) != std::string::npos)
+            relativePath.replace(pos, 2, "/");
+        std::string fullPath = relativePath;
+        bool isDir = isDirectory(fullPath);
 
-
-
-
-
-
-		if (!relativePath.empty() && relativePath[relativePath.size() - 1] != '/')
-			relativePath += "/";
-		relativePath += *it;
-		size_t pos;
-		while ((pos = relativePath.find("//")) != std::string::npos)
-		{
-			relativePath.replace(pos, 2, "/");
-		}
-		std::cout << "relativePath----------------------------------- = " << relativePath << std::endl;
-		std::string fullPath = relativePath;
-		bool isDir = isDirectory(fullPath);
-
-		html += "\t\t<li><a href=\"" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
-	}
-	html += "\t</ul>\n";
-	html += "</body>\n";
-	html += "</html>";
-	return html;
+        html += "\t\t<li><a href=\"" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
+    }
+    html += "\t</ul>\n";
+    html += "</body>\n";
+    html += "</html>";
+    return html;
 }
 
-
-void autoIndex(std::string path, Client& client)
+void autoIndex(std::string path, Client &client)
 {
-	std::string finalPath;
-	std::string reponse;
-	std::string file_content;
-	Server &server = client.getServer();
+    std::string finalPath;
+    std::string reponse;
+    std::string file_content;
+    Server &server = client.getServer();
 
-	if (client.getLocation() != NULL)
-	{
-		finalPath = path;
-	}
-	else 
-		finalPath = "." + server.getRoot() + path;
-	std::vector<std::string> files = listDirectory(finalPath);
-	file_content = generateAutoIndexPage(finalPath, files, client);
-	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+    if (client.getLocation() != NULL)
+        finalPath = path;
+    else
+        finalPath = "." + server.getRoot() + path;
+    std::vector<std::string> files = listDirectory(finalPath);
+    file_content = generateAutoIndexPage(finalPath, files, client);
+    reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+    send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }

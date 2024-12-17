@@ -1,13 +1,8 @@
 #include "Cookies.hpp"
 #include "Webserv.hpp"
 
-Cookies::Cookies()
-{
-}
-
-Cookies::~Cookies()
-{
-}
+Cookies::Cookies(){}
+Cookies::~Cookies(){}
 
 Cookies::Cookies(const Cookies &other)
 {

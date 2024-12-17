@@ -2,8 +2,7 @@
 
 bool Config::ServerRunning = true;
 
-Config::Config() {
-}
+Config::Config() {}
 
 Config::~Config() {}
 
@@ -83,27 +82,21 @@ int Config::SetupServerSocket(int i)
 	int opt = 1;
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == -1)
 	{
-		std::cerr << "Erreur lors de la configuration du socket." << std::endl;
 		close(server_socket);
 		return -1;
 	}
 	sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
-
-
 	int port = std::atoi(_servers[i].getPort().c_str());
-
 	server_address.sin_port = htons(port);
 	server_address.sin_addr.s_addr = INADDR_ANY;
 	if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) == -1)
 	{
-		std::cerr << "Erreur lors de la liaison du socket." << std::endl;
 		close(server_socket);
 		return (-1);
 	}
 	if (listen(server_socket, 5) == -1)
 	{
-		std::cerr << "Erreur lors de la mise en écoute." << std::endl;
 		close(server_socket);
 		return -1;
 	}
@@ -161,10 +154,7 @@ void Config::printConfig(std::ifstream& file)
 bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 {
 	if (serv[i].getServerName() == serv[j].getServerName())
-	{
-		std::cout << "Webserv : conflicting server name" << std::endl;
 		return false;
-	}
 	return true;
 }
 
@@ -188,12 +178,10 @@ bool check_same_path_of_location(const std::vector<location>& loc, size_t i, siz
 {
 	if (loc.size() <= std::max(i, j))
 	{
-		std::cerr << "Webserv : Not enough locations to compare paths" << std::endl;
 		return true;
 	}
 	if (loc[i].getPath() == loc[j].getPath())
 	{
-		std::cerr << "Webserv : Conflicting paths in locations" << std::endl;
 		return false;
 	}
 	return true;
@@ -206,7 +194,6 @@ bool Config::parse_config_file(std::string filename)
 		return false;
 	if (file.peek() == std::ifstream::traits_type::eof())
 	{
-		std::cerr << "Error: file is empty" << std::endl;
 		return false;
 	}
 	if (count_bracket(file) == false)
@@ -225,10 +212,8 @@ bool Config::parse_config_file(std::string filename)
 	}
 	file.clear();
 	file.seekg(0, std::ios::beg);
-	// this->printConfig(file);
 	if (!check_same_port(this->getServer()))
 		return false;
-	//tfreydie, added checking accross all servers;
 	for (size_t x = 0; x < _servers.size(); x++)
 	{
 		std::vector<location> locs = _servers[x].getLocation();
