@@ -3,23 +3,41 @@
 
 
 static void handleSignal(int signum);
+static int	execute_server(Config& conf, char **envp);
+
 
 int main(int argc, char **argv, char **envp)
 {
 	Config conf;
-	// HttpRequest req;
-	Cookies cook;
-	std::vector<struct pollfd> fds;
 
 	if (argc != 2)
 	{
-		std::cout << "error : use ./webserv file.conf" << std::endl;
-		return 0;
+		std::cerr << "Error : use ./webserv file.conf" << std::endl;
+		return FAILURE;
 	}
 	if (conf.parse_config_file(argv[1]) == false)
+		return FAILURE;
+	try
 	{
-		return 0;
+		int status = execute_server(conf, envp);
+		return status;
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << RED << "Error running server : " << e.what() << RESET << std::endl;
+		return FAILURE;
+	}
+	return SUCCESS;
+}
+
+
+
+
+static int	execute_server(Config& conf, char **envp)
+{
+	Cookies cook;
+	std::vector<struct pollfd> fds;
+
 	size_t number_of_servers = conf.addAllServers(fds);
 
 	while (Config::ServerRunning)
@@ -35,7 +53,7 @@ int main(int argc, char **argv, char **envp)
 			HttpRequest req;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
-				// printf("disconnect client of main loop, disconnected client %i\n", fds[i].fd);
+				checkFailedExecve(client);
 				disconnectClient(fds, client, conf);
 				break;
 			}
@@ -59,10 +77,8 @@ int main(int argc, char **argv, char **envp)
 				disconnectClient(fds, client, conf);
 				break ;
 			}
-			// on ajoute le buffer à la requete + recuperation du content-length et on update le totalRead
 			client.appendToRequest(buffer, recv_value);
 
-			// si on a recu toute la requete
 			if (client.getTotalRead() >= client.getContentLength()) {
 				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
 				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request

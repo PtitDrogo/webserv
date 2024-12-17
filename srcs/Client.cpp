@@ -132,7 +132,7 @@ bool Client::extractFileName() {
 	}
 
 	std::string fileName = getBody().substr(fileNamePos + key.length(), endPos - (fileNamePos + key.length()));
-	fileName = "./config/base_donnees/" + fileName;
+	fileName = "." + this->getServer().getRoot() + "base_donnees/" + fileName;
 	_fileName = fileName;
 	return true;
 }

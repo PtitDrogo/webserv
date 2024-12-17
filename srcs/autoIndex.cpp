@@ -80,7 +80,6 @@ std::string create_page(std::string html, std::string directory)
     html += "\t</style>\n";
     html += "</head>\n";
     html += "<body>\n";
-    // html += "\t<h1>Index of " + directory + "</h1>\n";
     html += "\t<h1>AutoIndex_Page</h1>\n";
 
     html += "\t<ul>\n";
@@ -100,44 +99,34 @@ std::string generateAutoIndexPage(const std::string& directory, const std::vecto
 
         if (client.getLocation() != NULL) //kinda weird que conf soit celui qui se souvienne de ca.
         {
+            std::cout << "je rentre ici546" << std::endl;
             std::string rootLoc = client.getLocation()->getRoot();
-            std::cout << "relativePath: " << relativePath << std::endl;
-            std::cout << "rootLoc: " << rootLoc << std::endl;
 
             std::string rootLocRelative = rootLoc.substr(1);  // Supprime le premier '/' pour rendre `rootLoc` relatif
-            std::cout << "rootLocRelative: " << rootLocRelative << std::endl;
 
             // Supprime './' du début de relativePath si présent
             if (relativePath.find("./") == 0) {
                 relativePath = relativePath.substr(2);  // Retire './' du début
             }
 
-            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
-
             if (relativePath.find(rootLocRelative) == 0) {
                 relativePath = relativePath.substr(rootLocRelative.size());
-                std::cout << "relativePath modifié: " << relativePath << std::endl;
             }
         }
 
         else {
+            std::cout << "je rentre ici78" << std::endl;
             std::string root = client.getServer().getRoot();
-            std::cout << "relativePath: " << relativePath << std::endl;
-            std::cout << "root: " << root << std::endl;
 
             std::string rootRelative = root.substr(1);  // Supprime le premier '/' pour rendre `root` relatif
-            std::cout << "rootRelative: " << rootRelative << std::endl;
 
             // Supprime './' du début de relativePath si présent
             if (relativePath.find("./") == 0) {
                 relativePath = relativePath.substr(2);  // Retire './' du début
             }
 
-            std::cout << "relativePath après nettoyage: " << relativePath << std::endl;
-
             if (relativePath.find(rootRelative) == 0) {
                 relativePath = relativePath.substr(rootRelative.size());
-                std::cout << "relativePath modifié: " << relativePath << std::endl;
             }
         }
 
@@ -164,4 +153,24 @@ std::string generateAutoIndexPage(const std::string& directory, const std::vecto
 	html += "</body>\n";
 	html += "</html>";
 	return html;
+}
+
+
+void autoIndex(std::string path, Client& client)
+{
+	std::string finalPath;
+	std::string reponse;
+	std::string file_content;
+	Server &server = client.getServer();
+
+	if (client.getLocation() != NULL)
+	{
+		finalPath = path;
+	}
+	else 
+		finalPath = "." + server.getRoot() + path;
+	std::vector<std::string> files = listDirectory(finalPath);
+	file_content = generateAutoIndexPage(finalPath, files, client);
+	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+	send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
 }
