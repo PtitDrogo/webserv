@@ -111,7 +111,7 @@ int	execute_server(Config& conf, char **envp)
 
 			if (client.getTotalRead() >= client.getContentLength()) {
 				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				// std::cout << GREEN << client.getRequest() << RESET << std::endl;		// debug request
+				std::cout << GREEN << "FULL REQUEST" << client.getRequest() << RESET << std::endl;		// debug request
 				// std::cout << "DEBUG , path in main is : " << client.
 
 				std::string type_request = get_type_request(client.getRequest(), req);
