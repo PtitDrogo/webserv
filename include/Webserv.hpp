@@ -58,8 +58,8 @@ bool isCgiRequest(const HttpRequest &req);
 
 //-----------ParseBuffer-----------//
 // void	parse_buffer_get(std::string buffer, Config &conf , int client_socket);
-void parse_buffer_get(Client &client, Cookies &cook, HttpRequest &req);
-void parse_buffer_post(Client &client, Cookies &cook, HttpRequest &req);
+bool parse_buffer_get(Client &client, Cookies &cook, HttpRequest &req);
+bool parse_buffer_post(Client &client, Cookies &cook, HttpRequest &req);
 bool preparePostParse(Client &client, Cookies &cook, HttpRequest &req);
 bool prepareGetParse(Client &client, Cookies &cook, HttpRequest &req);
 
@@ -78,7 +78,7 @@ bool handleTimeout(Client &client, std::vector<struct pollfd> &fds, Config &conf
 std::string readFile(std::string &path);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
 std::string httpHeaderResponse(std::string code, std::string contentType, std::string content);
-void generate_html_page_error(const Client &client, std::string error_code);
+bool generate_html_page_error(const Client &client, std::string error_code);
 bool file_exists_parsebuffer(const char *path);
 int	execute_server(Config& conf, char **envp);
 void handleSignal(int signum);
@@ -86,7 +86,7 @@ void handleSignal(int signum);
 //-----------Delete-----------//
 
 bool deleteFile(const std::string &path);
-void parse_buffer_delete(Client &client);
+bool parse_buffer_delete(Client &client);
 
 //-----------Download-----------//
 bool download(Client& client);
@@ -158,12 +158,12 @@ std::string handle_deconnexion(Cookies &cook, std::string request_token, Client&
 
 //-----------Auto_index-----------//
 
-void autoIndex(std::string path, Client& client);
+bool autoIndex(std::string path, Client& client);
 
 //-----------Check-----------//
 
 bool check_host(std::string line, const Server& Server);
-void checkFailedExecve(Client &client);
+bool checkFailedExecve(Client &client);
 
 
 

@@ -77,19 +77,19 @@ int	execute_server(Config& conf, char **envp)
 		checkIfNewClient(fds, number_of_servers, conf);
 		if (safe_poll(fds, number_of_servers) == FAILURE)
 			return FAILURE;
-		for (size_t i = number_of_servers; i < fds.size(); ++i) //honestly this is to the point
+		for (size_t i = number_of_servers; i < fds.size(); ++i)
 		{
 			Client &client = conf.getClientObject(fds[i].fd);
 			HttpRequest req;
 			if (fds[i].revents & POLLRDHUP || fds[i].revents & POLLHUP)
 			{
-				checkFailedExecve(client);
+				if (checkFailedExecve(client) == false)
+					std::cerr << "Error sending back that execve failed" << std::endl;
 				disconnectClient(fds, client, conf);
 				break;
 			}
 			if (fds[i].revents & POLLERR)
 			{
-				printf("error with this client, were killing it, disconnected client %i\n", fds[i].fd);
 				disconnectClient(fds, client, conf);
 				break;
 			}
@@ -109,31 +109,44 @@ int	execute_server(Config& conf, char **envp)
 			}
 			client.appendToRequest(buffer, recv_value);
 
-			if (client.getTotalRead() >= client.getContentLength()) {
-				// std::cout << MAGENTA << "Full request received" << RESET << std::endl;	// debug
-				std::cout << GREEN << "FULL REQUEST" << client.getRequest() << RESET << std::endl;		// debug request
-				// std::cout << "DEBUG , path in main is : " << client.
-
+			if (client.getTotalRead() >= client.getContentLength()) 
+			{
 				std::string type_request = get_type_request(client.getRequest(), req);
-				std::cout << BLUE << "TYPE REQUEST IS : " << type_request << RESET << std::endl; 
 				if (type_request == "POST")
 				{
 					if (preparePostParse(client, cook, req) == false)
+					{	
+						disconnectClient(fds, client, conf);;
 						break ;
+					}
 				}
 				else if (type_request == "GET") 
 				{
 					if (prepareGetParse(client, cook, req) == false) 
+					{	
+						disconnectClient(fds, client, conf);;
 						break ;
+					}
 				}
 				else if (type_request == "DELETE")
-					parse_buffer_delete(client);
+				{	
+					if (parse_buffer_delete(client) == false)
+					{	
+						disconnectClient(fds, client, conf);;
+						break ;
+					}
+				}
 				else if (type_request == "CGI-GET" || type_request == "CGI-POST")
 					cgiProtocol(envp, req, client, conf, fds);
 				else
-					generate_html_page_error(client, "400");
+				{
+					if (generate_html_page_error(client, "400") == false)
+					{	
+						disconnectClient(fds, client, conf);;
+						break ;
+					}
+				}
 				client.reset();
-				// std::cout << req << std::endl;
 			}
 		}
 	}

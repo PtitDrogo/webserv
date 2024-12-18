@@ -95,13 +95,51 @@ void location::setRedir(std::string& error_code, std::string& path)
 	this->_redir[error_code] = path;
 }
 
+std::string getCharactersBetweenSlashes(const std::string& path) {
+    size_t firstSlash = path.find('/');
+    if (firstSlash == std::string::npos) {
+        return ""; // Pas de premier '/' trouvé.
+    }
+
+    size_t secondSlash = path.find('/', firstSlash + 1);
+    if (secondSlash == std::string::npos) {
+        return ""; // Pas de second '/' trouvé.
+    }
+
+    // Extraire les caractères entre les deux slashes.
+    return path.substr(firstSlash, secondSlash - firstSlash);
+}
+
+
+std::string parsePath(const std::string& path) {
+    size_t firstSlash = path.find('/');
+    if (firstSlash == std::string::npos) {
+        return ""; // Pas de '/' trouvé
+    }
+
+    size_t secondSlash = path.find('/', firstSlash + 1);
+    if (secondSlash == std::string::npos) {
+        return ""; // Pas de second '/' trouvé
+    }
+
+    // Retourner tout ce qui suit le second '/'
+    return path.substr(secondSlash);
+}
+
 std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
 {
+	std::cout << "path = " << path << std::endl;
+	std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
+	std::string IsLocation = getCharactersBetweenSlashes(path);
 	std::string cleanedPath = trim(path);
+	std::string pathLoc;
 	for (size_t i = 0; i < locationPath.size(); ++i)
 	{
 		std::string locationStr = locationPath[i].getPath();
 		locationStr = trim(locationStr);
+		std::cout << "locationStr = " << locationStr << std::endl;
+		std::cout << "cleanedPath = " << cleanedPath << std::endl;
+		std::cout << "isLocation = " << IsLocation << std::endl;
 		if (cleanedPath == locationStr)
 		{
 			if (cleanedPath.size() <= locationStr.size())
@@ -123,11 +161,19 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 			client.setLocation(&locationPath[i]);
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
+		if (IsLocation == locationStr)
+		{
+			pathLoc = parsePath(path);
+			std::cout << "pathLoc = " << pathLoc << std::endl;
+			client.setLocation(&locationPath[i]);
+			std::cout << "locationPath[i].getRoot() + cleanedPath   =   " << locationPath[i].getRoot() + pathLoc << std::endl;
+			return "." + locationPath[i].getRoot() + pathLoc;
+		}
 	}
 	return "";
 }
 
-void sendRedirection(int client_socket, const std::string& path)
+bool sendRedirection(int client_socket, const std::string& path)
 {
 	std::ostringstream responseStream;
 	responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
@@ -137,7 +183,9 @@ void sendRedirection(int client_socket, const std::string& path)
 				<< "Connection: close\r\n"
 				<< "\r\n";
 	std::string response = responseStream.str();
-	send(client_socket, response.c_str(), response.size(), 0);
+	if (send(client_socket, response.c_str(), response.size(), 0) == -1)
+		return false;
+	return true;
 }
 
 std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket)
@@ -175,7 +223,11 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 			file_content = readFile(finalPath);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client_socket, reponse.c_str(), reponse.size(), 0);
+		if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		{
+			std::cerr << "Error sending back the response with Auto index" << std::endl;
+			return "";
+		}
 		return "";
 	}
 	else
@@ -236,11 +288,13 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 			autoIndex(finalPath, client);
 			return "";
 		}
-		else
-		{
-			generate_html_page_error(client, "404");
-			return "";
-		}
+		std::cout << "je suos laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
+		// else
+		// {
+		// 	generate_html_page_error(client, "404");
+		// 	return "";
+		// }
 	}
+	std::cout << "finalPath = " << finalPath << std::endl;
 	return finalPath;
 }

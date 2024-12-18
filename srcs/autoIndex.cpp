@@ -132,7 +132,7 @@ std::string generateAutoIndexPage(const std::string &directory, const std::vecto
     return html;
 }
 
-void autoIndex(std::string path, Client &client)
+bool autoIndex(std::string path, Client &client)
 {
     std::string finalPath;
     std::string reponse;
@@ -146,5 +146,7 @@ void autoIndex(std::string path, Client &client)
     std::vector<std::string> files = listDirectory(finalPath);
     file_content = generateAutoIndexPage(finalPath, files, client);
     reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-    send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+    if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+        return false;
+    return true;
 }

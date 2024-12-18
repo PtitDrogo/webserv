@@ -120,21 +120,39 @@
     <a href="../index.html" class="home-button">Accueil</a>
 
     <h1>Actions</h1>
+    <style>
+        a {
+            text-decoration: none; /* Remove underline from the link */
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #005f99;
+            transform: scale(1.05);
+        }
+        button:active {
+            background-color: #003f6b;
+        }
+    </style>
     <div class="buttons-container">
         <!-- Boutons dynamiques alignés -->
         <a href="/config/cgi-bin/helloworld.php"><button>helloworld.php</button></a>
         <a href="/config/cgi-bin/form_test.php"><button>form_test.php</button></a>
-        <a href="/config/cgi-bin/postTestCgi.py"><button>postTestCgi.py</button></a>
-        <button class="action-button" onclick="showSuccess('Bouton 1')">Action 1</button>
-        <button class="action-button" onclick="showSuccess('Bouton 2')">Action 2</button>
-        <button class="action-button" onclick="showSuccess('Bouton 3')">Action 3</button>
-        <button class="action-button" onclick="showSuccess('Bouton 4')">Action 4</button>
-        <button class="action-button" onclick="showSuccess('Bouton 5')">Action 5</button>
-        <button class="action-button" onclick="showSuccess('Bouton 6')">Action 6</button>
-        <button class="action-button" onclick="showSuccess('Bouton 7')">Action 7</button>
-        <button class="action-button" onclick="showSuccess('Bouton 8')">Action 8</button>
-        <button class="action-button" onclick="showSuccess('Bouton 9')">Action 9</button>
-        <button class="action-button" onclick="showSuccess('Bouton 10')">Action 10</button>
+        <a href="/config/cgi-bin/helloworld.py"><button>Helloworld.py</button></a>
+        <a href="/config/cgi-bin/time.py"><button>time.py</button></a>
+        <a href="/config/cgi-bin/norights.py"><button>norights.py</button></a>
+        <a href="/config/cgi-bin/brokencgi.py"><button>brokencgi.py</button></a>
+        <a href="/config/cgi-bin/sleep10.py"><button>sleep10.py</button></a>
+        <a href="/config/cgi-bin/sleep20.py"><button>sleep20.py</button></a>
+        <a href="/config/cgi-bin/printquerystring.py?Meaningoflife=42&FavoriteColor=Orange&Cool=42"><button>printquerystring.py</button></a>
     </div>
     <div id="popup" class="popup">Action réalisée avec succès !</div>
     <script>

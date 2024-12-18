@@ -65,7 +65,9 @@ bool parse_location(std::string line, Server &serv, std::ifstream &file)
 					return true;
 				size_t endRoot = subLine.find_first_of(" \t;", startRoot);
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
+				root = serv.getRoot() + root;
 				loc.setRoot(root);
+				std::cout << "root = " << root << std::endl;
 			}
 			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {

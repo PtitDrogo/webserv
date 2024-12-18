@@ -3,7 +3,8 @@
 bool				download(Client& client);
 static std::string 	readFile_http(std::string filePath);
 
-bool	download(Client& client) {
+bool	download(Client& client) 
+{
 	std::string filename = client.getRequest().substr(client.getRequest().find(client.getServer().getRoot() + "base_donnees/") + client.getServer().getRoot().size() + 13);
 
 	if (filename.find("?fileName=") != std::string::npos)
@@ -34,7 +35,8 @@ bool	download(Client& client) {
 	rep << "\r\n";
 	rep << fileContent;
 
-	send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
+	if (send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0) == -1)
+		return false;
 	return true;
 }
 

@@ -26,7 +26,8 @@ bool upload(Client& client)
 	std::string path = "." + server.getRoot() + server.getIndex();
 	std::string file_content = readFile(path);
 	std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client.getSocket(), response.c_str(), response.size(), 0);
+	if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+		return false;
 	return true;
 }
 
