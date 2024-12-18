@@ -18,9 +18,8 @@ std::string fileToString(const char *filePath)
 std::string readFromPipeFd(int pipefd) 
 {
     std::string result;
-    char buffer[65535];
+    char buffer[PIPE_BUFFER];
     ssize_t bytesRead;
-
 
     while (true) 
 	{
@@ -28,19 +27,13 @@ std::string readFromPipeFd(int pipefd)
         bytesRead = read(pipefd, buffer, sizeof(buffer));
         if (bytesRead < 0) 
 		{
-            std::cout << "Error here, down the line, this should be a 500 error" << std::endl;
+            std::cout << "Error here, down the line, this should be a 500 error" << std::endl; //TODO
 			break;
         }
         if (bytesRead == 0)
             break;
-        // std::cout << "result is : |" << result << "|" << std::endl;
         result.append(buffer, bytesRead);
-        // std::cout << "AFTER result is : |" << result << "|" << std::endl;
-        // break ; //Plus rien a foutre
     }
-
-    // std::cerr << "je suis sorti" << std::endl;
-    // printf("Je suis sorti\n");
     return result;   
 }
 

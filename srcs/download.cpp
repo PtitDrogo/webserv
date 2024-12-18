@@ -12,8 +12,7 @@ bool	download(Client& client)
 	else
 		filename = filename.substr(0, filename.find(" "));
 
-	std::cout << "\"" << filename << "\"" << std::endl;
-	std::string filePath = "." + client.getServer().getRoot() + "/base_donnees/" + filename;
+	std::string filePath = "." + client.getServer().getRoot() + "base_donnees/" + filename;
 	if (file_exists_parsebuffer(filePath.c_str()) == false)
 	{
 		generate_html_page_error(client, "404");

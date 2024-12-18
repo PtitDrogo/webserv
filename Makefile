@@ -23,7 +23,6 @@ SRCS	=		$(SRCS_DIR)/main.cpp \
 				$(SRCS_DIR)/autoIndex.cpp \
 				$(SRCS_DIR)/utils/fileToString.cpp \
 				$(SRCS_DIR)/parseRequest.cpp \
-				$(SRCS_DIR)/utils/debugPrints.cpp \
 				$(SRCS_DIR)/utils/utils.cpp \
 				$(SRCS_DIR)/Client.cpp \
 				$(SRCS_DIR)/cookies.cpp \

@@ -12,6 +12,11 @@ bool parse_buffer_delete(Client& client)
 {
 	Server& 	server = client.getServer();
 
+	std::cout << RED << (client.getLocation() != NULL) << RESET << std::endl;
+	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("DELETE") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
+	{
+		return (generate_html_page_error(client, "404"));
+	}
 	if (client.getRequest().find("DELETE " + client.getServer().getRoot() + "base_donnees/") != std::string::npos) {
 
         std::string filename = client.getRequest().substr(client.getRequest().find(client.getServer().getRoot() + "base_donnees/") + client.getServer().getRoot().size() + 13);

@@ -7,7 +7,6 @@ bool upload(Client& client)
 	const Server& 	server = client.getServer();
 	if (client.extractBoundary() == false)
 	{
-		// std::cout << "1" << std::endl;
 		generate_html_page_error(client, "400");
 		return false;
 	}

@@ -55,7 +55,7 @@ bool parse_listen(std::string line, Server &serv)
 		}
 		else 
 		{
-			std::cout << "Error: Invalid port" << std::endl;
+			std::cerr << "Error: Invalid port" << std::endl;
 			return false;
 		}
 	}
@@ -64,7 +64,6 @@ bool parse_listen(std::string line, Server &serv)
 
 bool parse_server_name(std::string line, Server &serv)
 {
-	// std::cout << "parse_server_name" << std::endl;	
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("server_name", pos) == pos)
 	{
@@ -84,7 +83,6 @@ bool parse_server_name(std::string line, Server &serv)
 
 void parse_index(std::string line, Server &serv)
 {
-	// std::cout << "parse_index" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("index", pos) == pos)
 	{
@@ -176,7 +174,6 @@ void parse_max_body_size(const std::string &line, Server &serv)
 
 void parse_auto_index(std::string line, Server &serv)
 {
-	// std::cout << "parse_auto_index" << std::endl;
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos != std::string::npos && line.find("auto_index", pos) == pos)
 	{
@@ -216,8 +213,4 @@ void parse_cgi_path(std::string& line, Server &server)
 		else
 			pos = std::string::npos;
 	}
-	std::cout << "You should see me once I think ? or 3 times, once per server" << std::endl;
-	std::cout << "address of map is " << &server.getCgis() << std::endl;
-	std::cout << "address of server is " << &server << std::endl;
-	printMapCgi(server.getCgis());
 }

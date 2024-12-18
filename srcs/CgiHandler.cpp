@@ -43,7 +43,6 @@ static std::string get_extension(const std::string &full_path, Client &client)
 bool CgiHandler::HandleCgiRequest(Client &client, const HttpRequest &request)
 {
 	_interpreter = get_extension(request.getPath(), client);
-	std::cout << _interpreter << std::endl;
 	if (_interpreter == "")
 	{
 		generate_html_page_error(client, "403");
@@ -245,9 +244,9 @@ pid_t CgiHandler::executeCGI(const HttpRequest &request)
 		char **updated_env = updateEnv();
 		dup2(_pipe_out[1], STDOUT_FILENO);
 		dup2(_pipe_in[0], STDIN_FILENO);
-		// int null_fd = open("/dev/null", O_WRONLY);
-		// dup2(null_fd, STDERR_FILENO);
-		// close(null_fd);
+		int null_fd = open("/dev/null", O_WRONLY);
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
 		if (request.getMethod() == "CGI-POST")
 		{
 			if (write(_pipe_in[1], _body_post.c_str(), _body_post.size()) == -1)
@@ -311,11 +310,9 @@ void cgiProtocol(char *const *envp, const HttpRequest &request, Client &client, 
 {
 	CgiHandler cgi(envp, client);
 
-	std::cout << "Path is :" << request.getPath() << std::endl;
 	if (cgi.HandleCgiRequest(client, request) == true)
 	{
 		int pipe_fd = cgi.getPipeOut()[0];
-
 		client.setCgiPID(cgi.getPID());
 		addPollFD(pipe_fd, fds);
 		conf.addClient(pipe_fd, client.getServer());

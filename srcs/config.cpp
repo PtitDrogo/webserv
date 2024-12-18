@@ -22,14 +22,6 @@ Config &Config::operator=(const Config &copy)
 	return *this;
 }
 
-// void printVector(std::map<std::string, std::string> errorPage)
-// {
-// 	for (std::map<std::string, std::string>::iterator it = errorPage.begin(); it != errorPage.end(); ++it)
-// 	{
-// 		std::cout << "	Error Page: " << it->first << " => " << it->second << std::endl;
-// 	}
-// }
-
 std::vector<Server> &Config::getServer()
 {
 	return this->_servers;
@@ -158,7 +150,7 @@ bool check_same_server_name(std::vector<Server> serv, size_t i, size_t j)
 {
 	if (serv[i].getServerName() == serv[j].getServerName())
 	{
-		std::cout << "Webserv : conflicting server name" << std::endl;
+		std::cerr << "Webserv : conflicting server name" << std::endl;
 		return false;
 	}
 	return true;
@@ -184,7 +176,6 @@ bool check_same_path_of_location(const std::vector<location>& loc, size_t i, siz
 {
 	if (loc.size() <= std::max(i, j))
 	{
-		std::cerr << "Webserv : Not enough locations to compare paths" << std::endl;
 		return true;
 	}
 	if (loc[i].getPath() == loc[j].getPath())

@@ -69,7 +69,7 @@ int	execute_server(Config& conf, char **envp)
 	std::vector<struct pollfd> fds;
 
 	size_t number_of_servers = conf.addAllServers(fds);
-
+	std::cout << GREEN << "Server is up and running !" << RESET << std::endl;
 	while (Config::ServerRunning)
 	{
 		signal(SIGINT, &handleSignal);

@@ -73,7 +73,6 @@ bool generate_html_page_error(const Client& client, std::string error_code)
 	}
 	std::string file_content = readFile(path);
 	std::string response = httpHeaderResponse(error_code, "text/html", file_content);
-	std::cout << GREEN << response.c_str() << RESET << std::endl;
 	if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
 		return false;
 	return true;

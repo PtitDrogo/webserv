@@ -16,7 +16,6 @@ bool parse_location(std::string line, Server &serv, std::ifstream &file)
 			return false;
 		}
 		std::string path = line.substr(start, end - start) + ' ';
-		std::cout << "path = |" << path << "|" << std::endl;
 		if (path == " " || path == "/ " || path.empty())
 		{
 			std::cerr << "Error: location has no path" << std::endl;
@@ -67,7 +66,6 @@ bool parse_location(std::string line, Server &serv, std::ifstream &file)
 				std::string root = subLine.substr(startRoot, endRoot - startRoot);
 				root = serv.getRoot() + root;
 				loc.setRoot(root);
-				std::cout << "root = " << root << std::endl;
 			}
 			size_t autoIndexPos = subLine.find("auto");
 			if (autoIndexPos != std::string::npos) {

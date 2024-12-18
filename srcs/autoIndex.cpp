@@ -8,10 +8,7 @@ bool isDirectory(const std::string &path)
     struct stat statbuf;
     std::string full = "./www/" + path;
     if (stat(full.c_str(), &statbuf) != 0)
-    {
         return false;
-    }
-    std::cout << "true " << path << " and full " << full << std::endl;
     return S_ISDIR(statbuf.st_mode);
 }
 
@@ -124,7 +121,11 @@ std::string generateAutoIndexPage(const std::string &directory, const std::vecto
         std::string fullPath = relativePath;
         bool isDir = isDirectory(fullPath);
 
-        html += "\t\t<li><a href=\"" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
+        // std::cout << client.getLocation()->getPath() + "/" << std::endl;
+        std::string locationpath = client.getLocation()->getPath();
+        std::string pitier = locationpath.substr(0, locationpath.size() - 1);
+        std::cout << pitier << std::endl;
+        html += "\t\t<li><a href=\"" + pitier + "/" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
     }
     html += "\t</ul>\n";
     html += "</body>\n";
