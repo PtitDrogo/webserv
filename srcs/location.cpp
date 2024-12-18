@@ -173,10 +173,9 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 	return "";
 }
 
-void sendRedirection(int client_socket, const std::string& path)
+bool sendRedirection(int client_socket, const std::string& path)
 {
 	std::ostringstream responseStream;
-	std::cout << "---------------------------------------------path = " << path << std::endl;
 	responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
 				<< "Location: " << path << "\r\n"
 				<< "Content-Type: text/html\r\n"
@@ -184,8 +183,9 @@ void sendRedirection(int client_socket, const std::string& path)
 				<< "Connection: close\r\n"
 				<< "\r\n";
 	std::string response = responseStream.str();
-	std::cout << GREEN "response = |" << response << "|" << RESET << std::endl;
-	send(client_socket, response.c_str(), response.size(), 0);
+	if (send(client_socket, response.c_str(), response.size(), 0) == -1)
+		return false;
+	return true;
 }
 
 std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket)
@@ -222,9 +222,12 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 		else if (isExtension(finalPath))
 			file_content = readFile(finalPath);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		std::cout << "reponse = " << reponse << std::endl;
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client_socket, reponse.c_str(), reponse.size(), 0);
+		if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		{
+			std::cerr << "Error sending back the response with Auto index" << std::endl;
+			return "";
+		}
 		return "";
 	}
 	else
@@ -256,7 +259,6 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 {
 	location location = *(client.getLocation());
 
-	std::cout << "req ----------------------------= " << req.getMethod() << std::endl;
 	if (isMethodAllowed(location.getAllowMethod(), req.getMethod()) == false && location.getAllowMethod().empty() == false)
 	{
 		generate_html_page_error(client, "404");

@@ -3,26 +3,25 @@
 bool				download(Client& client);
 static std::string 	readFile_http(std::string filePath);
 
-bool	download(Client& client) {
-	std::cout << YELLOW << "DOWNLOAD in process..." << RESET << std::endl; // debug
-	std::string filename = client.getRequest().substr(client.getRequest().find("/config/base_donnees/") + 21);
+bool	download(Client& client) 
+{
+	std::string filename = client.getRequest().substr(client.getRequest().find(client.getServer().getRoot() + "base_donnees/") + client.getServer().getRoot().size() + 13);
 
-	if (filename.find("?fileName=") != std::string::npos) // in botton case
+	if (filename.find("?fileName=") != std::string::npos)
 		filename = filename.substr(filename.find("?fileName=") + 10, filename.find(" ") - filename.find("?fileName=") - 10);
 	else
 		filename = filename.substr(0, filename.find(" "));
 
-	std::string filePath = "./config/base_donnees/" + filename;
+	std::cout << "\"" << filename << "\"" << std::endl;
+	std::string filePath = "." + client.getServer().getRoot() + "/base_donnees/" + filename;
 	if (file_exists_parsebuffer(filePath.c_str()) == false)
 	{
-		std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
 		generate_html_page_error(client, "404");
 		return false;
 	}
 
 	std::string fileContent = readFile_http(filePath);
 	if (fileContent.empty()) {
-		std::cout << RED << "DOWNLOAD Fail" << RESET << std::endl;
 		generate_html_page_error(client, "500");
 		return false;
 	}
@@ -36,8 +35,8 @@ bool	download(Client& client) {
 	rep << "\r\n";
 	rep << fileContent;
 
-	send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0);
-	std::cout << GREEN << "DOWNLOAD Successful" << RESET << std::endl; // debug
+	if (send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0) == -1)
+		return false;
 	return true;
 }
 

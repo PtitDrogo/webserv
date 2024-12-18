@@ -33,26 +33,28 @@ std::string httpHeaderResponse(std::string code, std::string contentType, std::s
 			"\r\n" + content);
 }
 
-void generate_default_error_page(std::string error_code, int client_socket, const Client& client)
+bool generate_default_error_page(std::string error_code, int client_socket, const Client& client)
 {
 	std::string path;
 
 	if (error_code == "400")
-		path = "." + client.getServer().getRoot() + "default_error_pages/400.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/400.html";
 	else if (error_code == "403")
-		path = "." + client.getServer().getRoot() + "default_error_pages/403.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/403.html";
 	else if (error_code == "404")
-		path = "." + client.getServer().getRoot() + "default_error_pages/404.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/404.html";
 	else if (error_code == "413")
-		path = "." + client.getServer().getRoot() + "default_error_pages/413.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/413.html";
 	else
-		path = "." + client.getServer().getRoot() + "default_error_pages/404.html";
+		path = "." + client.getServer().getRoot() + "default_error_page/404.html";
 	std::string file_content = readFile(path);
 	std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
-	send(client_socket, reponse.c_str(), reponse.size(), 0);
+	if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		return false;
+	return true;
 }
 
-void generate_html_page_error(const Client& client, std::string error_code)
+bool generate_html_page_error(const Client& client, std::string error_code)
 {
 	const Server& server = client.getServer();
 
@@ -66,14 +68,15 @@ void generate_html_page_error(const Client& client, std::string error_code)
 	}
 	else
 	{
-		generate_default_error_page(error_code, client.getSocket(), client);
-		return;
+		bool status = generate_default_error_page(error_code, client.getSocket(), client);
+		return status;
 	}
 	std::string file_content = readFile(path);
 	std::string response = httpHeaderResponse(error_code, "text/html", file_content);
-
 	std::cout << GREEN << response.c_str() << RESET << std::endl;
-	send(client.getSocket(), response.c_str(), response.size(), 0);
+	if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+		return false;
+	return true;
 }
 
 
