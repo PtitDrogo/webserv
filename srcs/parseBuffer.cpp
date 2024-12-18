@@ -27,12 +27,16 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			method = line.substr(pos1, 4);
 			path = line.substr(pos1 + 4, pos2 - pos1 - 5);
 			version = line.substr(pos2);
+
 			pathLoc = CheckLocation(path, locationPath, client);
-			if (client.getLocation() == NULL)	
+			std::cout << "pathLoc = " << pathLoc << std::endl;
+			if (client.getLocation() == NULL)
 				finalPath = parse_no_location(path, client, pathLoc, client_socket);
 			else
 				finalPath = parse_with_location(client, pathLoc, req);
-			if (finalPath.empty() || finalPath == pathLoc)
+			std::cout << "finalPath = " << finalPath << std::endl;
+			std::cout << "pathLoc = " << pathLoc << std::endl;
+			if (finalPath.empty())
 				return ;
 		}
 
@@ -43,6 +47,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 		}
 		if (pos8 != std::string::npos)
 		{
+
 			std::string cookies = line.substr(pos8 + strlen("session_token="));
 			cookies = cookies.substr(0, cookies.find_first_of("\r\n"));
 			req.setCookies(cookies);
@@ -82,11 +87,11 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	std::string filename;
 	std::string username;
 	std::string password;
-	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
-	{
-		generate_html_page_error(client, "404");
-		return ;
-	}
+	// if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
+	// {
+	// 	generate_html_page_error(client, "404");
+	// 	return ;
+	// }
 	while (std::getline(stream, line))
 	{
 		size_t pos1 = line.find("FileName=");
