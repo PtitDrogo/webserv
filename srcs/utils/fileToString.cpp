@@ -79,9 +79,10 @@ void	checkFailedExecve(Client &client)
 	if (WIFEXITED(status)) 
 	{
 		int exit_code = WEXITSTATUS(status);
-		if (exit_code == EXECVE_FAILURE)
+		if (exit_code != SUCCESS)
 		{
-			generate_html_page_error(*client.getCgiCaller(), "500");
+			std::cout << "Excuse me ??" << std::endl;
+            generate_html_page_error(*client.getCgiCaller(), "500");
 			return ;
 		}
 	}
