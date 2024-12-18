@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
+bool	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 {
 	Server& 	server = client.getServer();
 	int 		client_socket = client.getSocket();
@@ -16,7 +16,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	std::vector<location> locationPath = server.getLocation();
 
 	if (!stream)
-		return ;
+		return false;
 	while (std::getline(stream, line))
 	{
 		size_t pos1 = line.find("GET");
@@ -33,13 +33,12 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			else
 				finalPath = parse_with_location(client, pathLoc, req);
 			if (finalPath.empty() || finalPath == pathLoc)
-				return ;
+				return true;
 		}
 
 		if (check_host(line, server) == false)
 		{
-			generate_html_page_error(client, "400");
-			return ;
+			return (generate_html_page_error(client, "400"));
 		}
 		if (pos8 != std::string::npos)
 		{
@@ -50,7 +49,7 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 	}
 	file_content = readFile(finalPath);
 	if (file_content.empty())
-		generate_html_page_error(client, "404");
+		return (generate_html_page_error(client, "404"));
 	if (!req.getCookies().empty())
 	{
 		std::map<std::string, Cookie> &cookies_map = cook.getCookies();
@@ -59,19 +58,21 @@ void	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			file_content = injectUserHtml(file_content, it->second.username);
 	}
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	send(client_socket, reponse.c_str(), reponse.size(), 0);
+	if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		return false;
+	return true;
 }
 
 
 
-void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
+bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 {
 	std::istringstream stream(client.getRequest());
 	std::string line;
 	Server& 	server = client.getServer();
 
 	if (!stream)
-		return ;
+		return false;
 	std::string method;
 	std::string path;
 	std::string version;
@@ -84,8 +85,7 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	std::string password;
 	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
 	{
-		generate_html_page_error(client, "404");
-		return ;
+		return (generate_html_page_error(client, "404"));
 	}
 	while (std::getline(stream, line))
 	{
@@ -137,9 +137,13 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 			path = "." + client.getServer().getRoot() + "page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
+			if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+			{	
+				infile.close();
+				return false;
+			}
 			infile.close();
-			return ;
+			return true;
 		}
 		else
 		{
@@ -156,13 +160,13 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 				std::string path = "." + server.getRoot() + server.getIndex();
 				std::string file_content = readFile(path);
 				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-				send(client.getSocket(), reponse.c_str(), reponse.size(), 0);
-				return ;
+				if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+					return false;
+				return true;
 			}
 			else
 			{
-				generate_html_page_error(client, "404");
-				return ;
+				return (generate_html_page_error(client, "404"));
 			}
 		}
 	}
@@ -170,17 +174,19 @@ void parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	{
 		std::string response;
 		response = handle_connexion(username, password, cook, req.getCookies(), client);
-		send(client.getSocket(), response.c_str(), response.size(), 0);
-		return ;
+		if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+			return false;
+		return true;
 	}
 	else if (req.getPath() == "/Unlog")
 	{
 		std::string response2 = handle_deconnexion(cook, req.getCookies(), client);
-		send(client.getSocket(), response2.c_str(), response2.size(), 0);
-		return ;
+		if (send(client.getSocket(), response2.c_str(), response2.size(), 0) == -1)
+			return false;
+		return true;
 	}
 	else
-		generate_html_page_error(client, "404");
+		return (generate_html_page_error(client, "404"));
 	filename.clear();
 	name.clear();
 	email.clear();
@@ -204,25 +210,14 @@ bool preparePostParse(Client& client, Cookies &cook, HttpRequest &req)
 {
 	const Server& 	server = client.getServer();
 
-	if (client.getContentLength() == std::string::npos) {
-		generate_html_page_error(client, "400");
-		return false;
-	}
-
+	if (client.getContentLength() == std::string::npos) 
+		return (generate_html_page_error(client, "400"));
 	if (server.getMaxBodySize() != -1 && client.getContentLength() > (size_t)server.getMaxBodySize())
-	{
-		generate_html_page_error(client, "413");
-		return false;
-	}
-
+		return (generate_html_page_error(client, "413"));
 	if (client.getRequest().find("Content-Type: multipart/form-data") != std::string::npos)
-	{
-		if (upload(client) == false)
-			return false;
-	}
+		return (upload(client));
 	else
-		parse_buffer_post(client, cook, req);
-	return true;
+		return (parse_buffer_post(client, cook, req));
 }
 
 bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req)
@@ -230,12 +225,14 @@ bool prepareGetParse(Client& client, Cookies& cook, HttpRequest &req)
 	// if (client.getRequest().find("GET " + client.getServer().getRoot() + "base_donnees/") != std::string::npos)
 	if (client.getRequest().find("GET /config/base_donnees/") != std::string::npos)
 	{
-		if (download(client) == false){
+		if (download(client) == false)
 			return false;
-		}
 	}
 	else
-		parse_buffer_get(client, cook, req);
+	{
+		if (parse_buffer_get(client, cook, req) == false)
+			return false;
+	}
 	return true;
 }
 

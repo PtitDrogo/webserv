@@ -3,17 +3,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-// GET /config/cgi-bin/sleep10.py HTTP/1.1
-// GET /config/cgi-bin/sleep20.py HTTP/1.1
-// GET /config/cgi-bin/time.py HTTP/1.1
-// GET /config/cgi-bin/helloworld.py HTTP/1.1
-// GET /config/cgi-bin/helloworld.py?name=theo&age=29 HTTP/1.1
-// GET /favicon.ico HTTP/1.1 is a typical request
-// GET /hello-world.py would be a cgi request;
-// GET /config/cgi-bin/basicparam.py?name=theo&age=29 HTTP/1.1
-// GET /config/cgi-bin/helloworld.py HTTP/1.1
-// GET /config/cgi-bin/printquerystring.py?name=theo&age=29 HTTP/1.1
-
 static bool is_executable(const char *path);
 static bool file_exists(const char *path);
 static std::string getActualBody(std::string &fullbody);

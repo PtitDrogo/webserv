@@ -127,7 +127,7 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 	return "";
 }
 
-void sendRedirection(int client_socket, const std::string& path)
+bool sendRedirection(int client_socket, const std::string& path)
 {
 	std::ostringstream responseStream;
 	responseStream << "HTTP/1.1 301 Moved Permanently\r\n"
@@ -137,7 +137,9 @@ void sendRedirection(int client_socket, const std::string& path)
 				<< "Connection: close\r\n"
 				<< "\r\n";
 	std::string response = responseStream.str();
-	send(client_socket, response.c_str(), response.size(), 0);
+	if (send(client_socket, response.c_str(), response.size(), 0) == -1)
+		return false;
+	return true;
 }
 
 std::string parse_no_location(std::string path, Client &client, std::string finalPath, int client_socket)
@@ -175,7 +177,11 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 			file_content = readFile(finalPath);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		send(client_socket, reponse.c_str(), reponse.size(), 0);
+		if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		{
+			std::cerr << "Error sending back the response with Auto index" << std::endl;
+			return "";
+		}
 		return "";
 	}
 	else
