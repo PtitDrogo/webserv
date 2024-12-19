@@ -34,7 +34,7 @@ bool	download(Client& client)
 	rep << "\r\n";
 	rep << fileContent;
 
-	if (send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0) == -1)
+	if (send(client.getSocket(), rep.str().c_str(), rep.str().size(), 0) <= 0)
 		return false;
 	return true;
 }

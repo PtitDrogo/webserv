@@ -49,7 +49,7 @@ bool generate_default_error_page(std::string error_code, int client_socket, cons
 		path = "." + client.getServer().getRoot() + "default_error_page/404.html";
 	std::string file_content = readFile(path);
 	std::string reponse = httpHeaderResponse(error_code, "text/html", file_content);
-	if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+	if (send(client_socket, reponse.c_str(), reponse.size(), 0) <= 0)
 		return false;
 	return true;
 }
@@ -73,7 +73,7 @@ bool generate_html_page_error(const Client& client, std::string error_code)
 	}
 	std::string file_content = readFile(path);
 	std::string response = httpHeaderResponse(error_code, "text/html", file_content);
-	if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+	if (send(client.getSocket(), response.c_str(), response.size(), 0) <= 0)
 		return false;
 	return true;
 }

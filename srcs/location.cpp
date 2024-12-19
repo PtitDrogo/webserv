@@ -178,7 +178,7 @@ bool sendRedirection(int client_socket, const std::string& path)
 				<< "Connection: close\r\n"
 				<< "\r\n";
 	std::string response = responseStream.str();
-	if (send(client_socket, response.c_str(), response.size(), 0) == -1)
+	if (send(client_socket, response.c_str(), response.size(), 0) <= 0)
 		return false;
 	return true;
 }
@@ -218,7 +218,7 @@ std::string parse_no_location(std::string path, Client &client, std::string fina
 			file_content = readFile(finalPath);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+		if (send(client_socket, reponse.c_str(), reponse.size(), 0) <= 0)
 		{
 			std::cerr << "Error sending back the response with Auto index" << std::endl;
 			return "";
@@ -290,7 +290,7 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
                 return "";
             }
             std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-            if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+            if (send(client.getSocket(), response.c_str(), response.size(), 0) <= 0)
                 return "";
             return "";
 		}

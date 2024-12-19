@@ -149,7 +149,7 @@ bool autoIndex(std::string path, Client &client)
     std::vector<std::string> files = listDirectory(finalPath);
     file_content = generateAutoIndexPage(finalPath, files, client);
     reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-    if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+    if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
         return false;
     return true;
 }

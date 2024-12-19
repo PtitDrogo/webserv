@@ -334,7 +334,7 @@ bool isCgiStuff(Client &client, Config &conf, std::vector<struct pollfd> &fds, s
 	{
 		std::string cgi_output = readFromPipeFd(fds[i].fd);
 		std::string response = httpHeaderResponse("200 OK", "text/plain", cgi_output);
-		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) < 0)
+		if (send(client.getCgiCaller()->getSocket(), response.c_str(), response.size(), 0) <= 0)
 			std::cerr << RED << "Disconnecting client after failure to send response" << RESET << std::endl;
 		disconnectClient(fds, client, conf);
 		return true;

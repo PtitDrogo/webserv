@@ -35,7 +35,7 @@ bool parse_buffer_delete(Client& client)
 		std::string path = "." + server.getRoot() + server.getIndex();
 		std::string file_content = readFile(path);
 		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-		if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+		if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
 			return false;
 	}
 	return true;
