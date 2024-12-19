@@ -22,7 +22,7 @@ bool upload(Client& client)
 		generate_html_page_error(client, "400");
 		return false;
 	}
-	std::string path = "." + server.getRoot() + server.getIndex();
+	std::string path = "." + server.getRoot() + "page/succesPost.html";
 	std::string file_content = readFile(path);
 	std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
 	if (send(client.getSocket(), response.c_str(), response.size(), 0) <= 0)
