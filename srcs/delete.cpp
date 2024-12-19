@@ -8,14 +8,35 @@ bool deleteFile(const std::string& path)
 		return false;
 }
 
-bool parse_buffer_delete(Client& client)
+bool parse_buffer_delete(Client& client, HttpRequest& req)
 {
 	Server& 	server = client.getServer();
 
 	std::cout << RED << (client.getLocation() != NULL) << RESET << std::endl;
+	std::string location_path = CheckLocation(req.getPath(), client.getServer().getLocation(), client);
+	std::cout << YELLOW << location_path << RESET << std::endl;
 	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("DELETE") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
 	{
-		return (generate_html_page_error(client, "404"));
+		return (generate_html_page_error(client, "405"));
+	}
+	if (client.getLocation() != NULL)
+	{
+		size_t pos;
+		while ((pos = location_path.find("//")) != std::string::npos)
+            location_path.replace(pos, 2, "/");
+		std::cout << GREEN << "|" << location_path  << "|" << RESET << std::endl;
+		if (file_exists_parsebuffer(location_path.c_str()) == false)
+			return (generate_html_page_error(client, "404"));
+		std::cout << GREEN << "test 1 passed" << RESET << std::endl;
+		if (deleteFile(location_path) == false) 
+			return(generate_html_page_error(client, "404"));
+		std::cout << GREEN << "test 2 passed" << RESET << std::endl;
+		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string file_content = readFile(path);
+		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
+		if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
+			return false;
+		return true;
 	}
 	if (client.getRequest().find("DELETE " + client.getServer().getRoot() + "base_donnees/") != std::string::npos) {
 
@@ -27,6 +48,7 @@ bool parse_buffer_delete(Client& client)
             filename = filename.substr(0, filename.find(" "));
 		
         std::string filePath = "." + client.getServer().getRoot() + "base_donnees/" + filename;
+		std::cout << RED "code qui fonctione" << filePath << RESET << std::endl;
 		if (file_exists_parsebuffer(filePath.c_str()) == false) 
 			return (generate_html_page_error(client, "404"));
 

@@ -66,7 +66,6 @@ bool	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 }
 
 
-
 bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 {
 	std::istringstream stream(client.getRequest());
@@ -85,9 +84,10 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	std::string filename;
 	std::string username;
 	std::string password;
+
 	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
 	{
-		return (generate_html_page_error(client, "404"));
+		return (generate_html_page_error(client, "405"));
 	}
 	while (std::getline(stream, line))
 	{

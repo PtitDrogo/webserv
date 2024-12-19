@@ -167,8 +167,8 @@
                 alert("Veuillez entrer un nom de fichier valide.");
                 return;
             }
-
-            fetch(`/config/base_donnees/${fileName}`, {
+            //NAME TO CHANGE TO TEST DELETE
+            fetch(`/locationDelete/${fileName}`, {
                 method: 'DELETE'
             })
                 .then(response => {
@@ -178,10 +178,6 @@
                         showPopup("Échec de la suppression du fichier.", true);
                     }
                 })
-                .catch(error => {
-                    console.error('Une erreur est survenue :', error);
-                    showPopup("Erreur de connexion.", true);
-                });
         }
 
         function showPopup(message, isError = false) {
