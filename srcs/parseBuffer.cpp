@@ -60,11 +60,10 @@ bool	parse_buffer_get(Client &client, Cookies& cook, HttpRequest &req)
 			file_content = injectUserHtml(file_content, it->second.username);
 	}
 	reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-	if (send(client_socket, reponse.c_str(), reponse.size(), 0) == -1)
+	if (send(client_socket, reponse.c_str(), reponse.size(), 0) <= 0)
 		return false;
 	return true;
 }
-
 
 
 bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
@@ -85,9 +84,10 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	std::string filename;
 	std::string username;
 	std::string password;
+
 	if (client.getLocation() != NULL && client.getLocation()->getAllowMethod().find("POST") == std::string::npos && client.getLocation()->getAllowMethod().empty() == false)
 	{
-		return (generate_html_page_error(client, "404"));
+		return (generate_html_page_error(client, "405"));
 	}
 	while (std::getline(stream, line))
 	{
@@ -139,7 +139,7 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 			path = "." + client.getServer().getRoot() + "page/error_page_exist.html";
 			std::string file_content = readFile(path);
 			std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-			if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+			if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
 			{	
 				infile.close();
 				return false;
@@ -162,7 +162,7 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 				std::string path = "." + server.getRoot() + server.getIndex();
 				std::string file_content = readFile(path);
 				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
-				if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) == -1)
+				if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
 					return false;
 				return true;
 			}
@@ -176,14 +176,14 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	{
 		std::string response;
 		response = handle_connexion(username, password, cook, req.getCookies(), client);
-		if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+		if (send(client.getSocket(), response.c_str(), response.size(), 0) <= 0)
 			return false;
 		return true;
 	}
 	else if (req.getPath() == "/Unlog")
 	{
 		std::string response2 = handle_deconnexion(cook, req.getCookies(), client);
-		if (send(client.getSocket(), response2.c_str(), response2.size(), 0) == -1)
+		if (send(client.getSocket(), response2.c_str(), response2.size(), 0) <= 0)
 			return false;
 		return true;
 	}

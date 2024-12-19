@@ -86,7 +86,7 @@ void handleSignal(int signum);
 //-----------Delete-----------//
 
 bool deleteFile(const std::string &path);
-bool parse_buffer_delete(Client &client);
+bool parse_buffer_delete(Client &client, HttpRequest& req);
 
 //-----------Download-----------//
 bool download(Client& client);

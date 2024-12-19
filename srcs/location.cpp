@@ -128,6 +128,8 @@ std::string parsePath(const std::string& path) {
 
 std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
 {
+	std::cout << "path = " << path << std::endl;
+	std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
 	std::string IsLocation = getCharactersBetweenSlashes(path);
 	std::string cleanedPath = trim(path);
 	std::string pathLoc;
@@ -135,6 +137,9 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 	{
 		std::string locationStr = locationPath[i].getPath();
 		locationStr = trim(locationStr);
+		std::cout << "locationStr = " << locationStr << std::endl;
+		std::cout << "cleanedPath = " << cleanedPath << std::endl;
+		std::cout << "isLocation = " << IsLocation << std::endl;
 		if (cleanedPath == locationStr)
 		{
 			if (cleanedPath.size() <= locationStr.size())
@@ -156,12 +161,12 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 			client.setLocation(&locationPath[i]);
 			return "." + locationPath[i].getRoot() + relativePath;
 		}
-		std::cout << "Islocation vs locationStr" << IsLocation << ", " << locationStr << std::endl;
 		if (IsLocation == locationStr)
 		{
-			std::cout << GREEN << "I AM A LOCATION" << RESET << std::endl;
 			pathLoc = parsePath(path);
+			std::cout << "pathLoc = " << pathLoc << std::endl;
 			client.setLocation(&locationPath[i]);
+			std::cout << "locationPath[i].getRoot() + cleanedPath   =   " << locationPath[i].getRoot() + pathLoc << std::endl;
 			return "." + locationPath[i].getRoot() + pathLoc;
 		}
 	}
@@ -278,32 +283,18 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 	}
 	else if (location.getIndex().empty() == true)
 	{
-		size_t pos;
-        while ((pos = finalPath.find("//")) != std::string::npos)
-            finalPath.replace(pos, 2, "/");
-        if (isRegularFile(finalPath) == true)
-        {
-            std::string file_content = readFile(finalPath);
-            if (file_content.empty())
-            {
-                generate_html_page_error(client, "404");
-                return "";
-            }
-            std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
-            if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
-                return "";
-            return "";
-		}
 		if (location.getAutoIndex() == "on")
 		{
 			autoIndex(finalPath, client);
 			return "";
 		}
-		else
-		{
-			generate_html_page_error(client, "404");
-			return "";
-		} //TODO CHECK IT.
+		std::cout << "je suos laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
+		// else
+		// {
+		// 	generate_html_page_error(client, "404");
+		// 	return "";
+		// }
 	}
+	std::cout << "finalPath = " << finalPath << std::endl;
 	return finalPath;
 }

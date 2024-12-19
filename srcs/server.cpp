@@ -116,7 +116,7 @@ int	execute_server(Config& conf, char **envp)
 				{
 					if (preparePostParse(client, cook, req) == false)
 					{	
-						disconnectClient(fds, client, conf);;
+						disconnectClient(fds, client, conf);
 						break ;
 					}
 				}
@@ -124,15 +124,15 @@ int	execute_server(Config& conf, char **envp)
 				{
 					if (prepareGetParse(client, cook, req) == false) 
 					{	
-						disconnectClient(fds, client, conf);;
+						disconnectClient(fds, client, conf);
 						break ;
 					}
 				}
 				else if (type_request == "DELETE")
 				{	
-					if (parse_buffer_delete(client) == false)
+					if (parse_buffer_delete(client, req) == false)
 					{	
-						disconnectClient(fds, client, conf);;
+						disconnectClient(fds, client, conf);
 						break ;
 					}
 				}
