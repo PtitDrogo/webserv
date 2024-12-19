@@ -27,8 +27,7 @@ std::string readFromPipeFd(int pipefd)
         bytesRead = read(pipefd, buffer, sizeof(buffer));
         if (bytesRead < 0) 
 		{
-            std::cout << "Error here, down the line, this should be a 500 error" << std::endl; //TODO
-			break;
+			return "";
         }
         if (bytesRead == 0)
             break;

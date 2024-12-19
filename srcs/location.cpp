@@ -283,11 +283,11 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 			autoIndex(finalPath, client);
 			return "";
 		}
-		// else
-		// {
-		// 	generate_html_page_error(client, "404");
-		// 	return "";
-		// } //TODO CHECK IT.
+		else
+		{
+			generate_html_page_error(client, "404");
+			return "";
+		} //TODO CHECK IT.
 	}
 	return finalPath;
 }

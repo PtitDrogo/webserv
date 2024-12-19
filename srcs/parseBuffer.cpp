@@ -195,6 +195,7 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	message.clear();
 	username.clear();
 	password.clear();
+	return true ;
 }
 
 bool file_exists_parsebuffer(const char *path)
