@@ -98,15 +98,14 @@ void location::setRedir(std::string& error_code, std::string& path)
 std::string getCharactersBetweenSlashes(const std::string& path) {
     size_t firstSlash = path.find('/');
     if (firstSlash == std::string::npos) {
-        return ""; // Pas de premier '/' trouvé.
+        return "";
     }
 
     size_t secondSlash = path.find('/', firstSlash + 1);
     if (secondSlash == std::string::npos) {
-        return ""; // Pas de second '/' trouvé.
+        return "";
     }
 
-    // Extraire les caractères entre les deux slashes.
     return path.substr(firstSlash, secondSlash - firstSlash);
 }
 
@@ -114,22 +113,18 @@ std::string getCharactersBetweenSlashes(const std::string& path) {
 std::string parsePath(const std::string& path) {
     size_t firstSlash = path.find('/');
     if (firstSlash == std::string::npos) {
-        return ""; // Pas de '/' trouvé
+        return ""; 
     }
 
     size_t secondSlash = path.find('/', firstSlash + 1);
     if (secondSlash == std::string::npos) {
-        return ""; // Pas de second '/' trouvé
+        return "";
     }
-
-    // Retourner tout ce qui suit le second '/'
     return path.substr(secondSlash);
 }
 
 std::string CheckLocation(const std::string& path, std::vector<location>& locationPath, Client& client)
 {
-	std::cout << "path = " << path << std::endl;
-	std::cout << "locationPath.size() = " << locationPath.size() << std::endl;
 	std::string IsLocation = getCharactersBetweenSlashes(path);
 	std::string cleanedPath = trim(path);
 	std::string pathLoc;
@@ -137,9 +132,6 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 	{
 		std::string locationStr = locationPath[i].getPath();
 		locationStr = trim(locationStr);
-		std::cout << "locationStr = " << locationStr << std::endl;
-		std::cout << "cleanedPath = " << cleanedPath << std::endl;
-		std::cout << "isLocation = " << IsLocation << std::endl;
 		if (cleanedPath == locationStr)
 		{
 			if (cleanedPath.size() <= locationStr.size())
@@ -164,9 +156,7 @@ std::string CheckLocation(const std::string& path, std::vector<location>& locati
 		if (IsLocation == locationStr)
 		{
 			pathLoc = parsePath(path);
-			std::cout << "pathLoc = " << pathLoc << std::endl;
 			client.setLocation(&locationPath[i]);
-			std::cout << "locationPath[i].getRoot() + cleanedPath   =   " << locationPath[i].getRoot() + pathLoc << std::endl;
 			return "." + locationPath[i].getRoot() + pathLoc;
 		}
 	}
@@ -288,13 +278,6 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 			autoIndex(finalPath, client);
 			return "";
 		}
-		std::cout << "je suos laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-		// else
-		// {
-		// 	generate_html_page_error(client, "404");
-		// 	return "";
-		// }
 	}
-	std::cout << "finalPath = " << finalPath << std::endl;
 	return finalPath;
 }

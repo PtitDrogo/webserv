@@ -11,7 +11,6 @@ bool isDirectory(const std::string &path)
     {
         return false;
     }
-    std::cout << "true " << path << " and full " << full << std::endl;
     return S_ISDIR(statbuf.st_mode);
 }
 
