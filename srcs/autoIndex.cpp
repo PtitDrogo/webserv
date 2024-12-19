@@ -120,12 +120,14 @@ std::string generateAutoIndexPage(const std::string &directory, const std::vecto
             relativePath.replace(pos, 2, "/");
         std::string fullPath = relativePath;
         bool isDir = isDirectory(fullPath);
-
-        // std::cout << client.getLocation()->getPath() + "/" << std::endl;
-        std::string locationpath = client.getLocation()->getPath();
-        std::string pitier = locationpath.substr(0, locationpath.size() - 1);
-        std::cout << pitier << std::endl;
-        html += "\t\t<li><a href=\"" + pitier + "/" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
+        std::string prepath;
+        if (client.getLocation() != NULL)
+        {
+            std::string locationpath = client.getLocation()->getPath();
+            std::string prepath = locationpath.substr(0, locationpath.size() - 1);
+        }
+        std::cout << prepath << std::endl;
+        html += "\t\t<li><a href=\"" + prepath + "/" + relativePath + "\"><button>" + *it + (isDir ? "/" : "") + "</button></a></li>\n";
     }
     html += "\t</ul>\n";
     html += "</body>\n";

@@ -278,6 +278,22 @@ std::string parse_with_location(Client &client, std::string finalPath, HttpReque
 	}
 	else if (location.getIndex().empty() == true)
 	{
+		size_t pos;
+        while ((pos = finalPath.find("//")) != std::string::npos)
+            finalPath.replace(pos, 2, "/");
+        if (isRegularFile(finalPath) == true)
+        {
+            std::string file_content = readFile(finalPath);
+            if (file_content.empty())
+            {
+                generate_html_page_error(client, "404");
+                return "";
+            }
+            std::string response = httpHeaderResponse("200 Ok", "text/html", file_content);
+            if (send(client.getSocket(), response.c_str(), response.size(), 0) == -1)
+                return "";
+            return "";
+		}
 		if (location.getAutoIndex() == "on")
 		{
 			autoIndex(finalPath, client);
