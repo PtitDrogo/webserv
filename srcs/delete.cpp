@@ -26,7 +26,7 @@ bool parse_buffer_delete(Client& client, HttpRequest& req)
 			return (generate_html_page_error(client, "404"));
 		if (deleteFile(location_path) == false) 
 			return(generate_html_page_error(client, "404"));
-		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string path = "." + server.getRoot() + "page/succesDelete.html";
 		std::string file_content = readFile(path);
 		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
@@ -48,7 +48,7 @@ bool parse_buffer_delete(Client& client, HttpRequest& req)
 
 		if (deleteFile(filePath) == false) 
 			return(generate_html_page_error(client, "404"));
-		std::string path = "." + server.getRoot() + server.getIndex();
+		std::string path = "." + server.getRoot() + "page/succesDelete.html";
 		std::string file_content = readFile(path);
 		std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 		if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)

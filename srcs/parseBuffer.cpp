@@ -72,6 +72,7 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 	std::string line;
 	Server& 	server = client.getServer();
 
+
 	if (!stream)
 		return false;
 	std::string method;
@@ -159,7 +160,7 @@ bool parse_buffer_post(Client& client, Cookies &cook, HttpRequest &req)
 				outfile.flush();
 				outfile.close();
 
-				std::string path = "." + server.getRoot() + server.getIndex();
+				std::string path = "." + server.getRoot() + "page/succesPost.html";
 				std::string file_content = readFile(path);
 				std::string reponse = httpHeaderResponse("200 Ok", "text/html", file_content);
 				if (send(client.getSocket(), reponse.c_str(), reponse.size(), 0) <= 0)
